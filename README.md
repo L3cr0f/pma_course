@@ -1,3 +1,3 @@
 # Practical Malware Analysis Course
 
-En este repositorio se espera guardar el conjunto de los ejercicios del libro _Practical Malware Analysis_. Dichos ejercicios vendran situados en archivos independientes según el tema dentro del directorio _/Ejercicios_. Además, se incluyen los diversos binarios analizados dentro del directorio _/Binarios_.
+This repository saves the _LAB_ exercises of the _Practical Malware Analysis_ book. These exercises are located in the "/Labs" folder, whereas the analized binaries are located in the "/Binaries" folder. Also, some pictures regarding the solved exercises are included in the "/Pictures" folder.
