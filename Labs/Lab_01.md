@@ -8,9 +8,8 @@ The labs include two sections of answers. The first section consists of short an
 
 This lab uses the files Lab01-01.exe and Lab01-01.dll. Use the tools and techniques described in the chapter to gain information about the files and answer the questions below.
 
-**Questions**
 
-1. Upload the files to http://www.VirusTotal.com/ and view the reports. Does either file match any existing antivirus signatures?
+**1. Upload the files to http://www.VirusTotal.com/ and view the reports. Does either file match any existing antivirus signatures?**
 
 First of all, I checked the SHA256 hashes of both files in VirusTotal before submit them. These are:
 
@@ -26,14 +25,14 @@ The results of VirusTotal are the following:
 
 The descriptions of the Antivirus software are quite generic, many of them just say that are a _Trojan_.
 
-2. When were these files compiled?
+**2. When were these files compiled?**
 
 We can check this value with several tools, in my case I have used VirusTotal and PEviwe:
 
 - Lab01-01.exe: 2010-12-19 16:16:19
 - Lab01-01.dll: 2010-12-19 16:16:38
 
-3. Are there any indications that either of these files is packed or obfuscated? If so, what are these indicators?
+3. **Are there any indications that either of these files is packed or obfuscated? If so, what are these indicators?**
 
 We can check it with PEview, by looking for the values of _Virtual Size_ and _Size of Raw Data_  of the _IMAGE SECTION HEADER .text_ header:
 
