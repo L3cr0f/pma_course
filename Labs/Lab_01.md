@@ -32,7 +32,7 @@ We can check this value with several tools, in my case I have used VirusTotal an
 - Lab01-01.exe: 2010-12-19 16:16:19
 - Lab01-01.dll: 2010-12-19 16:16:38
 
-3. **Are there any indications that either of these files is packed or obfuscated? If so, what are these indicators?**
+**3. Are there any indications that either of these files is packed or obfuscated? If so, what are these indicators?**
 
 We can check it with PEview, by looking for the values of _Virtual Size_ and _Size of Raw Data_  of the _IMAGE SECTION HEADER .text_ header:
 
@@ -44,7 +44,7 @@ We can check it with PEview, by looking for the values of _Virtual Size_ and _Si
 	- Size of Raw Data: 1000
 
 
-4. Do any imports hint at what this malware does? If so, which imports are they?
+**4. Do any imports hint at what this malware does? If so, which imports are they?**
 
 The imports are one of the main indicator of what a malware does, so it is important to check them:
 
@@ -94,7 +94,7 @@ WSACleanup
 htons
 ```
 
-5. Are there any other files or host-based indicators that you could look for on infected systems?
+**5. Are there any other files or host-based indicators that you could look for on infected systems?**
 
 We can look for strings and see if there is something interesting within them:
 
@@ -129,11 +129,11 @@ SADFHUHF
 
 We can see that an IP address is shown, an important network-based indicator. Also, the string _SADFHUHF_ could be the name of the mutex created by the malware.
 
-6. What network-based indicators could be used to find this malware on infected machines?
+**6. What network-based indicators could be used to find this malware on infected machines?**
 
 With basic static analysis techniques we can only get one network-based indicator, the IP address _127.26.152.13_.
 
-7. What would you guess is the purpose of these files?
+**7. What would you guess is the purpose of these files?**
 
 After the initial analysis is performed, we can perform some hypotheses regarding the samples:
 
@@ -146,7 +146,7 @@ Analyze the file Lab01-02.exe.
 
 **Questions**
 
-1. Upload the Lab01-02.exe file to http://www.VirusTotal.com/. Does it match any existing antivirus definitions?
+**1. Upload the Lab01-02.exe file to http://www.VirusTotal.com/. Does it match any existing antivirus definitions?**
 
 First of all, I checked the SHA256 hashes of both files in VirusTotal before submit them. These are:
 
@@ -158,7 +158,7 @@ The results of VirusTotal are the following:
 
 44/69 Antivirus detect the file _Lab01-02.exe_ as malicious.
 
-2. Are there any indications that this file is packed or obfuscated? If so, what are these indicators? If the file is packed, unpack it if possible.
+**2. Are there any indications that this file is packed or obfuscated? If so, what are these indicators? If the file is packed, unpack it if possible.**
 
 The file seems to be obfuscated with UPX, based on the headers shown by PEview:
 
@@ -188,7 +188,7 @@ This new binary has the following VirusTotal results:
 
 49/71 Antivirus detect the file _Lab01-02.exe_ as malicious.
 
-3. Do any imports hint at this program’s functionality? If so, which imports are they and what do they tell you?
+**3. Do any imports hint at this program’s functionality? If so, which imports are they and what do they tell you?**
 
 The file has some interesting imports like the following:
 
@@ -220,7 +220,7 @@ InternetOpenA
 
 As we can see, it seems to perform some system operations like creating mutexes, also, it seems to have the ability to create a new service in the host, probably to gain persistence. Finally, it also can perform network operations through HTTP.
 
-4. What host- or network-based indicators could be used to identify this malware on infected machines?
+**4. What host- or network-based indicators could be used to identify this malware on infected machines?**
 
 The strings of the binary shows some interesting IOCs, some of them are.
 
@@ -233,13 +233,13 @@ Analyze the file Lab01-03.exe. Questions
 
 **Questions**
 
-1. Upload the Lab01-03.exe file to http://www.VirusTotal.com/. Does it match any existing antivirus definitions?
+**1. Upload the Lab01-03.exe file to http://www.VirusTotal.com/. Does it match any existing antivirus definitions?**
 
 
-2. Are there any indications that this file is packed or obfuscated? If so, what are these indicators? If the file is packed, unpack it if possible.
+**2. Are there any indications that this file is packed or obfuscated? If so, what are these indicators? If the file is packed, unpack it if possible.**
 
-3. Do any imports hint at this program’s functionality? If so, which imports are they and what do they tell you?
-4. What host- or network-based indicators could be used to identify this malware on infected machines?
+**3. Do any imports hint at this program’s functionality? If so, which imports are they and what do they tell you?**
+**4. What host- or network-based indicators could be used to identify this malware on infected machines?**
 
 ## Lab 1-4
 
@@ -247,9 +247,9 @@ Analyze the file Lab01-04.exe.
 
 **Questions**
 
-1. Upload the Lab01-04.exe file to http://www.VirusTotal.com/. Does it match any existing antivirus definitions?
-2. Are there any indications that this file is packed or obfuscated? If so, what are these indicators? If the file is packed, unpack it if possible.
-3. When was this program compiled?
-4. Do any imports hint at this program’s functionality? If so, which imports are they and what do they tell you?
-5. What host- or network-based indicators could be used to identify this malware on infected machines?
-6. This file has one resource in the resource section. Use Resource Hacker to examine that resource, and then use it to extract the resource. What can you learn from the resource?
+**1. Upload the Lab01-04.exe file to http://www.VirusTotal.com/. Does it match any existing antivirus definitions?**
+**2. Are there any indications that this file is packed or obfuscated? If so, what are these indicators? If the file is packed, unpack it if possible.**
+**3. When was this program compiled?**
+**4. Do any imports hint at this program’s functionality? If so, which imports are they and what do they tell you?**
+**5. What host- or network-based indicators could be used to identify this malware on infected machines?**
+**6. This file has one resource in the resource section. Use Resource Hacker to examine that resource, and then use it to extract the resource. What can you learn from the resource?**
