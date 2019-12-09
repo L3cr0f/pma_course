@@ -362,7 +362,7 @@ Looking at the strings of the sample we can see some interesting IOCs:
 - Host-based: \winup.exe, \system32\wupdmgrd.exe, sfc_os.dll
 - Network-based: http://www.practicalmalwareanalysis[.]com/updater.exe
 
-Notice that _wupdmgrd.exe_ seems to masquerade the legit _wupdmgr.exe_ program. Also, check how the program seems to have the hability to perform HTTP requests, despite any functions related appears in the _Import Address Table_ (the functions may be dynamically loaded. Finally, highlight the fact that the URL that the binary points out seem to store another _PE_ file, so the definitions that VirusTotal antivirus gave us about the sample, being a _Downloader_ / _Dropper_ Seems to be right.
+Notice that _wupdmgrd.exe_ seems to masquerade the legit _wupdmgr.exe_ program. Also, check how the program seems to have the hability to perform HTTP requests, despite any functions related appears in the _Import Address Table_ (the functions may be dynamically loaded. Finally, highlight the fact that the URL that the binary points out seem to store another _PE_ file, so the definitions that VirusTotal antivirus gave us about the sample, being a _Downloader_ / _Dropper_, seems to be right.
 
 **6. This file has one resource in the resource section. Use Resource Hacker to examine that resource, and then use it to extract the resource. What can you learn from the resource?**
 
