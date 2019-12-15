@@ -7,10 +7,10 @@ The labs include two sections of answers. The first section consists of short an
 
 ## Lab 1-1
 
-This lab uses the files Lab01-01.exe and Lab01-01.dll. Use the tools and techniques described in the chapter to gain information about the files and answer the questions below.
+This lab uses the files _Lab01-01.exe_ and _Lab01-01.dll_. Use the tools and techniques described in the chapter to gain information about the files and answer the questions below.
 
 
-**1. Upload the files to http://www.VirusTotal.com/ and view the reports. Does either file match any existing antivirus signatures?**
+**1. Upload the files to http://www.virustotal.com/ and view the reports. Does either file match any existing antivirus signatures?**
 
 First of all, I checked the SHA256 hashes of both files in VirusTotal before submit them. These are:
 
@@ -144,7 +144,7 @@ After the initial analysis is performed, we can perform some hypotheses regardin
 
 ## Lab 1-2
 
-Analyze the file Lab01-02.exe.
+Analyze the file _Lab01-02.exe_.
 
 **1. Upload the Lab01-02.exe file to http://www.VirusTotal.com/. Does it match any existing antivirus definitions?**
 
@@ -232,7 +232,7 @@ The strings of the binary shows some interesting IOCs, some of them are.
 
 ## Lab 1-3
 
-Analyze the file Lab01-03.exe.
+Analyze the file _Lab01-03.exe_.
 
 **1. Upload the Lab01-03.exe file to http://www.VirusTotal.com/. Does it match any existing antivirus definitions?**
 
@@ -289,7 +289,7 @@ Due to the lack of the unpacked sample, we cannot analyze it.
 
 ## Lab 1-4
 
-Analyze the file Lab01-04.exe.
+Analyze the file _Lab01-04.exe_.
 
 **1. Upload the Lab01-04.exe file to http://www.VirusTotal.com/. Does it match any existing antivirus definitions?**
 
