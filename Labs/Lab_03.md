@@ -198,7 +198,7 @@ User-Agent: user-fc84728d64 Windows XP 6.11
 Host: practicalmalwareanalysis.com
 ```
 
-As we can see, the malware tries to get the "/serve.html" file on the mentioned domain by making requests use of a special _User-Agent_ composed by the following structure: <username>[ ] <operating system version>.
+As we can see, the malware tries to get the "/serve.html" file on the mentioned domain by making requests use of a special _User-Agent_ composed by the following structure: `<username>[ ]<operating system version>`.
 
 ## Lab 3-3
 
