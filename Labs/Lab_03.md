@@ -105,7 +105,7 @@ uninstallA
 We can see that it has some functions that relates some "installation" process. To install the sample we can just execute the following command:
 
 ```
-$> rundll32 Lab03-02.dll,installA
+C:\> rundll32 Lab03-02.dll,installA
 ```
 
 After that, we will see the following output in _Regshot_ related with the executed binary:
@@ -158,7 +158,7 @@ It seems that the malware creates some kind of new service called _IPRIP_, somet
 To execute the malware we are going to execute the previously created service as follows:
 
 ```
-$> net start IPRIP
+C:\> net start IPRIP
 ```
 
 We can see the created process in the monitor screen of _Process Explorer_ for a few seconds, but then it dissapeared.
@@ -186,7 +186,19 @@ We have several host-based indicators like the previously explained service _IPR
 
 **6. Are there any useful network-based signatures for this malware?**
 
-We can see by using ApateDNS that the malware makes a requests to practicalmalwareanalysis.com.
+We can see by using _ApateDNS_ that the malware makes a requests to practicalmalwareanalysis.com every 10 minutes. Let's configure _Netcat_ so as to capture the redirected traffic of the malware.
+
+```
+C:\> nc -v -n -l -p 80
+listening on [any] 80 ...
+connect to [127.0.0.1] from (UNKNOWN) [127.0.0.1] 1157
+GET /serve.html HTTP/1.1
+Accept: */*
+User-Agent: user-fc84728d64 Windows XP 6.11
+Host: practicalmalwareanalysis.com
+```
+
+As we can see, the malware tries to get the "/serve.html" file on the mentioned domain by making requests use of a special _User-Agent_ composed by the following structure: <username>[ ] <operating system version>.
 
 ## Lab 3-3
 
