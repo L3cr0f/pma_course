@@ -182,9 +182,11 @@ PID IS 1024
 
 **5. What are the malware’s host-based indicators?**
 
-We have several host-based indicators like the previously explained service _IPRIP_. Also we have
+We have several host-based indicators like the previously explained service _IPRIP_, which shows the name "Intranet Network Awareness (INA+)". Also we have all the registry values that the malware creates so as to create the service.
 
 **6. Are there any useful network-based signatures for this malware?**
+
+We can see by using ApateDNS that the malware makes a requests to practicalmalwareanalysis.com.
 
 ## Lab 3-3
 
