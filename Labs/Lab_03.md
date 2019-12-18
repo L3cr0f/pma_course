@@ -88,13 +88,102 @@ As we can see, the malware seems to connect to the domain name www.practicalmalw
 
 ## Lab 3-2
 
-Analyze the malware found in the file Lab03-02.dll using basic dynamic analysis tools.
+Analyze the malware found in the file _Lab03-02.dll_ using basic dynamic analysis tools.
 
 **1. How can you get this malware to install itself?**
+
+First of all, we analyze the exports that this malware has and see if there is anything interesting among them (we use the script "get_file_exports.py".
+
+```
+Install
+ServiceMain
+UninstallService
+installA
+uninstallA
+```
+
+We can see that it has some functions that relates some "installation" process. To install the sample we can just execute the following command:
+
+```
+$> rundll32 Lab03-02.dll,installA
+```
+
+After that, we will see the following output in _Regshot_ related with the executed binary:
+
+```
+----------------------------------
+Keys added:63
+----------------------------------
+...
+HKLM\SYSTEM\ControlSet001\Services\IPRIP
+HKLM\SYSTEM\ControlSet001\Services\IPRIP\Parameters
+HKLM\SYSTEM\ControlSet001\Services\IPRIP\Security
+HKLM\SYSTEM\CurrentControlSet\Services\IPRIP
+HKLM\SYSTEM\CurrentControlSet\Services\IPRIP\Parameters
+HKLM\SYSTEM\CurrentControlSet\Services\IPRIP\Security
+...
+
+----------------------------------
+Values added:186
+----------------------------------
+...
+HKLM\SYSTEM\ControlSet001\Services\IPRIP\Security\Security: 01 00 14 80 90 00 00 00 9C 00 00 00 14 00 00 00 30 00 00 00 02 00 1C 00 01 00 00 00 02 80 14 00 FF 01 0F 00 01 01 00 00 00 00 00 01 00 00 00 00 02 00 60 00 04 00 00 00 00 00 14 00 FD 01 02 00 01 01 00 00 00 00 00 05 12 00 00 00 00 00 18 00 FF 01 0F 00 01 02 00 00 00 00 00 05 20 00 00 00 20 02 00 00 00 00 14 00 8D 01 02 00 01 01 00 00 00 00 00 05 0B 00 00 00 00 00 18 00 FD 01 02 00 01 02 00 00 00 00 00 05 20 00 00 00 23 02 00 00 01 01 00 00 00 00 00 05 12 00 00 00 01 01 00 00 00 00 00 05 12 00 00 00
+HKLM\SYSTEM\ControlSet001\Services\IPRIP\Parameters\ServiceDll: "C:\Documents and Settings\PSEL\Escritorio\Binaries\Chapter_3L\Lab03-02.dll"
+HKLM\SYSTEM\ControlSet001\Services\IPRIP\Type: 0x00000020
+HKLM\SYSTEM\ControlSet001\Services\IPRIP\Start: 0x00000002
+HKLM\SYSTEM\ControlSet001\Services\IPRIP\ErrorControl: 0x00000001
+HKLM\SYSTEM\ControlSet001\Services\IPRIP\ImagePath: "%SystemRoot%\System32\svchost.exe -k netsvcs"
+HKLM\SYSTEM\ControlSet001\Services\IPRIP\DisplayName: "Intranet Network Awareness (INA+)"
+HKLM\SYSTEM\ControlSet001\Services\IPRIP\ObjectName: "LocalSystem"
+HKLM\SYSTEM\ControlSet001\Services\IPRIP\Description: "Depends INA+, Collects and stores network configuration and location information, and notifies applications when this information changes."
+HKLM\SYSTEM\ControlSet001\Services\IPRIP\DependOnService: 'RpcSs'
+HKLM\SYSTEM\CurrentControlSet\Services\IPRIP\Security\Security: 01 00 14 80 90 00 00 00 9C 00 00 00 14 00 00 00 30 00 00 00 02 00 1C 00 01 00 00 00 02 80 14 00 FF 01 0F 00 01 01 00 00 00 00 00 01 00 00 00 00 02 00 60 00 04 00 00 00 00 00 14 00 FD 01 02 00 01 01 00 00 00 00 00 05 12 00 00 00 00 00 18 00 FF 01 0F 00 01 02 00 00 00 00 00 05 20 00 00 00 20 02 00 00 00 00 14 00 8D 01 02 00 01 01 00 00 00 00 00 05 0B 00 00 00 00 00 18 00 FD 01 02 00 01 02 00 00 00 00 00 05 20 00 00 00 23 02 00 00 01 01 00 00 00 00 00 05 12 00 00 00 01 01 00 00 00 00 00 05 12 00 00 00
+HKLM\SYSTEM\CurrentControlSet\Services\IPRIP\Parameters\ServiceDll: "C:\Documents and Settings\PSEL\Escritorio\Binaries\Chapter_3L\Lab03-02.dll"
+HKLM\SYSTEM\CurrentControlSet\Services\IPRIP\Type: 0x00000020
+HKLM\SYSTEM\CurrentControlSet\Services\IPRIP\Start: 0x00000002
+HKLM\SYSTEM\CurrentControlSet\Services\IPRIP\ErrorControl: 0x00000001
+HKLM\SYSTEM\CurrentControlSet\Services\IPRIP\ImagePath: "%SystemRoot%\System32\svchost.exe -k netsvcs"
+HKLM\SYSTEM\CurrentControlSet\Services\IPRIP\DisplayName: "Intranet Network Awareness (INA+)"
+HKLM\SYSTEM\CurrentControlSet\Services\IPRIP\ObjectName: "LocalSystem"
+HKLM\SYSTEM\CurrentControlSet\Services\IPRIP\Description: "Depends INA+, Collects and stores network configuration and location information, and notifies applications when this information changes."
+HKLM\SYSTEM\CurrentControlSet\Services\IPRIP\DependOnService: 'RpcSs'
+...
+```
+It seems that the malware creates some kind of new service called _IPRIP_, something we confirm with the _autoruns_ utility.
+
+![Autoruns](../Pictures/Lab_03/lab_03-02_1_autoruns.png)
+
 **2. How would you get this malware to run after installation?**
+
+To execute the malware we are going to execute the previously created service as follows:
+
+```
+$> net start IPRIP
+```
+
+We can see the created process in the monitor screen of _Process Explorer_ for a few seconds, but then it dissapeared.
+
 **3. How can you find the process under which this malware is running?**
+
+We can use _Process Explorer_ to check where the DLL was loaded. One aproach would be looking at every process imported DLLs (lower pane), but it is more effective using the search DLL feature (CTRL+F), which give us the following output.
+
+![Process Explorer](../Pictures/Lab_03/lab_03-02_3_process_explorer.png)
+
+As we can see, the malware is stored in the process with a PID of 1024.
+
 **4. Which filters could you set in order to use procmon to glean information?**
+
+We can set up the following filters so as to show the most interesting information about the analyzed malware:
+
+```
+Process name IS svchost.exe
+PID IS 1024
+```
+
 **5. What are the malware’s host-based indicators?**
+
+We have several host-based indicators like the previously explained service _IPRIP_. Also we have
+
 **6. Are there any useful network-based signatures for this malware?**
 
 ## Lab 3-3
