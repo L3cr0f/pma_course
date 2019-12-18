@@ -198,21 +198,99 @@ User-Agent: user-fc84728d64 Windows XP 6.11
 Host: practicalmalwareanalysis.com
 ```
 
-As we can see, the malware tries to get the "/serve.html" file on the mentioned domain by making requests use of a special _User-Agent_ composed by the following structure: `<username>[ ]<operating system version>`.
+As we can see, the malware tries to get the "/serve.html" file on the mentioned domain by making requests use of a special _User-Agent_ composed by the following structure: `<current user>[ ]<operating system version>`.
 
 ## Lab 3-3
 
-Execute the malware found in the file Lab03-03.exe while monitoring it using basic dynamic analysis tools in a safe environment.
+Execute the malware found in the file _Lab03-03.exe_ while monitoring it using basic dynamic analysis tools in a safe environment.
 
 **1. What do you notice when monitoring this malware with Process Explorer?**
+
+The malware seems to spawn a new process with the name _svchost.exe_ and then exits, it seems that the malware has performed some kind of process replacement.
+
 **2. Can you identify any live memory modifications?**
+
+If we look at the strings of the process we can check many differences between the "original" strings of the process and the "memory" ones.
+
 **3. What are the malware’s host-based indicators?**
+
+The memory strings of the process contain a few interesting strings like the following:
+
+```
+...
+practicalmalwareanalysis.log
+[SHIFT]
+[ENTER]
+[BACKSPACE]
+BACKSPACE
+[TAB]
+[CTRL]
+[DEL]
+[CAPS LOCK]
+[CAPS LOCK]
+C:\WINDOWS\system32\svchost.exe
+abcdefghijklmnopqrstuvwxyz
+ABCDEFGHIJKLMNOPQRSTUVWXYZ
+...
+```
+
+One host-based indicator could be the filename "practicalmalwareanalysis.log".
+
 **4. What is the purpose of this program?**
+
+The strings tells us that the malware probably is a keylogger. Something we can check by looking into the file "practicalmalwareanalysis.log" located in the same folder of the sample.
 
 ## Lab 3-4
 
-Analyze the malware found in the file Lab03-04.exe using basic dynamic analysis tools. (This program is analyzed further in the Chapter 9 labs.)
+Analyze the malware found in the file _Lab03-04.exe_ using basic dynamic analysis tools. (This program is analyzed further in the Chapter 9 labs.)
 
 **1. What happens when you run this file?**
+
+When the malware is executed we can see how it is deleted and nothing more. Let's analyze the strings and imports of the malware to try to determine some kind of behaviour.
+
+First of all, we list the strings of the sample:
+
+```
+...
+Configuration
+SOFTWARE\Microsoft \XPS
+\kernel32.dll
+ HTTP/1.0
+GET
+'`'`'
+`'`'`
+NOTHING
+CMD
+DOWNLOAD
+UPLOAD
+SLEEP
+cmd.exe
+ >> NUL
+/c del
+ups
+http://www.practicalmalwareanalysis.com
+ Manager Service
+.exe
+%SYSTEMROOT%\system32\
+k:%s h:%s p:%s per:%s
+-cc
+-re
+-in
+         (((((                  H
+PST
+PDT
+...
+```
+
+As we can see, it seems that the malware perform some kind of HTTP requests to the URL "http://www.practicalmalwareanalysis.com". It also seems to execute the command `cmd.exe /c del` to delete the original file. Also we can see some strings that are like commands for a bot: NOTHING, CMD, DOWNLOAD, UPLOAD, SLEEP.
+
+The imports do not give us to much informations, so we will keep it outside of the exercise.
+
 **2. What is causing the roadblock in dynamic analysis?**
+
+Probably, the malware are waiting for some kind of command to continue the execution.
+
 **3. Are there other ways to run this program?**
+
+We see in the strings that the program seems to execute some "commands". Also, we see the parameters `-cc, -re, -in`.
+We try to execute the malware in different ways, but all of them are unfruitful.
