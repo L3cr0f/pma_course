@@ -68,10 +68,51 @@ After that, it calls the function _sub_100052A2_, which will open the registry k
 The first thing the export _PSLITS_ does is getting the operating system version, then checks the argument, if it is null, it enumerates the processes and stores the result in a file called _xinstall.dll_. It the argument is not null and it is a number, then it will send the information of the PID that matches the argument.
 
 **12. Use the graph mode to graph the cross-references from sub_10004E79. Which API functions could be called by entering this function? Based on the API functions alone, what could you rename this function?**
+
+As we can see in the following picture, by entering this function the API functions that could be called are: _GetSystemDefaultLangID_, _sprintf_, _strlen_, _send_, _malloc_, _free_ and _\_\_imp_str_len_.
+
+![IDA Pro graph view](../Pictures/Lab_05/lab_05-01_12_ida_pro_1.png)
+
+Based on all of the functions called, we can call this function as "Get System Language" or something like this.
+
 **13. How many Windows API functions does DllMain call directly? How many at a depth of 2?**
+
+The function calls that the _DLLMain_ function does directly are: _strncmp_, _\_strnicmp_, _CreateThread_ and _strlen_.
+
+![IDA Pro graph view of DLLMain, depth 1](../Pictures/Lab_05/lab_05-01_13_ida_pro_1.png)
+
+Now, the API calls that the _DLLMain_ does at depth 2 are: _strcpy_, _strncpy_, _memcpy_, _strlen_, _strchr_, _inet_ntoa_, _gethostbyname_, _WinExec_, _Sleep_, _CreateThread_, _inet_addr_, _atoi_, _connect_, _memset_, _ntohs_, _send_, _socket_, _GetTickCount_, _recv_, _CloseHandle_, _WSAStartup_, _GetProcAddress_, _LoadLibrary_ and many more.
+
 **14. At 0x10001358, there is a call to Sleep (an API function that takes one parameter containing the number of milliseconds to sleep). Looking backward through the code, how long will the program sleep if this code executes?**
+
+We can see the following structure in IDA Pro.
+
+![IDA Pro _Sleep_](../Pictures/Lab_05/lab_05-01_14_ida_pro_1.png)
+
+We can see that the offset _off_10019020_ is stored in _EAX_. This offset stores a reference to the offset string _unk_100192AC_, which stores the text "[This is CTI]30" (in our case we have to convert the numeric value since it was recognized by IDA Pro as code).
+
+![IDA Pro _off_10019020_](../Pictures/Lab_05/lab_05-01_14_ida_pro_2.png)
+![IDA Pro _unk_100192AC_](../Pictures/Lab_05/lab_05-01_14_ida_pro_3.png)
+
+After that, we see how the sample adds 0x0D to _EAX_, which is equivalent to shifts the pointer to the 13 position of the array that composes the string. So now eax stores the string value "30". Then is converted with the function _atoi_ and then multiplied by 0x3E8, which is equal to 1000 in decimal notation. Then, the _Sleep_ function is called by loading the value 30000, which is the same as 30 seconds.
+
 **15. At 0x10001701 is a call to socket. What are the three parameters?**
+
+The socket function takes three arguments, the address specification (af), the type and the protocol, in that order (in the code we will se them loaded in the reverse order due to the stack behaviour).
+
+In this case we can see how the function is called using the following values as parameters:
+	- AF: 2 (AF_INET), the IPv4 protocol.
+	- Type: 1 (SOCK_STREAM).
+	- Protocol: 6 (IPPROTO_TCP), the TCP communication protocol.
+
+![IDA Pro _socket_](../Pictures/Lab_05/lab_05-01_15_ida_pro_1.png)
+
 **16. Using the MSDN page for socket and the named symbolic constants functionality in IDA Pro, can you make the parameters more meaningful? What are the parameters after you apply changes?**
+
+We can use the "Standard symbolic constant" functionality to make things clearer.
+
+![IDA Pro _socket_ constants](../Pictures/Lab_05/lab_05-01_16_ida_pro_1.png)
+
 **17. Search for usage of the in instruction (opcode 0xED). This instruction is used with a magic string VMXh to perform VMware detection. Is that in use in this malware? Using the cross-references to the function that executes the in instruction, is there further evidence of VMware detection?**
 **18. Jump your cursor to 0x1001D988. What do you find?**
 **19. If you have the IDA Python plug-in installed (included with the commercial version of IDA Pro), run Lab05-01.py, an IDA Pro Python script provided with the malware for this book. (Make sure the cursor is at 0x1001D988.) What happens after you run the script?**
