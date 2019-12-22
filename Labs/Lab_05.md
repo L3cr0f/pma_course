@@ -46,8 +46,8 @@ The function where this string appears seems to perform a remote shell session o
 
 	```
 	Hi,Master [%d/%d/%d %d:%d:%d]',0Dh,0Ah
-	 'WelCome Back...Are You Enjoying Today?',0Dh,0Ah
-	 0Dh,0Ah
+	'WelCome Back...Are You Enjoying Today?',0Dh,0Ah
+	0Dh,0Ah
 	'Machine UpTime  [%-.2d Days %-.2d Hours %-.2d Minutes %-.2d Secon'
 	'ds]',0Dh,0Ah
 	'Machine IdleTime [%-.2d Days %-.2d Hours %-.2d Minutes %-.2d Seco'
