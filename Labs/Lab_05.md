@@ -21,8 +21,10 @@ In total 5 functions called 9 times the _gethostbyname_ function.
 
 The malware seems to resolve the domain name _pics.praticalmalwareanalysis.com_. In the next pictures we can see how the binary manages the domain name (it cuts the first 13 -0x0D- bytes of string -[This is RDO])
 
-![IDA Pro gethostbyname 1]((../Pictures/Lab_05/lab_05-01_4_ida_pro_1.png)
-![IDA Pro gethostbyname 2]((../Pictures/Lab_05/lab_05-01_4_ida_pro_2.png)
+![IDA Pro gethostbyname 1](../Pictures/Lab_05/lab_05-01_4_ida_pro_1.png)
+
+
+![IDA Pro gethostbyname 2](../Pictures/Lab_05/lab_05-01_4_ida_pro_2.png)
 
 **5. How many local variables has IDA Pro recognized for the subroutine at 0x10001656?**
 
@@ -39,7 +41,9 @@ The string is located at address 0x10095B34 in a region called _xdoors_d_.
 **8. What is happening in the area of code that references \cmd.exe /c?**
 
 The function where this string appears seems to perform a remote shell session opening with some special commands, since we can find several hints that tells so, some of them are:
-	- The string:
+
+- The string:
+
 	```
 	Hi,Master [%d/%d/%d %d:%d:%d]',0Dh,0Ah
 	 'WelCome Back...Are You Enjoying Today?',0Dh,0Ah
@@ -52,8 +56,9 @@ The function where this string appears seems to perform a remote shell session o
 	'Encrypt Magic Number For This Remote Shell Session [0x%02x]',0Dh,0Ah
 	0Dh,0Ah,0
 	```
-	- The use of functions like: CreatePipe, recv, CreateProcess.
-	- The strings related to commands: `inject, idle, uptime, enmagic, language, robotwork`
+
+- The use of functions like: CreatePipe, recv, CreateProcess.
+- The strings related to commands: `inject, idle, uptime, enmagic, language, robotwork`
 
 **9. In the same area, at 0x100101C8, it looks like dword_1008E5C4 is a global variable that helps decide which path to take. How does the malware set dword_1008E5C4? (Hint: Use dword_1008E5C4’s cross-references.)**
 
@@ -92,6 +97,8 @@ We can see the following structure in IDA Pro.
 We can see that the offset _off_10019020_ is stored in _EAX_. This offset stores a reference to the offset string _unk_100192AC_, which stores the text "[This is CTI]30" (in our case we have to convert the numeric value since it was recognized by IDA Pro as code).
 
 ![IDA Pro _off_10019020_](../Pictures/Lab_05/lab_05-01_14_ida_pro_2.png)
+
+
 ![IDA Pro _unk_100192AC_](../Pictures/Lab_05/lab_05-01_14_ida_pro_3.png)
 
 After that, we see how the sample adds 0x0D to _EAX_, which is equivalent to shifts the pointer to the 13 position of the array that composes the string. So now eax stores the string value "30". Then is converted with the function _atoi_ and then multiplied by 0x3E8, which is equal to 1000 in decimal notation. Then, the _Sleep_ function is called by loading the value 30000, which is the same as 30 seconds.
