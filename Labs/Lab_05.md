@@ -1,8 +1,8 @@
-# Lab 5 - IDA Pro
+# Lab 5 - _IDA Pro_
 
 ## Lab 5-1
 
-Analyze the malware found in the file Lab05-01.dll using only IDA Pro. The goal of this lab is to give you hands-on experience with IDA Pro. If you’ve already worked with IDA Pro, you may choose to ignore these questions and focus on reverse-engineering the malware.
+Analyze the malware found in the file Lab05-01.dll using only _IDA Pro_. The goal of this lab is to give you hands-on experience with _IDA Pro_. If you’ve already worked with _IDA Pro_, you may choose to ignore these questions and focus on reverse-engineering the malware.
 
 
 **1. What is the address of DllMain?**
@@ -21,16 +21,16 @@ In total 5 functions called 9 times the _gethostbyname_ function.
 
 The malware seems to resolve the domain name _pics.praticalmalwareanalysis.com_. In the next pictures we can see how the binary manages the domain name (it cuts the first 13 -0x0D- bytes of string -[This is RDO])
 
-![IDA Pro gethostbyname 1](../Pictures/Lab_05/lab_05-01_4_ida_pro_1.png)
+![_IDA Pro_ gethostbyname 1](../Pictures/Lab_05/lab_05-01_4_ida_pro_1.png)
 
 
-![IDA Pro gethostbyname 2](../Pictures/Lab_05/lab_05-01_4_ida_pro_2.png)
+![_IDA Pro_ gethostbyname 2](../Pictures/Lab_05/lab_05-01_4_ida_pro_2.png)
 
-**5. How many local variables has IDA Pro recognized for the subroutine at 0x10001656?**
+**5. How many local variables has _IDA Pro_ recognized for the subroutine at 0x10001656?**
 
-Seems that IDA Pro have recognized a total of 20 variables.
+Seems that _IDA Pro_ have recognized a total of 20 variables.
 
-**6. How many parameters has IDA Pro recognized for the subroutine at 0x10001656?**
+**6. How many parameters has _IDA Pro_ recognized for the subroutine at 0x10001656?**
 
 The number of parameters that this function have is only one.
 
@@ -76,7 +76,7 @@ The first thing the export _PSLITS_ does is getting the operating system version
 
 As we can see in the following picture, by entering this function the API functions that could be called are: _GetSystemDefaultLangID_, _sprintf_, _strlen_, _send_, _malloc_, _free_ and _\_\_imp_str_len_.
 
-![IDA Pro graph view](../Pictures/Lab_05/lab_05-01_12_ida_pro_1.png)
+![_IDA Pro_ graph view](../Pictures/Lab_05/lab_05-01_12_ida_pro_1.png)
 
 Based on all of the functions called, we can call this function as "Get System Language" or something like this.
 
@@ -84,22 +84,22 @@ Based on all of the functions called, we can call this function as "Get System L
 
 The function calls that the _DLLMain_ function does directly are: _strncmp_, _\_strnicmp_, _CreateThread_ and _strlen_.
 
-![IDA Pro graph view of DLLMain, depth 1](../Pictures/Lab_05/lab_05-01_13_ida_pro_1.png)
+![_IDA Pro_ graph view of DLLMain, depth 1](../Pictures/Lab_05/lab_05-01_13_ida_pro_1.png)
 
 Now, the API calls that the _DLLMain_ does at depth 2 are: _strcpy_, _strncpy_, _memcpy_, _strlen_, _strchr_, _inet_ntoa_, _gethostbyname_, _WinExec_, _Sleep_, _CreateThread_, _inet_addr_, _atoi_, _connect_, _memset_, _ntohs_, _send_, _socket_, _GetTickCount_, _recv_, _CloseHandle_, _WSAStartup_, _GetProcAddress_, _LoadLibrary_ and many more.
 
 **14. At 0x10001358, there is a call to Sleep (an API function that takes one parameter containing the number of milliseconds to sleep). Looking backward through the code, how long will the program sleep if this code executes?**
 
-We can see the following structure in IDA Pro.
+We can see the following structure in _IDA Pro_.
 
-![IDA Pro _Sleep_](../Pictures/Lab_05/lab_05-01_14_ida_pro_1.png)
+![_IDA Pro_ _Sleep_](../Pictures/Lab_05/lab_05-01_14_ida_pro_1.png)
 
-We can see that the offset _off_10019020_ is stored in _EAX_. This offset stores a reference to the offset string _unk_100192AC_, which stores the text "[This is CTI]30" (in our case we have to convert the numeric value since it was recognized by IDA Pro as code).
+We can see that the offset _off_10019020_ is stored in _EAX_. This offset stores a reference to the offset string _unk_100192AC_, which stores the text "[This is CTI]30" (in our case we have to convert the numeric value since it was recognized by _IDA Pro_ as code).
 
-![IDA Pro _off_10019020_](../Pictures/Lab_05/lab_05-01_14_ida_pro_2.png)
+![_IDA Pro_ _off_10019020_](../Pictures/Lab_05/lab_05-01_14_ida_pro_2.png)
 
 
-![IDA Pro _unk_100192AC_](../Pictures/Lab_05/lab_05-01_14_ida_pro_3.png)
+![_IDA Pro_ _unk_100192AC_](../Pictures/Lab_05/lab_05-01_14_ida_pro_3.png)
 
 After that, we see how the sample adds 0x0D to _EAX_, which is equivalent to shifts the pointer to the 13 position of the array that composes the string. So now eax stores the string value "30". Then is converted with the function _atoi_ and then multiplied by 0x3E8, which is equal to 1000 in decimal notation. Then, the _Sleep_ function is called by loading the value 30000, which is the same as 30 seconds.
 
@@ -112,16 +112,58 @@ In this case we can see how the function is called using the following values as
 	- Type: 1 (SOCK_STREAM).
 	- Protocol: 6 (IPPROTO_TCP), the TCP communication protocol.
 
-![IDA Pro _socket_](../Pictures/Lab_05/lab_05-01_15_ida_pro_1.png)
+![_IDA Pro_ _socket_](../Pictures/Lab_05/lab_05-01_15_ida_pro_1.png)
 
-**16. Using the MSDN page for socket and the named symbolic constants functionality in IDA Pro, can you make the parameters more meaningful? What are the parameters after you apply changes?**
+**16. Using the MSDN page for socket and the named symbolic constants functionality in _IDA Pro_, can you make the parameters more meaningful? What are the parameters after you apply changes?**
 
 We can use the "Standard symbolic constant" functionality to make things clearer.
 
-![IDA Pro _socket_ constants](../Pictures/Lab_05/lab_05-01_16_ida_pro_1.png)
+![_IDA Pro_ _socket_ constants](../Pictures/Lab_05/lab_05-01_16_ida_pro_1.png)
 
 **17. Search for usage of the in instruction (opcode 0xED). This instruction is used with a magic string VMXh to perform VMware detection. Is that in use in this malware? Using the cross-references to the function that executes the in instruction, is there further evidence of VMware detection?**
+
+To look for the opcode 0xED we go to "Search" and "sequence of bytes..." in _IDA Pro_, then we introduce the value "ED" (without any hexadecimal annotation). After that, we can see many results, but only one that seems interesting at _0x100061DB_:
+
+```
+100061DB                 in      eax, dx
+```
+
+Before that instruction, we can also see the following block of instructions:
+
+```
+.text:100061C7                 mov     eax, 564D5868h
+.text:100061CC                 mov     ebx, 0
+.text:100061D1                 mov     ecx, 0Ah
+.text:100061D6                 mov     edx, 5658h
+.text:100061DB                 in      eax, dx
+.text:100061DC                 cmp     ebx, 564D5868h
+```
+
+Notice that the value _0x564D5868_ means _VMXh_ in ASCII notation (the conversion was made by clicking the key 'R' in _IDA Pro_), the value that we were looking for.
+
 **18. Jump your cursor to 0x1001D988. What do you find?**
-**19. If you have the IDA Python plug-in installed (included with the commercial version of IDA Pro), run Lab05-01.py, an IDA Pro Python script provided with the malware for this book. (Make sure the cursor is at 0x1001D988.) What happens after you run the script?**
+
+At this location we can find an irrelevant block of data.
+
+**19. If you have the IDA Python plug-in installed (included with the commercial version of _IDA Pro_), run Lab05-01.py, an _IDA Pro_ Python script provided with the malware for this book. (Make sure the cursor is at 0x1001D988.) What happens after you run the script?**
+
+After executing the script we can see how the seemly irrelevant block of data were decrypted to something useful, in fact, we can see now the string: "xdoor is this backdoor, string decoded for Practical Malware Analysis Lab".
+
 **20. With the cursor in the same location, how do you turn this data into a single ASCII string?**
+
+We can turn the split string into a single one by pressing the key "A" at the beginning of the string.
+
 **21. Open the script with a text editor. How does it work?**
+
+The executed script is as follows:
+
+```
+sea = ScreenEA()
+
+for i in range(0x00,0x50):
+        b = Byte(sea+i)
+        decoded_byte = b ^ 0x55
+        PatchByte(sea+i,decoded_byte)
+```
+
+As we can see, first of all takes the value of the cursor by the function _ScreenEA_. Then, it goes through all the bytes between the cursor and the next 0x50 bytes and applies a XOR decryption with the value 0x55. Finally, it patches the code by means of the function _PatchByte_.
