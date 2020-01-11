@@ -120,15 +120,41 @@ The main purpose of this malware is gaining persistence in a system, by means of
 
 In this lab, we’ll analyze the malware found in the file Lab06-04.exe.
 
-
 **1. What is the difference between the calls made from the main method in Labs 6-3 and 6-4?**
+
+The main difference between both samples is that the sample _Lab 6-4_ makes a total of 1441 iterations doing what the sample _Lab 6-3_ does.
 
 **2. What new code construct has been added to main?**
 
+The new code construct is a for loop that iterates a total of 1440 times.
+
 **3. What is the difference between this lab’s parse HTML function and those of the previous labs?**
+
+The main and only difference is that the new sample uses the counter of the for loop in the user agent, as follows:
+
+```
+Internet Explorer 7.50/pma + counter
+	||
+	\/
+Internet Explorer 7.50/pma0
+Internet Explorer 7.50/pma1
+Internet Explorer 7.50/pma2
+...
+```
 
 **4. How long will this program run? (Assume that it is connected to the Internet.)**
 
+Since the malware sleeps 60 seconds each iteration and the number of iterations is 1440, we can conclude that the malware will be running at least: 1440 * 60 = 86400 seconds, which in fact is equal to 24 hours or a complete day. This calculation must be taken with a pinch of salt, since if the malware receives the command "e", it will sleep an additional 100 seconds.
+
 **5. Are there any new network-based indicators for this malware?**
 
+The malware has two main network based IOCs, like the other analyzed samples.
+
+```
+User agent: Internet Explorer 7.5/pma + counter
+URL: http://www.practicalmalwareanalysis.com/cc.htm
+```
+
 **6. What is the purpose of this malware?**
+
+The purpose of the malware is downloading every 60 seconds during a whole day (24 hours) commands from _http://www.practicalmalwareanalysis.com/cc.htm_ so as to execute certain tasks like creating directories, copying itself, creating registry values and so on.
