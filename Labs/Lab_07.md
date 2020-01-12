@@ -42,9 +42,87 @@ Analyze the malware found in the file Lab07-02.exe.
 
 **1. How does this program achieve persistence?**
 
+This malware does not seem to have any persistence mechanism.
+
 **2. What is the purpose of this program?**
 
+The first thing the malware does is initializing the _COM_ library so as to perform some actions using the _OleInitialize_ API function. Then, by means of _CoCreateInstance_ API function, loads the CLSID _{0002DF01-0000-0000-C000000000000046}_, which is the one that corresponds to _Internet Explorer_, with the IID _{D30C1661-CDAF-11D0-8A3E00C04FC9E26E}_, which is the _IWebBrowser2_ interface.
+
+```
+rclsid          dd 2DF01h
+				dw 0
+                dw 0
+                db 0C0h, 6 dup(0), 46h
+    ||
+    \/
+
+dd 2DF01h	-> 0002DF01
+dw 0 		-> 0000
+dw 0 		-> 0000
+db 0C0h		-> C0
+db 6 dup(0)	-> 00 00 00 00 00 00
+db 46h			-> 46
+
+    ||
+    \/
+
+CLSID = 0002DF01-0000-0000-C000000000000046 (Internet Explorer)
+```
+![_IDA Pro_, _Internet Explorer_ CLSID](../Pictures/Lab_07/lab_07-02_2_ida_pro_1.png)
+
+```
+riid            dd 0D30C1661h
+                dw 0CDAFh
+                dw 11D0h
+                db 8Ah, 3Eh, 0, 0C0h, 4Fh, 0C9h, 0E2h, 6Eh
+    ||
+    \/
+
+dd 0D30C1661h	-> D30C1661
+dw 0CDAFh		-> CDAF
+dw 11D0h		-> 11D0
+db 8Ah			-> 8A
+db 3Eh			-> 3E
+db 0			-> 00
+db 0C0h			-> C0
+db 4Fh			-> 4F
+db 0C9h			-> C9
+db 0E2h			-> E2
+db 6Eh			-> 6E
+
+    ||
+    \/
+
+IID = D30C1661-CDAF-11D0-8A3E00C04FC9E26E (IWebBrowser2)
+```
+
+![_IDA Pro_, _IWebBrowser2_ IID](../Pictures/Lab_07/lab_07-02_2_ida_pro_2.png)
+
+After that, it loads the URL _http://www.malwareanalysisbook.com/ad.html_, which prior to the name of the downloaded document seems to be an advertisement. The HTTP request performed via the _Internet Explorer COM_ object is done by loading the URL using _SysAllocString_ and then, by a call to the _Navigate_ (_2Ch_) function of that object.
+
+![_IDA Pro_ HTTP request via _Internet Explorer_](../Pictures/Lab_07/lab_07-02_2_ida_pro_3.png)
+
+To know which function the _2Ch_ offset is, we must include a new structure. To do so, first we go to the _Structures_ panel, where we will press the _INSERT_ of our keyboard (_On-Sreen Keyboard_ OSK could be used). Then, we click on _Add standard structure_, which will show us some common structures.
+
+![_IDA Pro_ add structure](../Pictures/Lab_07/lab_07-02_2_ida_pro_4.png)
+
+After that, we select the interface we have previously identified, _IWebBrowser2_, but with the name _IWebBrowser2Vtbl_.
+
+![_IDA Pro_ add _IWebBrowser2_ structure](../Pictures/Lab_07/lab_07-02_2_ida_pro_5.png)
+
+Finally, we right click in the offset _2Ch_ of the program, and select the option "[edx+IWebBrowser2Vtbl.Navigate]" 
+
+![_IDA Pro_ add reference to _IWebBrowser2_ structure](../Pictures/Lab_07/lab_07-02_2_ida_pro_6.png)
+
+The final result will be the following.
+
+![_IDA Pro_ reference to _IWebBrowser2_ structure](../Pictures/Lab_07/lab_07-02_2_ida_pro_7.png)
+
+After poping up the advertisement, the program terminates.
+
 **3. When will this program finish executing?**
+
+The program will run while the user keeps the _Internet Explorer_ process opened.
 
 ## Lab 7-3
 
