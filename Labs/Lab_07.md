@@ -158,7 +158,7 @@ After the malware connects to the CnC, it will start receiving commands. However
 - **sleep**: sleeps for 60 seconds and tries again
 - **exec + arg**: executes the arg via command line and tries again
 - **q**: quits session
-- default option: sleeps for 60 seconds and tries again
+- **default option**: sleeps for 60 seconds and tries again
 
 
 ![_IDA Pro_ commands to execute](../Pictures/Lab_07/lab_07-03_3_ida_pro_2.png)
