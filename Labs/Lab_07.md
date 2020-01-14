@@ -132,9 +132,42 @@ This lab may be a bit more challenging than previous ones. You’ll need to use 
 
 **1. How does this program achieve persistence to ensure that it continues running when the computer is restarted?**
 
+The file _Lab07-03.exe_ seems to map the files _kernel32.dll_ and _Lab07-03.dll_ in memory. However, at the end of the code the malware simply copies the DLL to a new location and name: _C:\windows\system32\kerne132.dll_ (the 'l' has been substituted with a '1'). This is not an exactly persistence method.
+
+
 **2. What are two good host-based signatures for this malware?**
 
+We can see at least two good host-based IOCs:
+
+```
+File: C:\windows\system32\kerne132.dll
+Mutex: SADFHUHF
+```
+
 **3. What is the purpose of this program?**
+
+The core of the malware can be found within the DLL _Lab07-03.dll_. The first thing it does when it is executed is checking if there is a mutex called _SADFHUHF_, if not, it creates one (this is done to avoid multiple instances of the malware running at the same time in the same machine).
+
+After that, we can see how the malware tries to stablish a connection against the IP address _127.26.152.13_.
+
+![_IDA Pro_ IP address connect](../Pictures/Lab_07/lab_07-03_3_ida_pro_1.png)
+
+After the malware connects to the CnC, it will start receiving commands. However, it only understand three possibilities:
+
+```
+sleep: sleeps for 60 seconds and tries again
+exec + arg: executes the arg via command line and tries again
+q: quits session
+default option: sleeps for 60 seconds and tries again
+```
+
+![_IDA Pro_ commands to execute](../Pictures/Lab_07/lab_07-03_3_ida_pro_2.png)
+
+To understand what the 'exec' command executes, we need to reconfigure the _buf_ variable in _IDA Pro_, since it has a size of 512 bytes. After doing so, we can see how the malware takes the arguments of the 'exec' command to execute it via the command line from the received buffer (notice that 'exec' has 4 letters).
+
+![_IDA Pro_ 'exec' command](../Pictures/Lab_07/lab_07-03_3_ida_pro_3.png)
+
+The malware only will terminate when it receives the 'q' command.
 
 **4. How could you remove this malware once it is installed?**
 
