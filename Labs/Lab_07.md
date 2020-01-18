@@ -144,9 +144,17 @@ The next step the malware does is checking if the found file is an executable fi
 
 ![_IDA Pro_ search executable files](../Pictures/Lab_07/lab_07-03_1_ida_pro_3.png)
 
-If it is an executable, then enters in the function located at 0x004010A0. This function creates new file mappings, but in this case using the executable file found by the malware. After some instructions, we see something interesting, the malware looks for the value _kernel32.dll_ and changes it using the string _kerne132.dll_ (the malicious DLL) by means of _rep movsd_ instruction, which is similar to _memcpy_. After that, it exits the function and continues looking for executables in a recursive way
+If it is an executable, then enters in the function located at 0x004010A0. This function creates new file mappings, but in this case using the executable file found by the malware. After some instructions, we see something interesting, the malware looks for the value _kernel32.dll_ and changes it with the _dword_ _dword_403010_, something strange. If we look at this variable, we see a value that it has no sense.
 
-![_IDA Pro_ modify executable](../Pictures/Lab_07/lab_07-03_1_ida_pro_4.png)
+![_IDA Pro_ check variable](../Pictures/Lab_07/lab_07-03_1_ida_pro_4.png)
+
+To solve this we have to convert this data in a string, since _IDA Pro_ has mislabeled it. To do so, we click in the variable and press the key 'a'.
+
+![_IDA Pro_ convert to string](../Pictures/Lab_07/lab_07-03_1_ida_pro_5.png)
+
+Now, we can see how the value _kernel32.dll_ is changed with the string _kerne132.dll_ (the malicious DLL) by means of _rep movsd_ instruction, which is similar to _memcpy_. After that, it exits the function and continues looking for executables in a recursive way.
+
+![_IDA Pro_ modify executable](../Pictures/Lab_07/lab_07-03_1_ida_pro_6.png)
 
 Now, we know the malware will look for all executables in the system and modify them so as to load the malicious _kerne132.dll_ file instead the legit _kernel32.dll_.
 
