@@ -132,8 +132,23 @@ This lab may be a bit more challenging than previous ones. You’ll need to use 
 
 **1. How does this program achieve persistence to ensure that it continues running when the computer is restarted?**
 
-The file _Lab07-03.exe_ seems to map the files _kernel32.dll_ and _Lab07-03.dll_ in memory. However, at the end of the code the malware simply copies the DLL to a new location and name: _C:\windows\system32\kerne132.dll_ (the 'l' has been substituted with a '1'). This is not an exactly persistence method.
+The file _Lab07-03.exe_ maps the files _kernel32.dll_ and _Lab07-03.dll_ in memory to perform some changes on it. However, we will ignore this changes since they seem quite complicated and time consuming to analyze. After doing so, the malware copies the DLL _Lab07-03.dll_ to a new location and name: _C:\windows\system32\kerne132.dll_ (the 'l' has been substituted with a '1'). After that, if the copy has been successful, it enters in one function located at 0x004011E0 with the string parameter "C:\\\*", something that tells us that the function is related with file system operations.
 
+![_IDA Pro_ copy file and call unknown function](../Pictures/Lab_07/lab_07-03_1_ida_pro_1.png)
+
+The first thing the unknown file system function does is listing files by means of _FindFirstFileA_ API call. Then, it checks whether the result is directory or a file. The directory check is done by comparing the structure value _FindFileData.dwFileAttributes_ with the value 0x10, which is the same as _FILE_ATTRIBUTE_DIRECTORY_ constant.
+
+![_IDA Pro_ search files](../Pictures/Lab_07/lab_07-03_1_ida_pro_2.png)
+
+The next step the malware does is checking if the found file is an executable file.
+
+![_IDA Pro_ search executable files](../Pictures/Lab_07/lab_07-03_1_ida_pro_3.png)
+
+If it is an executable, then enters in the function located at 0x004010A0. This function creates new file mappings, but in this case using the executable file found by the malware. After some instructions, we see something interesting, the malware looks for the value _kernel32.dll_ and changes it using the string _kerne132.dll_ (the malicious DLL) by means of _rep movsd_ instruction, which is similar to _memcpy_. After that, it exits the function and continues looking for executables in a recursive way
+
+![_IDA Pro_ modify executable](../Pictures/Lab_07/lab_07-03_1_ida_pro_4.png)
+
+Now, we know the malware will look for all executables in the system and modify them so as to load the malicious _kerne132.dll_ file instead the legit _kernel32.dll_.
 
 **2. What are two good host-based signatures for this malware?**
 
@@ -170,4 +185,6 @@ To understand what the 'exec' command executes, we need to reconfigure the _buf_
 The malware only will terminate when it receives the 'q' command.
 
 **4. How could you remove this malware once it is installed?**
+
+The best way to remove this malware is reinstalling the Operating System, since the malware will modify every single executable.
 
