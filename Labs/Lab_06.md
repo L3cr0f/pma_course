@@ -94,10 +94,10 @@ The new function will use the command provided by the previous function to execu
 
 The different tasks that the malware can carry are according the value of the command are:
 
-- 97 (a): create _C:\Temp_ folder by means of _CreateDirectoryA_ API call.
-- 98 (b): copy the own file in _C:\Temp\cc.exe_ path by means of _CopyFileA_ API call.
-- 99 (c): delete the file _C:\Temp\cc.exe_ by means of _DeleteFileA_ API call.
-- 100 (d): set the registry key value _Software\Microsoft\Windows\CurrentVersion\Run_ with the value _C:\Temp\cc.exe_ and the name _Malware_ so as to gain persistence.
+- 97 (a): create "C:\Temp" folder by means of _CreateDirectoryA_ API call.
+- 98 (b): copy the own file in "C:\Temp\cc.exe" path by means of _CopyFileA_ API call.
+- 99 (c): delete the file "C:\Temp\cc.exe" by means of _DeleteFileA_ API call.
+- 100 (d): set the registry key "Software\Microsoft\Windows\CurrentVersion\Run" with the value "C:\Temp\cc.exe" and the name "Malware" so as to gain persistence.
 - 101 (e): sleep 100 seconds.
 
 ![_IDA Pro_ example command execution](../Pictures/Lab_06/lab_06-03_4_ida_pro_2.png)

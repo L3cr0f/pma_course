@@ -53,7 +53,7 @@ Also, the malware copies itself into the "C:\\Windows\\System32\\" path.
 
 ![_IDA Pro_ copy file](../Pictures/Lab_09/lab_09-01_2_ida_pro_4.png)
 
-Finally, the malware creates the registry key "SOFTWARE\\\\Microsoft \\\\XPS" with the value name "Configuration" and the values "ups", "http://www.practicalmalwareanalysis.com", "80" and "60". These values will be used later by the malware.
+Finally, the malware creates the registry key "SOFTWARE\\\\Microsoft \\\\XPS" with the value name "Configuration" and the values "ups", "http://www.practicalmalwareanalysis.com", "80" and "60". These values will be used later by the malware as configuration.
 
 ![_IDA Pro_ add registry key 1](../Pictures/Lab_09/lab_09-01_2_ida_pro_5.png)
 
@@ -61,9 +61,35 @@ Finally, the malware creates the registry key "SOFTWARE\\\\Microsoft \\\\XPS" wi
 
 **-re (aka: remove)**
 
-**-c (aka: TODO)**
+When the malware receives the command "-re" starts the removal process of the malware.
 
-**-cc (aka: TODO)**
+![_IDA Pro_ removal process](../Pictures/Lab_09/lab_09-01_2_ida_pro_7.png)
+
+Then, the malware will check if the user has provided another argument in the same way of the installation process. After that, the malware will remove the service, the copied file and the registry key.
+
+![_IDA Pro_ remove service](../Pictures/Lab_09/lab_09-01_2_ida_pro_8.png)
+
+![_IDA Pro_ remove file](../Pictures/Lab_09/lab_09-01_2_ida_pro_9.png)
+
+![_IDA Pro_ remove registry key](../Pictures/Lab_09/lab_09-01_2_ida_pro_10.png)
+
+**-c (aka: configuration)**
+
+The sample will change the configuration set in the registry key created during the installation process if it receives de argument "-c".
+
+![_IDA Pro_ modify configuration 1](../Pictures/Lab_09/lab_09-01_2_ida_pro_10.png)
+
+Now, the malware will check if the user has provided 7 commands, which are the filename, the command "-c", the password "abcd" and the configuration parameters, the C&C URL, the numeric values and the last string.
+
+![_IDA Pro_ modify configuration 2](../Pictures/Lab_09/lab_09-01_2_ida_pro_11.png)
+
+**-cc (aka: configuration check)**
+
+The last parameter the malware understands is "-cc", which will order the malware to check their configuration properties and print them.
+
+![_IDA Pro_ check configuration 1](../Pictures/Lab_09/lab_09-01_2_ida_pro_12.png)
+
+![_IDA Pro_ check configuration 1](../Pictures/Lab_09/lab_09-01_2_ida_pro_13.png)
 
 **No arguments**
 
@@ -75,25 +101,56 @@ The malware will wait for the following commands:
 
 - SLEEP: the sample will sleep the time in seconds the C&C has established with the second argument of the command (example: SLEEP 10, will sleep 10 seconds).
 
-![_IDA Pro_ SLEEP command 1](../Pictures/Lab_09/lab_09-01_2_ida_pro_core_1.png)
+![_IDA Pro_ SLEEP command 1](../Pictures/Lab_09/lab_09-01_2_ida_pro_core_2.png)
 
-![_IDA Pro_ SLEEP command 2](../Pictures/Lab_09/lab_09-01_2_ida_pro_core_2.png)
+![_IDA Pro_ SLEEP command 2](../Pictures/Lab_09/lab_09-01_2_ida_pro_core_3.png)
 
-- UPDATE
+- UPLOAD: the binary will upload the file specified in the argument to the C&C.
 
-- DOWNLOAD
+![_IDA Pro_ UPLOAD command 1](../Pictures/Lab_09/lab_09-01_2_ida_pro_core_4.png)
 
-- CMD
+![_IDA Pro_ UPLOAD command 2](../Pictures/Lab_09/lab_09-01_2_ida_pro_core_5.png)
+
+- DOWNLOAD: the malware will download the file specified in the argument to the C&C.
+
+![_IDA Pro_ DOWNLOAD command 1](../Pictures/Lab_09/lab_09-01_2_ida_pro_core_6.png)
+
+![_IDA Pro_ DOWNLOAD command 2](../Pictures/Lab_09/lab_09-01_2_ida_pro_core_7.png)
+
+- CMD: the sample will create a pipe, send a command specified in the arguments and send its result to the C&C.
+
+![_IDA Pro_ CMD command 1](../Pictures/Lab_09/lab_09-01_2_ida_pro_core_8.png)
+
+![_IDA Pro_ CMD command 2](../Pictures/Lab_09/lab_09-01_2_ida_pro_core_9.png)
+
+![_IDA Pro_ CMD command 2](../Pictures/Lab_09/lab_09-01_2_ida_pro_core_10.png)
 
 - NOTHING: the malware will do nothing and wait for the next command.
+
+![_IDA Pro_ NOTHING command](../Pictures/Lab_09/lab_09-01_2_ida_pro_core_11.png)
+
+**Incorrect argument/s**
+
+If the malware does not understand the provided arguments, it will auto-remove itself.
 
 **3. How can you use OllyDbg to permanently patch this malware, so that it doesn’t require the special command-line password?**
 
 **4. What are the host-based indicators of this malware?**
 
+There are several host-based indicators like the service or the configuration registry key created by the malware.
+
+```
+Service: 
+Registry key and value: "SOFTWARE\\Microsoft \\XPS", "Configuration"
+```
+
 **5. What are the different actions this malware can be instructed to take via the network?**
 
+Answered in the second exercise in the "No arguments" section.
+
 **6. Are there any useful network-based signatures for this malware?**
+
+We can see one interesting network-based IOC, the url _http://www.practicalmalwareanalysis.com/_.
 
 # Lab 9-2
 
