@@ -140,7 +140,7 @@ If the malware does not understand the provided arguments, it will auto-remove i
 There are several host-based indicators like the service or the configuration registry key created by the malware.
 
 ```
-Service: 
+Service: "Manager Service"
 Registry key and value: "SOFTWARE\\Microsoft \\XPS", "Configuration"
 ```
 
