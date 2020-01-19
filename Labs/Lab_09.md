@@ -8,19 +8,19 @@ Analyze the malware found in the file Lab09-01.exe using OllyDbg and IDA Pro to 
 
 To run the malware we need to insert at least one argument, after that, the malware will enter to a function that will check if the argument is "abcd".
 
-![_IDA Pro_ check argument 1](../Pictures/Lab_07/lab_09-01_1_ida_pro_1.png)
+![_IDA Pro_ check argument 1](../Pictures/Lab_09/lab_09-01_1_ida_pro_1.png)
 
-![_IDA Pro_ check argument 2](../Pictures/Lab_07/lab_09-01_1_ida_pro_2.png)
+![_IDA Pro_ check argument 2](../Pictures/Lab_09/lab_09-01_1_ida_pro_2.png)
 
-![_IDA Pro_ check argument 3](../Pictures/Lab_07/lab_09-01_1_ida_pro_3.png)
+![_IDA Pro_ check argument 3](../Pictures/Lab_09/lab_09-01_1_ida_pro_3.png)
 
 If check fails, it will auto-remove and terminate.
 
-![_IDA Pro_ auto-remove 1](../Pictures/Lab_07/lab_09-01_1_ida_pro_4.png)
+![_IDA Pro_ auto-remove 1](../Pictures/Lab_09/lab_09-01_1_ida_pro_4.png)
 
-![_IDA Pro_ auto-remove 2](../Pictures/Lab_07/lab_09-01_1_ida_pro_5.png)
+![_IDA Pro_ auto-remove 2](../Pictures/Lab_09/lab_09-01_1_ida_pro_5.png)
 
-![_IDA Pro_ auto-remove 3](../Pictures/Lab_07/lab_09-01_1_ida_pro_6.png)
+![_IDA Pro_ auto-remove 3](../Pictures/Lab_09/lab_09-01_1_ida_pro_6.png)
 
 
 **2. What are the command-line options for this program? What is the password requirement?**
