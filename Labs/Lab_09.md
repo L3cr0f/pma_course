@@ -137,17 +137,17 @@ If the malware does not understand the provided arguments, it will auto-remove i
 
 In this case we are going tot use _Immunity Debugger_ instead of _OllyDbg_. Firstly, we see where the _main_ function is located by means of _IDA Pro_, which tells us that is located at _0x00402AF0_. Now, in _Immunity_ we click on _CTRL+G_ and introduce that value, now, we can see how we are in the main function.
 
-![_Immunity Debugger main_ function](../Pictures/Lab_09/lab_09-03_1_immunity_debugger_1.png)
+![_Immunity Debugger main_ function](../Pictures/Lab_09/lab_09-01_3_immunity_debugger_1.png)
 
 Then, we can start patching the binary so as to remove the password check.
 
 We have to remember that the password check is done only if more than one argument is provided (the first argument is always the binary filename), so we have to edit the code after this check is performed. The easiest way to do so is just modifying the call of the function _check_last_argument_ (0x00402510) by _nop_ instructions (0x90).
 
-![_Immunity Debugger _check_last_argument__ function](../Pictures/Lab_09/lab_09-03_1_immunity_debugger_2.png)
+![_Immunity Debugger _check_last_argument__ function](../Pictures/Lab_09/lab_09-01_3_immunity_debugger_2.png)
 
-![_Immunity Debugger_ edit with _NOPs_](../Pictures/Lab_09/lab_09-03_1_immunity_debugger_3.png)
+![_Immunity Debugger_ edit with _NOPs_](../Pictures/Lab_09/lab_09-01_3_immunity_debugger_3.png)
 
-![_Immunity Debugger_ patched binary](../Pictures/Lab_09/lab_09-03_1_immunity_debugger_4.png)
+![_Immunity Debugger_ patched binary](../Pictures/Lab_09/lab_09-01_3_immunity_debugger_4.png)
 
 This will the malware to accept any word as password, however it will need to have one, since it checks the number of arguments several times.
 
@@ -174,13 +174,74 @@ Analyze the malware found in the file Lab09-02.exe using OllyDbg to answer the f
 
 **1. What strings do you see statically in the binary?**
 
+When we execute the string command we can see a bunch of strings, but no one interesting (there are a many strings related with the imported functions, but no one related with the malware):
+
+```
+C:\> strings Lab09-02.exe
+
+...
+- not enough space for arguments
+R6002
+- floating point not loaded
+Microsoft Visual C++ Runtime Library
+Runtime Error!
+Program:
+...
+<program name unknown>
+GetLastActivePopup
+GetActiveWindow
+MessageBoxA
+user32.dll
+Y6@
+]6@
+WaitForSingleObject
+CreateProcessA
+Sleep
+GetModuleFileNameA
+KERNEL32.dll
+WSASocketA
+WS2_32.dll
+GetCommandLineA
+...
+```
+
+May be the strings are encrypted in some way.
+
 **2. What happens when you run this binary?**
+
+When we run this binary, it does not do anything, may be it needs some kind of parameter/password.
+
+If we run this malware via _Immunity Debugger_ we can see how at the main function the binary compares in a unsuccessfully way its own filename with the string "ocl.exe".
+
+![_Immunity Debugger_ failed string comparison](../Pictures/Lab_09/lab_09-02_2_immunity_debugger_1.png)
+
+In IDA, we can check this easily at the beginning of the binary.
+
+![_IDA Pro_ string comparison](../Pictures/Lab_09/lab_09-02_2_ida_pro_1.png)
+
+Also, it is interesting mentioning this other string, that seems encrypted: 1qaz2wsx3edc.
+
+![_IDA Pro_ encrypted string](../Pictures/Lab_09/lab_09-02_2_ida_pro_2.png)
 
 **3. How can you get this sample to run its malicious payload?**
 
+We can run this sample by modifying the filename to _ocl.exe_. Also we can patch the binary by means of _Immunity Debugger_ at address _0x00401236_ with the following instruction:
+
+```
+mov eax, 0  -> B8 00 00 00 00
+```
+
+![_Immunity Debugger_ edit instruction](../Pictures/Lab_09/lab_09-02_2_immunity_debugger_2.png)
+
+![_Immunity Debugger_ patched binary](../Pictures/Lab_09/lab_09-02_2_immunity_debugger_3.png)
+
 **4. What is happening at 0x00401133?**
 
+A new variable is being defined, in this case an encrypted one as stated previously at point 2. The string value is "1qaz2wsx3edc".
+
 **5. What arguments are being passed to subroutine 0x00401089?**
+
+
 
 **6. What domain name does this malware use?**
 
