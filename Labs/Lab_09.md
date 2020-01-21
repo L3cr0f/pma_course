@@ -135,6 +135,22 @@ If the malware does not understand the provided arguments, it will auto-remove i
 
 **3. How can you use OllyDbg to permanently patch this malware, so that it doesn’t require the special command-line password?**
 
+In this case we are going tot use _Immunity Debugger_ instead of _OllyDbg_. Firstly, we see where the _main_ function is located by means of _IDA Pro_, which tells us that is located at _0x00402AF0_. Now, in _Immunity_ we click on _CTRL+G_ and introduce that value, now, we can see how we are in the main function.
+
+![_Immunity Debugger main_ function](../Pictures/Lab_09/lab_09-03_1_immunity_debugger_1.png)
+
+Then, we can start patching the binary so as to remove the password check.
+
+We have to remember that the password check is done only if more than one argument is provided (the first argument is always the binary filename), so we have to edit the code after this check is performed. The easiest way to do so is just modifying the call of the function _check_last_argument_ (0x00402510) by _nop_ instructions (0x90).
+
+![_Immunity Debugger _check_last_argument__ function](../Pictures/Lab_09/lab_09-03_1_immunity_debugger_2.png)
+
+![_Immunity Debugger_ edit with _NOPs_](../Pictures/Lab_09/lab_09-03_1_immunity_debugger_3.png)
+
+![_Immunity Debugger_ patched binary](../Pictures/Lab_09/lab_09-03_1_immunity_debugger_4.png)
+
+This will the malware to accept any word as password, however it will need to have one, since it checks the number of arguments several times.
+
 **4. What are the host-based indicators of this malware?**
 
 There are several host-based indicators like the service or the configuration registry key created by the malware.
