@@ -219,7 +219,7 @@ In IDA, we can check this easily at the beginning of the binary.
 
 ![_IDA Pro_ string comparison](../Pictures/Lab_09/lab_09-02_2_ida_pro_1.png)
 
-Also, it is interesting mentioning this other string, that seems encrypted: 1qaz2wsx3edc.
+Also, it is interesting mentioning this other string, that seems encrypted or a kind of key: 1qaz2wsx3edc.
 
 ![_IDA Pro_ encrypted string](../Pictures/Lab_09/lab_09-02_2_ida_pro_2.png)
 
@@ -241,9 +241,45 @@ A new variable is being defined, in this case an encrypted one as stated previou
 
 **5. What arguments are being passed to subroutine 0x00401089?**
 
-
+Two arguments are passed to the subroutine _0x00401089_. These arguments seems to be the deencryption key "1qaz2wsx3edc" (which seems to be the hostname of the C&C) as _arg_0_ and the encrypted string as _arg_1_.
 
 **6. What domain name does this malware use?**
+
+We can do two things so as to decrypt the string, the first one is by static means, which is much more difficult, the second one is by dynamic means such as debugging or capturing the requests by means of _ApateDNS_, which is far more easy. We are going to do the both of them.
+
+**Static analysis**
+
+The first thing we do is taking a look at the decryption routine so as to know how the algorithm works.
+
+![_IDA Pro_ decryption routine](../Pictures/Lab_09/lab_09-02_6_ida_pro_1.png)
+
+As we can see, the decryption routine consist of a _XOR_ operation between _ECX_ and _EDX_ over a 32 length string. Now, we have to understand where this registers are populated.
+
+```
+mov     edx, [ebp+encrypted_string]				-> EDX = array of values that make up the encrypted_string = encrypted_string [0]
+add     edx, [ebp+counter]						-> EDX = walks over the array = encrypted_string [0 + counter] 
+movsx   ecx, byte ptr [edx]						-> ECX = specific value of the array at the value of the counter = encrypted_string [counter]
+mov     eax, [ebp+counter]						-> EAX = counter
+cdq												-> EDX = 0x00000000 (extends the sign bit of EAX into the EDX register), counter max value = 0x20 = 32
+idiv    [ebp+strlen_of_encrypted_string]		-> [EAX|EBX] / strlen_of_encrypted_string -> EAX = result, EDX = reminder 
+mov     eax, [ebp+decryption_key]				-> EAX = decryption_key[0]
+movsx   edx, byte ptr [eax+edx]					-> EDX = decryption_key[0 + reminder]
+xor     ecx, edx								-> ECX ^ EDX = encrypted_string [counter] ^ decryption_key[0 + reminder]
+mov     eax, [ebp+counter]						-> EAX = counter
+mov     byte ptr [ebp+eax+decrypted_string], cl -> decrypted_string [counter] = CL (result of XOR operation)
+```
+
+Then, we need the value of the arrays of the _encrypted_string_ and the _decryption_key_.
+
+```
+decryption_key = [1, q, a, z, 2, w, s, x, 3, e, d, c]
+encrypted_string = [0x46, 0x6, 0x16, 0x54, 0x42, 0x5, 0x12, 0x1B, 0x47, 0x0C, 0x7, 0x2, 0x5D, 0x1C, 0x0, 0x16, 0x45, 0x16, 0x1, 0x1D, 0x52, 0x0B, 0x5, 0x0F, 0x48, 0x2, 0x8, 0x9, 0x1C, 0x14, 0x1C, 0x15]
+```
+
+Now that we understand the algorithm and know the arrays, it's time to write a python script that dec
+
+**Dynamic analysis**
+
 
 **7. What encoding routine is being used to obfuscate the domain name?**
 
