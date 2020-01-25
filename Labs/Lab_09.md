@@ -256,29 +256,58 @@ The first thing we do is taking a look at the decryption routine so as to know h
 As we can see, the decryption routine consist of a _XOR_ operation between _ECX_ and _EDX_ over a 32 length string. Now, we have to understand where this registers are populated.
 
 ```
-mov     edx, [ebp+encrypted_string]				-> EDX = array of values that make up the encrypted_string = encrypted_string [0]
-add     edx, [ebp+counter]						-> EDX = walks over the array = encrypted_string [0 + counter] 
-movsx   ecx, byte ptr [edx]						-> ECX = specific value of the array at the value of the counter = encrypted_string [counter]
-mov     eax, [ebp+counter]						-> EAX = counter
-cdq												-> EDX = 0x00000000 (extends the sign bit of EAX into the EDX register), counter max value = 0x20 = 32
-idiv    [ebp+strlen_of_encrypted_string]		-> [EAX|EBX] / strlen_of_encrypted_string -> EAX = result, EDX = reminder 
-mov     eax, [ebp+decryption_key]				-> EAX = decryption_key[0]
-movsx   edx, byte ptr [eax+edx]					-> EDX = decryption_key[0 + reminder]
-xor     ecx, edx								-> ECX ^ EDX = encrypted_string [counter] ^ decryption_key[0 + reminder]
-mov     eax, [ebp+counter]						-> EAX = counter
+mov     edx, [ebp+encrypted_string]		-> EDX = array of values that make up the encrypted_string = encrypted_string [0]
+add     edx, [ebp+counter]			-> EDX = walks over the array = encrypted_string [0 + counter] 
+movsx   ecx, byte ptr [edx]			-> ECX = specific value of the array at the value of the counter = encrypted_string [counter]
+mov     eax, [ebp+counter]			-> EAX = counter
+cdq						-> EDX = 0x00000000 (extends the sign bit of EAX into the EDX register), counter max value = 0x20 = 32
+idiv    [ebp+strlen_of_encrypted_string]	-> [EDX|EAX] / strlen_of_decryption_key -> EAX = result, EDX = reminder 
+mov     eax, [ebp+decryption_key]		-> EAX = decryption_key[0]
+movsx   edx, byte ptr [eax+edx]			-> EDX = decryption_key[0 + reminder]
+xor     ecx, edx				-> ECX ^ EDX = encrypted_string [counter] ^ decryption_key[0 + reminder]
+mov     eax, [ebp+counter]			-> EAX = counter
 mov     byte ptr [ebp+eax+decrypted_string], cl -> decrypted_string [counter] = CL (result of XOR operation)
 ```
 
 Then, we need the value of the arrays of the _encrypted_string_ and the _decryption_key_.
 
 ```
-decryption_key = [1, q, a, z, 2, w, s, x, 3, e, d, c]
 encrypted_string = [0x46, 0x6, 0x16, 0x54, 0x42, 0x5, 0x12, 0x1B, 0x47, 0x0C, 0x7, 0x2, 0x5D, 0x1C, 0x0, 0x16, 0x45, 0x16, 0x1, 0x1D, 0x52, 0x0B, 0x5, 0x0F, 0x48, 0x2, 0x8, 0x9, 0x1C, 0x14, 0x1C, 0x15]
+decryption_key = [1, q, a, z, 2, w, s, x, 3, e, d, c]
 ```
 
-Now that we understand the algorithm and know the arrays, it's time to write a python script that dec
+Now that we understand the algorithm and know the arrays, it's time to write a python script that decrypts the hostname:
+
+```
+encrypted_string = bytearray([0x46, 0x6, 0x16, 0x54, 0x42, 0x5, 0x12, 0x1B, 0x47, 0x0C, 0x7, 0x2, 0x5D, 0x1C, 0x0, 0x16, 0x45, 0x16, 0x1, 0x1D, 0x52, 0x0B, 0x5, 0x0F, 0x48, 0x2, 0x8, 0x9, 0x1C, 0x14, 0x1C, 0x15])
+decryption_key = ["1", "q", "a", "z", "2", "w", "s", "x", "3", "e", "d", "c"]
+
+decrypted_string = ""
+
+for counter in range(len(encrypted_string)):
+	encrypted_char = encrypted_string[counter]
+	reminder = counter % len(decryption_key)
+	xor_key = decryption_key[reminder]
+	decrypted_string = decrypted_string + chr(encrypted_char ^ ord(xor_key))
+
+print("The decrypted string is: " + decrypted_string)
+```
+
+Let's execute it and see what we get:
+
+```
+$ python3 Scripts/Others/lab_09_2_decryption_hostname.py 
+
+The decrypted string is: www.practicalmalwareanalysis.com
+```
+
+Great! We have obtained the hostname of the C&C, **www.practicalmalwareanalysis.com**
 
 **Dynamic analysis**
+
+The dynamic analysis will be divided in two parts, in the first one we are going to use _Immunity Debugger_ so as to perform the analysis, and in the second one we are going to use _ApateDNS_.
+
+_Immunity Debugger_
 
 
 **7. What encoding routine is being used to obfuscate the domain name?**

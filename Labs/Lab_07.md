@@ -61,7 +61,7 @@ dw 0 		-> 0000
 dw 0 		-> 0000
 db 0C0h		-> C0
 db 6 dup(0)	-> 00 00 00 00 00 00
-db 46h			-> 46
+db 46h		-> 46
 
     ||
     \/
@@ -79,16 +79,16 @@ riid            dd 0D30C1661h
     \/
 
 dd 0D30C1661h	-> D30C1661
-dw 0CDAFh		-> CDAF
-dw 11D0h		-> 11D0
-db 8Ah			-> 8A
-db 3Eh			-> 3E
-db 0			-> 00
-db 0C0h			-> C0
-db 4Fh			-> 4F
-db 0C9h			-> C9
-db 0E2h			-> E2
-db 6Eh			-> 6E
+dw 0CDAFh	-> CDAF
+dw 11D0h	-> 11D0
+db 8Ah		-> 8A
+db 3Eh		-> 3E
+db 0		-> 00
+db 0C0h		-> C0
+db 4Fh		-> 4F
+db 0C9h		-> C9
+db 0E2h		-> E2
+db 6Eh		-> 6E
 
     ||
     \/

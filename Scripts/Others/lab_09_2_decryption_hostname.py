@@ -1,0 +1,12 @@
+encrypted_string = bytearray([0x46, 0x6, 0x16, 0x54, 0x42, 0x5, 0x12, 0x1B, 0x47, 0x0C, 0x7, 0x2, 0x5D, 0x1C, 0x0, 0x16, 0x45, 0x16, 0x1, 0x1D, 0x52, 0x0B, 0x5, 0x0F, 0x48, 0x2, 0x8, 0x9, 0x1C, 0x14, 0x1C, 0x15])
+decryption_key = ["1", "q", "a", "z", "2", "w", "s", "x", "3", "e", "d", "c"]
+
+decrypted_string = ""
+
+for counter in range(len(encrypted_string)):
+	encrypted_char = encrypted_string[counter]
+	reminder = counter % len(decryption_key)
+	xor_key = decryption_key[reminder]
+	decrypted_string = decrypted_string + chr(encrypted_char ^ ord(xor_key))
+
+print("The decrypted string is: " + decrypted_string)
