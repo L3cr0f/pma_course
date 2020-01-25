@@ -168,7 +168,7 @@ Answered in the second exercise in the "No arguments" section.
 
 We can see one interesting network-based IOC, the url _http://www.practicalmalwareanalysis.com/_.
 
-# Lab 9-2
+## Lab 9-2
 
 Analyze the malware found in the file Lab09-02.exe using OllyDbg to answer the following questions.
 
