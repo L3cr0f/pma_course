@@ -221,7 +221,7 @@ In IDA, we can check this easily at the beginning of the binary.
 
 Also, it is interesting mentioning this other string, that seems encrypted or a kind of key: 1qaz2wsx3edc.
 
-![_IDA Pro_ encrypted string](../Pictures/Lab_09/lab_09-02_2_ida_pro_2.png)
+![_IDA Pro_ encrypted/key string](../Pictures/Lab_09/lab_09-02_2_ida_pro_2.png)
 
 **3. How can you get this sample to run its malicious payload?**
 
@@ -237,7 +237,7 @@ mov eax, 0  -> B8 00 00 00 00
 
 **4. What is happening at 0x00401133?**
 
-A new variable is being defined, in this case an encrypted one as stated previously at point 2. The string value is "1qaz2wsx3edc".
+A new variable is being defined, in this case an encrypted one or a key as stated previously at point 2. The string value is "1qaz2wsx3edc".
 
 **5. What arguments are being passed to subroutine 0x00401089?**
 
@@ -309,10 +309,33 @@ The dynamic analysis will be divided in two parts, in the first one we are going
 
 _Immunity Debugger_
 
+First of all, we get where the decryption routine takes place with _IDA Pro_, at _0x004012BD_. Let's put a breakpoint there and see what happens when it runs (remember that the program must be renamed to _ocl.exe_ so as to run).
+
+![_Immunity Debugger_ decryption routine breakpoint](../Pictures/Lab_09/lab_09-02_6_immunity_debugger_1.png)
+
+When we run the binary we see that it decrypts the hostname as expected.
+
+![_Immunity Debugger_ decrypted hostname](../Pictures/Lab_09/lab_09-02_6_immunity_debugger_2.png)
+
+_ApateDNS_
+
+First, we need to set up _ApateDNS_ so as to capture the DNS requests of the malware.
+
+![_ApateDNS_ set up](../Pictures/Lab_09/lab_09-02_6_apatedns_1.png)
+
+After that, we simply execute the binary so as to start capturing its DNS requests.
+
+![_ApateDNS_ capturing DNS requests](../Pictures/Lab_09/lab_09-02_6_apatedns_2.png)
 
 **7. What encoding routine is being used to obfuscate the domain name?**
 
+The encoding used by the malware is known as _XOR_.
+
 **8. What is the significance of the CreateProcessA call at 0x0040106E?**
+
+It creates a _CMD_ process piped over the previously created socket that it is connected to the C&C.
+
+![_IDA Pro_ create _CMD_ process through socket](../Pictures/Lab_09/lab_09-02_8_ida_pro_1.png)
 
 ## Lab 9-3
 
