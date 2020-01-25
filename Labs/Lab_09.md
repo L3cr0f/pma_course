@@ -313,7 +313,7 @@ First of all, we get where the decryption routine takes place with _IDA Pro_, at
 
 ![_Immunity Debugger_ decryption routine breakpoint](../Pictures/Lab_09/lab_09-02_6_immunity_debugger_1.png)
 
-When we run the binary we see that it decrypts the hostname as expected.
+When we _step-over_ (F8) in the binary, we see how it decrypts the hostname as expected.
 
 ![_Immunity Debugger_ decrypted hostname](../Pictures/Lab_09/lab_09-02_6_immunity_debugger_2.png)
 
@@ -337,8 +337,7 @@ It creates a _CMD_ process piped over the previously created socket that it is c
 
 ![_IDA Pro_ create _CMD_ process through socket](../Pictures/Lab_09/lab_09-02_8_ida_pro_1.png)
 
-
-## Lab 9-3
+## Lab 9-3
 
 Analyze the malware found in the file Lab09-03.exe using OllyDbg and IDA Pro. This malware loads three included DLLs (DLL1.dll, DLL2.dll, and DLL3.dll) that are all built to request the same memory load location. Therefore, when viewing these DLLs in OllyDbg versus IDA Pro, code may appear at different memory locations. The purpose of this lab is to make you comfortable with finding the correct location of code within IDA Pro when you are looking at code in OllyDbg.
 
