@@ -1,3 +1,3 @@
-# Lab-2 - Malware ANalysis in Virtual Machines
+# Lab-2 - Malware Analysis in Virtual Machines
 
 Sin ejercicios
