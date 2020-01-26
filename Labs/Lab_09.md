@@ -403,9 +403,25 @@ Finally, when the binary is executed, the _temp.txt_ appears in the same path of
 
 **6. When Lab09-03.exe creates a job using NetScheduleJobAdd, where does it get the data for the second parameter?**
 
-The second parameter that _NetScheduleJobAdd_ needs, it is obtained from _DLL3_ _DLL3GetStructure_ function as we can see in the following screenshot.
+The second parameter, called _buffer_ (it is a pointer to an _AT_INFO_ structure), that _NetScheduleJobAdd_ needs, it is obtained from _DLL3_ _DLL3GetStructure_ function as we can see in the following screenshot.
 
 ![_IDA Pro_ second parameter of _NetScheduleJobAdd_](../Pictures/Lab_09/lab_09-03_6_ida_pro_1.png)
+
+Also, this parameter is set up in _DLL3_ as an _AT_INFO_ structure. However, _IDA Pro_ does not know that is this kind of structure, we have to specify it.
+
+First, in the _Structures_ tab we insert a new structure called _AT_INFO_.
+
+![_IDA Pro_ adding _AT_INFO_ structure](../Pictures/Lab_09/lab_09-03_6_ida_pro_2.png)
+
+After that, we select the structure defined as global variable (_dword_1000B0A0_) and click on "Edit -> Structs -> Struct var..." and select the _AT_INFO_ structure we have previously included.
+
+![_IDA Pro_ create structure](../Pictures/Lab_09/lab_09-03_6_ida_pro_3.png)
+
+![_IDA Pro_ select _AT_INFO_ structure](../Pictures/Lab_09/lab_09-03_6_ida_pro_4.png)
+
+Now, we can see the values of the struct.
+
+![_IDA Pro AT_INFO_ structure](../Pictures/Lab_09/lab_09-03_6_ida_pro_5.png)
 
 **7. While running or debugging the program, you will see that it prints out three pieces of mystery data. What are the following: DLL 1 mystery data 1, DLL 2 mystery data 2, and DLL 3 mystery data 3?**
 
