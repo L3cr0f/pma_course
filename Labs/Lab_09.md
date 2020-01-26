@@ -343,17 +343,128 @@ Analyze the malware found in the file Lab09-03.exe using OllyDbg and IDA Pro. Th
 
 **1. What DLLs are imported by Lab09-03.exe?**
 
+The binary _Lab09-03.exe_ imports several _DLLs_, some of them does not belong to _WINAPI_. In the following list are listed the _DLLs_ that appears in the imports section of the binary.
+
+```
+DLL1
+DLL2
+KERNEL32
+NETAPI32
+```
+
+Also, if we take a look to the binary in _IDA Pro_, we can see how imports another _DLL_, called _DLL3_, in a dynamic way.
+
+![_IDA Pro_ dynamically _DLL_ import](../Pictures/Lab_09/lab_09-03_1_ida_pro_1.png)
+
 **2. What is the base address requested by DLL1.dll, DLL2.dll, and DLL3.dll?**
+
+All _DLLs_ requests the same base address (located at _IMAGE_OPTIONAL_HEADER_), _0x10000000_.
+
+![_PEview DLL_ base address](../Pictures/Lab_09/lab_09-03_2_peview_1.png)
 
 **3. When you use OllyDbg to debug Lab09-03.exe, what is the assigned based address for: DLL1.dll, 
 DLL2.dll, and DLL3.dll?**
 
+When we load the binary in _Immunity Debugger_ we can see in the memory view where the _DLLs_ has been loaded. As we can see in the next image, the _DLL1_ has been loaded at its preferred base address. Nevertheless, the _DLL2_ was loaded at _0x00380000_, since at its preferred base address was loaded the _DLL1_.
+
+![_Immunity Debugger_ memory map of _DLL1_ and _DLL2_](../Pictures/Lab_09/lab_09-03_3_immunity_debugger_1.png)
+
+The _DLL3_ was not loaded yet, since the binary loads it in a dynamic way. To know where the _DLL_ is loaded, we need to execute the part of the binary where _DLL3_ is loaded.
+
+![_Immunity Debugger DLL3_ loaded](../Pictures/Lab_09/lab_09-03_3_immunity_debugger_2.png)
+
+After that, we can check in the memroy view where _DLL3_ was loaded.
+
+![_Immunity Debugger DLL3_ memory map](../Pictures/Lab_09/lab_09-03_3_immunity_debugger_3.png)
+
+As we can see, it was loaded at _0x003E0000_.
+
 **4. When Lab09-03.exe calls an import function from DLL1.dll, what does this import function do?**
+
+When the binary calls the function from _DLL1.dll_ it prints out the data "DLL 1 mystery data 452". The value seems to be the process ID of the binary that loads the _DLL_.
+
+![_Process Explorer_ process _PID_](../Pictures/Lab_09/lab_09-03_4_process_explorer_1.png)
+
+Also, it is something that we can see in _IDA Pro_, in the _DLLMain_ routine of _DLL1_.
+
+![_IDA Pro_ process _PID_](../Pictures/Lab_09/lab_09-03_4_ida_pro_1.png)
 
 **5. When Lab09-03.exe calls WriteFile, what is the filename it writes to?**
 
+The filename is located in the same directory of the binary and it is called _temp.txt_. This can be checked by means of _IDA Pro_ in the _DLLMain_ routine of _DLL2_.
+
+![_IDA Pro_ temporal file](../Pictures/Lab_09/lab_09-03_5_ida_pro_1.png)
+
+Also, we can check so in _Immunity Debugger_ (notice the memory changes from _IDA Pro_, from _0x1000101A_ to _0x0038101A_).
+
+![_Immunity Debugger_ temporal file](../Pictures/Lab_09/lab_09-03_5_immunity_debugger_1.png)
+
+Finally, when the binary is executed, the _temp.txt_ appears in the same path of the binary.
+
 **6. When Lab09-03.exe creates a job using NetScheduleJobAdd, where does it get the data for the second parameter?**
+
+The second parameter that _NetScheduleJobAdd_ needs, it is obtained from _DLL3_ _DLL3GetStructure_ function as we can see in the following screenshot.
+
+![_IDA Pro_ second parameter of _NetScheduleJobAdd_](../Pictures/Lab_09/lab_09-03_6_ida_pro_1.png)
 
 **7. While running or debugging the program, you will see that it prints out three pieces of mystery data. What are the following: DLL 1 mystery data 1, DLL 2 mystery data 2, and DLL 3 mystery data 3?**
 
+The data printed by the loaded _DLLs_ are the following:
+
+- DLL1
+
+It corresponds with PID of the current process as stated in the point 3 of 9-3.
+
+- DLL2
+
+It is the handler ID of the written file as we can see in the following image.
+
+![_IDA Pro_ mystery data of _DLL2_ 1](../Pictures/Lab_09/lab_09-03_7_ida_pro_1.png)
+
+![_IDA Pro_ mystery data of _DLL2_ 2](../Pictures/Lab_09/lab_09-03_7_ida_pro_2.png)
+
+- DLL3
+
+To know what the value means, we need to go where is it set, to do so we use _IDA Pro_, which tells us that it is done at _0x10001000_, however, since the _DLL_ was rebased, we need to adjust the address. After doing so, we will have the address _0x003E1000_. However, to set a breakpoint we need to load the _DLL_ first, but if we do so, it will execute what we want to analyze. To overcome this _Immunity Debugger_ have an option that forces the binary to stop at every _DLL_ loaded (Options -> Debugging Options -> Events).
+
+![_Immunity Debugger_ break on new module (DLL)](../Pictures/Lab_09/lab_09-03_6_immunity_debugger_1.png)
+
+Now, we can go where the variable is set.
+
+![_Immunity Debugger_ mystery data of _DLL3_](../Pictures/Lab_09/lab_09-03_6_immunity_debugger_2.png)
+
+After the function _MultiByteToWideChar_ is executed, the variable we are analyzing has the unciode value of "ping www.malwareanalysisbook.com" as we can see.
+
+![_Immunity Debugger_ value of mystery data of _DLL3_](../Pictures/Lab_09/lab_09-03_6_immunity_debugger_3.png)
+
+However, if we execute the binary, it prints out the value _4108480_. We need to go deeper and analyze also when the variable is printed by the _DLL_.
+
+The address of the _print_ routine is _0x10001070_ according to _IDA Pro_, but with the rebase applied is _0x003E1070_
+
+![_Immunity Debugger_ stack value of mystery data of _DLL3_ when printed out](../Pictures/Lab_09/lab_09-03_6_immunity_debugger_4.png)
+
+As we can see, the value is the same, the unicode value of the string "ping www.malwareanalysisbook.com", however, it printed out the value _4108480_.
+
+![_CMD_ value of mystery data of _DLL3_ when printed out](../Pictures/Lab_09/lab_09-03_6_cmd_1.png)
+
+It seems that this value is the memort location where the variable points out.
+
 **8. How can you load DLL2.dll into IDA Pro so that it matches the load address used by OllyDbg?**
+
+To rebase the addresses of _DLL2_ in _IDA Pro_ we need to go to "Edit -> Segments -> Rebase" and set the address of the _DLLMain_ in _Immunity Debugger_, _0x00381000_.
+
+![_IDA Pro_ rebasing _DLL2_ 1](../Pictures/Lab_09/lab_09-03_8_ida_pro_1.png)
+
+![_IDA Pro_ rebasing _DLL2_ 2](../Pictures/Lab_09/lab_09-03_8_ida_pro_2.png)
+
+After doing so, we check how the program was successfully rebased.
+
+![_IDA Pro_ _DLL2_ rebased](../Pictures/Lab_09/lab_09-03_8_ida_pro_3.png)
+
+Another way to do so is selecting the option _Manual load_ when the binary is loaded in _IDA Pro_.
+
+![_IDA Pro_ manual load of _DLL2_ 1](../Pictures/Lab_09/lab_09-03_8_ida_pro_4.png)
+
+![_IDA Pro_ manual load of _DLL2_ 2](../Pictures/Lab_09/lab_09-03_8_ida_pro_5.png)
+
+Now, the binary was loaded at address we saw in _Immunity Debugger_.
