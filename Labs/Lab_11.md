@@ -219,12 +219,153 @@ Analyze the malware found in Lab11-03.exe and Lab11-03.dll. Make sure that both 
 
 **1. What interesting analysis leads can you discover using basic static analysis?**
 
+Using _PEView_ we can see some interesting things about the binary _Lab11-03.dll_, like the functions it uses. Also, regarding _Lab11-03.exe_, we only see that it uses 
+
+```
+C:\> python get_file_imports.py Lab11-03.dll
+
+======================
+KERNEL32.dll
+======================
+InitializeCriticalSection
+DeleteCriticalSection
+EnterCriticalSection
+LeaveCriticalSection
+GetCPInfo
+GetACP
+GetOEMCP
+GetCurrentThreadId
+TlsSetValue
+TlsAlloc
+TlsFree
+TlsGetValue
+HeapDestroy
+HeapCreate
+VirtualFree
+HeapFree
+HeapAlloc
+VirtualAlloc
+HeapReAlloc
+GetProcAddress
+LoadLibraryA
+======================
+USER32.dll
+======================
+GetForegroundWindow
+GetWindowTextA
+GetAsyncKeyState
+```
+
+As we can see, there's a lot of functions that are related with memory manipulation, dynamic library load and keylogging capabilities (some imports have been ommited).
+
+Also, the _DLL_ has one export that should be taking in mind.
+
+```
+C:\> python get_file_exports.py Lab11-03.dll
+
+######################
+EXPORTS
+######################
+zzz69806582
+```
+
+Regarding the strings of each binary, there some interesting ones in both of them.
+
+```
+C:\> strings Lab11-03.exe
+
+C:\WINDOWS\System32\inet_epar32.dll
+zzz69806582
+.text
+net start cisvc
+C:\WINDOWS\System32\%s
+cisvc.exe
+Lab11-03.dll
+C:\WINDOWS\System32\inet_epar32.dll
+```
+
+As we can see, the executable file seems to create one service called _cisvc_, may be it is also the name of the copy of the binary. Also, it does something with the _DLL_ file, which may be is copied with the name _inet_epar32.dll_ to the "C:\Windows\System32\" path.
+
+```
+C:\> strings Lab11-03.dll
+
+<SHIFT>
+%s: %s
+C:\WINDOWS\System32\kernel64x.dll
+```
+
+The string _<SHIFT>_ seems to reference the keylogging capabilitites of the malware described above. Also, the file _kernel64x.dll_ could be a copy the _DLL_ to "C:\Windows\System32\". This is something we will have to check.
+
 **2. What happens when you run this malware?**
+
+When the malware executes, it will perform some changes to the system as _Regshot_ has recorded. First of all, it will create the following registry keys:
+
+```
+HKLM\SYSTEM\ControlSet001\Enum\Root\LEGACY_CISVC\0000\Control\*NewlyCreated*: 0x00000000
+HKLM\SYSTEM\ControlSet001\Enum\Root\LEGACY_CISVC\0000\Control\ActiveService: "CiSvc"
+HKLM\SYSTEM\ControlSet001\Enum\Root\LEGACY_CISVC\0000\Service: "CiSvc"
+HKLM\SYSTEM\ControlSet001\Enum\Root\LEGACY_CISVC\0000\Legacy: 0x00000001
+HKLM\SYSTEM\ControlSet001\Enum\Root\LEGACY_CISVC\0000\ConfigFlags: 0x00000000
+HKLM\SYSTEM\ControlSet001\Enum\Root\LEGACY_CISVC\0000\Class: "LegacyDriver"
+HKLM\SYSTEM\ControlSet001\Enum\Root\LEGACY_CISVC\0000\ClassGUID: "{8ECC055D-047F-11D1-A537-0000F8753ED1}"
+HKLM\SYSTEM\ControlSet001\Enum\Root\LEGACY_CISVC\0000\DeviceDesc: "Servicio de Index Server"
+HKLM\SYSTEM\ControlSet001\Enum\Root\LEGACY_CISVC\NextInstance: 0x00000001
+HKLM\SYSTEM\ControlSet001\Services\CiSvc\Enum\0: "Root\LEGACY_CISVC\0000"
+HKLM\SYSTEM\ControlSet001\Services\CiSvc\Enum\Count: 0x00000001
+HKLM\SYSTEM\ControlSet001\Services\CiSvc\Enum\NextInstance: 0x00000001
+HKLM\SYSTEM\CurrentControlSet\Enum\Root\LEGACY_CISVC\0000\Control\*NewlyCreated*: 0x00000000
+HKLM\SYSTEM\CurrentControlSet\Enum\Root\LEGACY_CISVC\0000\Control\ActiveService: "CiSvc"
+HKLM\SYSTEM\CurrentControlSet\Enum\Root\LEGACY_CISVC\0000\Service: "CiSvc"
+HKLM\SYSTEM\CurrentControlSet\Enum\Root\LEGACY_CISVC\0000\Legacy: 0x00000001
+HKLM\SYSTEM\CurrentControlSet\Enum\Root\LEGACY_CISVC\0000\ConfigFlags: 0x00000000
+HKLM\SYSTEM\CurrentControlSet\Enum\Root\LEGACY_CISVC\0000\Class: "LegacyDriver"
+HKLM\SYSTEM\CurrentControlSet\Enum\Root\LEGACY_CISVC\0000\ClassGUID: "{8ECC055D-047F-11D1-A537-0000F8753ED1}"
+HKLM\SYSTEM\CurrentControlSet\Enum\Root\LEGACY_CISVC\0000\DeviceDesc: "Servicio de Index Server"
+HKLM\SYSTEM\CurrentControlSet\Enum\Root\LEGACY_CISVC\NextInstance: 0x00000001
+HKLM\SYSTEM\CurrentControlSet\Services\CiSvc\Enum\0: "Root\LEGACY_CISVC\0000"
+HKLM\SYSTEM\CurrentControlSet\Services\CiSvc\Enum\Count: 0x00000001
+HKLM\SYSTEM\CurrentControlSet\Services\CiSvc\Enum\NextInstance: 0x00000001
+```
+
+Moreover, these registry key manipulations shows us that one service has been created called _CiSvc_, as we expected in the previous exercise.
+
+_Regshot_ also has captured some file system manipulations, like the two _DLLs_ dropped to "C:\Windows\System32\" that we have predicted previously:
+
+```
+C:\WINDOWS\system32\inet_epar32.dll
+C:\WINDOWS\system32\kernel64x.dll
+```
 
 **3. How does Lab11-03.exe persistently install Lab11-03.dll ?**
 
+To answer this question, we are going to use _IDA Pro_ to analyze both samples.
+
+First, we load the binary _Lab11-03.exe_, which copies the malicious _DLL_ to the path "C:\WINDOWS\system32\" with the name _inet_epar32.dll_. Then, it will load in memory the file _cisvc.exe_ located at "C:\Windows\System32\" by means of _CreateFileMappingA_ and _MapViewOfFile_ _API_ functions, and then it will modify the legit binary so as to load the function _zzz69806582_ of the malicious _DLL_. Afer that, it will execute the service _cisvc_ that will execute the binary _cisvc.exe_ and then the binary _Lab11-03.dll_.
+
+![_IDA Pro_ execution of main binary](../Pictures/Lab_11/lab_11-03_3_ida_pro_1.png)
+
+The way we know it will modify the binary so as to execute the exported function is because we see in the _modify_executable_ function (_0x00401070_) a chunck of code that points out to some _0x00409030_ which stores a bunch of bytes, probably a shellcode. Also we see at the end of the function the instruction _rep movsd_, which is similar to _memcpy_, in which the malware copies a total of _0x4E_ dwords or _78 * 4_, 312 bytes.
+
+![_IDA Pro_ memory copy](../Pictures/Lab_11/lab_11-03_3_ida_pro_2.png)
+
+The region of memory _0x00409030_ plus 312 bytes (the size of the shellcode) leads us to _0x00409168_ memory address, which is where the shellcode ends. This also points out to the end _zzz69806582_ string, which is the name of the export function of the _DLL_.
+
+![_IDA Pro_ string _zzz69806582_](../Pictures/Lab_11/lab_11-03_3_ida_pro_3.png)
+
 **4. Which Windows system file does the malware infect?**
+
+As explained in the previous exercise, the malware modifies the file _cisvc.exe_ located at "C:\Windows\System32\" to load the malicious _DLL_.
 
 **5. What does Lab11-03.dll do?**
 
+The main capability of the _DLL_ is the fact that it can record the keystrokes of the user, in other words, its _keylogging_ capabilities. This functionality is loacated at _0x10001030_. Also, we can check how the malware obtains the current window, something really usefull for the attacker.
+
+![_IDA Pro_ check current window](../Pictures/Lab_11/lab_11-03_5_ida_pro_1.png)
+
+In the next screenshot, we can see how the malware also checks if the user is writting in upper case.
+
+![_IDA Pro_ check for upper case](../Pictures/Lab_11/lab_11-03_5_ida_pro_2.png)
+
 **6. Where does the malware store the data it collects?**
+
+The data that the malware captures by its _keylogging_ feature is dumped in the file _kernel64x.dll_ located at "C:\WINDOWS\System32\".
