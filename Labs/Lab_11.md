@@ -171,8 +171,8 @@ The meaning of the instructions of the decryption routing are the following:
 mov     eax, [ebp+key]			-> EAX = 32h = 50
 and     eax, 0FFh			-> EAX = 32h = 50
 imul    eax, 29Ah			-> EAX = 32h * 29Ah = 50 * 666 = 0x8214 = 33300
-sar     eax, 4			-> EAX = 821h = 2081
-movsx   ecx, [ebp+encrypted_char] -> ECX = encrypted_char
+sar     eax, 4					-> EAX = 821h = 2081
+movsx   ecx, [ebp+encrypted_char]	 -> ECX = encrypted_char
 xor     eax, ecx			-> EAX = 821h ^ encrypted_char = 2081 ^ encrypted_char
 ```
 
@@ -180,7 +180,7 @@ Also, we have to take these instruction after this function is executed:
 
 ```
 mov     ecx, [ebp+Lab11_02_ini_contents]	-> ECX = encrypted_char
-mov     [ecx], al				->	encrypted_char [i] = decrypted_char (EAX = decrypted char -> AL = last byte -> EAX = 862h => AL = 62h)
+mov     [ecx], al				-> encrypted_char [i] = decrypted_char (EAX = decrypted char -> AL = last byte -> EAX = 862h => AL = 62h)
 ```
 This means that we have to keep only the last two elements of the decrypted character, which is the same as using the key _0x21_ instead of _0x821_ or adjusting the decrypted character using the _AND_ operation with the value _0x00FF_. Doing so we have developed the following script so as to decrypt the configuration file.
 
