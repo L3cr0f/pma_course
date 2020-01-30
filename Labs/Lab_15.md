@@ -18,7 +18,7 @@ Analyze the malware found in the file Lab15-02.exe. Correct all anti-disassembly
 **3. What does the program look for in the page it initially requests?**
 **4. What does the program do with the information it extracts from the page?**
 
-## Lab 15-3
+## Lab 15-3
 
 Analyze the malware found in the file Lab15-03.exe. At first glance, this binary appears to be a legitimate tool, but it actually contains more functionality than advertised.
 

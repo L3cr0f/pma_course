@@ -2,7 +2,7 @@
 
 You’ll need a 64-bit computer and a 64-bit virtual machine in order to run the malware for these labs, as well as the advanced version of IDA Pro in order to analyze the malware.
 
-## Lab 21-1
+## Lab 21-1
 
 Analyze the code in Lab21-01.exe. This lab is similar to Lab 9-2, but tweaked and compiled for a 64-bit system.
 

@@ -1,6 +1,6 @@
 # Lab 11 - Malware Behaviour
 
-## Lab 11-1
+## Lab 11-1
 
 Analyze the malware found in Lab11-01.exe.
 

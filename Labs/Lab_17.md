@@ -1,4 +1,4 @@
-# Lab 17 - Anti-Virtual Machine Techniques
+	# Lab 17 - Anti-Virtual Machine Techniques
 
 ## Lab 17-1
 Analyze the malware found in Lab17-01.exe inside VMware. This is the same malware as Lab07-01.exe, with added anti-VMware techniques.
@@ -25,7 +25,7 @@ rundll32.exe Lab17-02.dll,InstallRT (or InstallSA/InstallSB)
 **6. How could you permanently disable the anti-VM technique?**
 **7. How does each installation export function work?**
 
-## Lab 17-3
+## Lab 17-3
 
 Analyze the malware Lab17-03.exe inside VMware. This lab is similar to Lab12-02.exe, with added anti-VMware techniques.
 
