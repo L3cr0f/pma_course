@@ -10,17 +10,17 @@ To do so we are going to use different tools such as _Resource Hacker_ or _IDA P
 
 Te first thing we do is using _Resource Hacker_ so as to check if the malware contains any other binary in it.
 
-![_Resource Hacker_ check inserted binary](../Pictures/lab_11/lab_11-01_1_resource_hacker_1.png)
+![_Resource Hacker_ check inserted binary](../Pictures/Lab_11/lab_11-01_1_resource_hacker_1.png)
 
 As we can see, there is some binary inserted in the malware called _TGAD_. Also, it is something we can check in _IDA Pro_ at function that we have called _loadAndDropResource_ at address _0x00401080_.
 
-![_IDA Pro_ load resource 1](../Pictures/lab_11/lab_11-01_1_ida_pro_1.png)
+![_IDA Pro_ load resource 1](../Pictures/Lab_11/lab_11-01_1_ida_pro_1.png)
 
-![_IDA Pro_ load resource 2](../Pictures/lab_11/lab_11-01_1_ida_pro_2.png)
+![_IDA Pro_ load resource 2](../Pictures/Lab_11/lab_11-01_1_ida_pro_2.png)
 
 Also, this binary seems to be dropped to the filesystem, in the same path of the binary, as a _DLL_ called _msgina32.dll_ as we can check in the same routine in _IDA Pro_.
 
-![_IDA Pro_ drop resource](../Pictures/lab_11/lab_11-01_1_ida_pro_3.png)
+![_IDA Pro_ drop resource](../Pictures/Lab_11/lab_11-01_1_ida_pro_3.png)
 
 We will need to research deeper in order to know what this module does.
 
@@ -28,7 +28,7 @@ We will need to research deeper in order to know what this module does.
 
 The malware creates a registry key called _GinaDLL_ within "SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon" with the value of the path of the "msgina32.dll" binary that was previously dropped at function we have called _persistenceSetup_ at address _0x00401000_. This will lead to _Winlogon_ to load the malicious _DLL_ at startup instead of the legit _msgina.dll_.
 
-![_IDA Pro_ load resource 1](../Pictures/lab_11/lab_11-01_2_ida_pro_1.png)
+![_IDA Pro_ load resource 1](../Pictures/Lab_11/lab_11-01_2_ida_pro_1.png)
 
 **3. How does the malware steal user credentials?**
 
@@ -64,23 +64,23 @@ Interseting, so the _WLX_MPR_NOTIFY_INFO_ structure contains the information of 
 
 We select the "Structures" tab, click on _INSERT_ and select "Add standard structure". We search for _WLX_MPR_NOTIFY_INFO_ structure and accept.
 
-![_IDA Pro_ insert _WLX_MPR_NOTIFY_INFO_ structure](../Pictures/lab_11/lab_11-01_3_ida_pro_1.png)
+![_IDA Pro_ insert _WLX_MPR_NOTIFY_INFO_ structure](../Pictures/Lab_11/lab_11-01_3_ida_pro_1.png)
 
 Now, on every reference to the structure (in this case it points out to _ESI_) we right-click and select the corresponding structure variable.
 
-![_IDA Pro_ add structure variable 1 ](../Pictures/lab_11/lab_11-01_3_ida_pro_2.png)
+![_IDA Pro_ add structure variable 1 ](../Pictures/Lab_11/lab_11-01_3_ida_pro_2.png)
 
-![_IDA Pro_ add structure variable 2](../Pictures/lab_11/lab_11-01_3_ida_pro_3.png)
+![_IDA Pro_ add structure variable 2](../Pictures/Lab_11/lab_11-01_3_ida_pro_3.png)
 
 Now, we can see how the malware dumps the credentials of the user.
 
-![_IDA Pro_ credential dump](../Pictures/lab_11/lab_11-01_3_ida_pro_4.png)
+![_IDA Pro_ credential dump](../Pictures/Lab_11/lab_11-01_3_ida_pro_4.png)
 
 **4. What does the malware do with stolen credentials?**
 
 The credentials of the user are stored in a file called "msutils32.sys" as we can see.
 
-![_IDA Pro_ credential storage](../Pictures/lab_11/lab_11-01_4_ida_pro_1.png)
+![_IDA Pro_ credential storage](../Pictures/Lab_11/lab_11-01_4_ida_pro_1.png)
 
 **5. How can you use this malware to get user credentials from your test environment?**
 
@@ -89,7 +89,7 @@ To execute the malware we have to perform the following actions:
 	2. Log out (the malware will get the credentials once the user logs out).
 	3. Check the file "C:\Windows\System32\msutil32.sys" with the credentials (notice that the binary _Winlogon_ that loads this DLL is located at "C:\Windows\System32\").
 
-![Malware executed](../Pictures/lab_11/lab_11-01_5_1.png)
+![Malware executed](../Pictures/Lab_11/lab_11-01_5_1.png)
 
 The file will have the following output:
 
@@ -120,27 +120,31 @@ To ask this question we are going to use _IDA Pro_ to analyze the binary.
 
 When the malware is executed, it checks in the _DLLMain_ the existence of the file _Lab11-02.ini_ int the path "C:\Windows\System32".
 
-![_IDA Pro_ configuration file check](../Pictures/lab_11/lab_11-02_3_ida_pro_1.png)
+![_IDA Pro_ configuration file check](../Pictures/Lab_11/lab_11-02_3_ida_pro_1.png)
 
 **4. How is this malware installed for persistence?**
 
-The malware gains persistence by copying itself to "C:\Windows\System32" with the name _spoolvxx32.dll_ and setting this name as value of "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Windows\AppInit_DLLs" registry key (this process is done in reverse order by the malware), as commented in the exercise 2-2. This process is done in the exported function called _installer_.
+The malware gains persistence by copying itself to "C:\Windows\System32" with the name _spoolvxx32.dll_ and setting this name as value of "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Windows\AppInit_DLLs" registry key (this process is done in reverse order by the malware), as commented in the exercise 2-2. This process is done in the exported function called _installer_ and forces every application that loads _User32.dll_ to load also the malware.
 
-![_IDA Pro_ persistence gaining 1](../Pictures/lab_11/lab_11-02_4_ida_pro_1.png)
+![_IDA Pro_ persistence gaining 1](../Pictures/Lab_11/lab_11-02_4_ida_pro_1.png)
 
-![_IDA Pro_ persistence gaining 2](../Pictures/lab_11/lab_11-02_4_ida_pro_2.png)
+![_IDA Pro_ persistence gaining 2](../Pictures/Lab_11/lab_11-02_4_ida_pro_2.png)
 
 **5. What user-space rootkit technique does this malware employ?**
 
+Once the malware has checked what mail process has loaded it, it suspends all threads, overwrites the legitimate _send_ function of _wsock32.dll_ by a malicious one, so as to force the mail process to send the emails to the malicious email address, and finally resumes all threads again.
 
+![_IDA Pro_ hooking process 1](../Pictures/Lab_11/lab_11-02_5_ida_pro_1.png)
 
 **6. What does the hooking code do?**
+
+The hooking code consists of suspending all threads of the current process, replacing the malicious _send_ function in memory and resuming all threads after.
 
 **7. Which process(es) does this malware attack and why?**
 
 The malware only targets three differenct process: _thebat.exe_, _outlook.exe_ and _msimn.exe_.
 
-![_IDA Pro_ process checking](../Pictures/lab_11/lab_11-02_7_ida_pro_1.png)
+![_IDA Pro_ process checking](../Pictures/Lab_11/lab_11-02_7_ida_pro_1.png)
 
 These process are targeted because of all them are mail clients.
 
@@ -148,11 +152,11 @@ These process are targeted because of all them are mail clients.
 
 The configuration file _Lab11-02.ini_ seems to be encrypted, something we confirm when we see the function located at _0x100010B3_ that we have called _decrypt_file_content_.
 
-![_IDA Pro_ decryption routine](../Pictures/lab_11/lab_11-02_8_ida_pro_1.png)
+![_IDA Pro_ decryption routine](../Pictures/Lab_11/lab_11-02_8_ida_pro_1.png)
 
 There, we can see a function call that we have called _xor_decoding_, since the decryption routine is _XOR_ based.
 
-![_IDA Pro XOR_ decoding](../Pictures/lab_11/lab_11-02_8_ida_pro_2.png)
+![_IDA Pro XOR_ decoding](../Pictures/Lab_11/lab_11-02_8_ida_pro_2.png)
 
 In the pictures we can see that the function takes two parameters, the first one is one encrypted character of the file content and the second is the _key_ with the value _0x32_. To get the contents of the file in hexadecimal we used the program called _HxD_, which is an hexadecimal editor.
 
@@ -164,17 +168,50 @@ key = 0x32
 The meaning of the instructions of the decryption routing are the following:
 
 ```
-mov     eax, [ebp+key]	-> EAX = 32h = 50
-and     eax, 0FFh	-> EAX = 32h = 50
-imul    eax, 29Ah	-> EAX = 32h * 29Ah = 50 * 666 = 0x0214 = 532 (key is 2 bytes length -dword-, and the imul operation forces to reserve the last digit)
-sar     eax, 4	-> EAX = 21h = 33
+mov     eax, [ebp+key]			-> EAX = 32h = 50
+and     eax, 0FFh			-> EAX = 32h = 50
+imul    eax, 29Ah			-> EAX = 32h * 29Ah = 50 * 666 = 0x8214 = 33300
+sar     eax, 4			-> EAX = 821h = 2081
 movsx   ecx, [ebp+encrypted_char] -> ECX = encrypted_char
-xor     eax, ecx	-> EAX = 2081 ^ encrypted_char
+xor     eax, ecx			-> EAX = 821h ^ encrypted_char = 2081 ^ encrypted_char
 ```
 
-Now, it is time to write a script that decodes the contents of the file.
+Also, we have to take these instruction after this function is executed:
+
+```
+mov     ecx, [ebp+Lab11_02_ini_contents]	-> ECX = encrypted_char
+mov     [ecx], al				->	encrypted_char [i] = decrypted_char (EAX = decrypted char -> AL = last byte -> EAX = 862h => AL = 62h)
+```
+This means that we have to keep only the last two elements of the decrypted character, which is the same as using the key _0x21_ instead of _0x821_ or adjusting the decrypted character using the _AND_ operation with the value _0x00FF_. Doing so we have developed the following script so as to decrypt the configuration file.
+
+```
+encrypted_string = bytearray([0x43, 0x48, 0x4D, 0x4D, 0x58, 0x61, 0x4C, 0x40, 0x4D, 0x56, 0x40, 0x53, 0x44, 0x40, 0x4F, 0x40, 0x4D, 0x58, 0x52, 0x48, 0x52, 0x43, 0x4E, 0x4E, 0x4A, 0x0F, 0x42, 0x4E, 0x4C])
+decryption_key = 0x821
+
+decrypted_string = ""
+
+for counter in range(len(encrypted_string)):
+	encrypted_char = encrypted_string[counter]
+	decrypted_string = decrypted_string + chr((decryption_key ^ encrypted_char) & 0x00FF)
+
+print("The decrypted string is: " + decrypted_string)
+```
+
+Now, when we execute the script will find the decrypted value.
+
+```
+$ python3 Scripts/Others/lab_11_2_decryption_config_file.py
+
+The decrypted string is: billy@malwareanalysisbook.com
+```
+
+The configuration file seems to contain an email address to use further by the malware. Something we can check in the function located at _0x1000113D_ that we have called _mail_setup_, due to all the email configuration that seems to happen there:
+
+![_IDA Pro_ email address usage](../Pictures/Lab_11/lab_11-02_8_ida_pro_3.png)
 
 **9. How can you dynamically capture this malware’s activity with Wireshark?**
+
+First of all we have to install the malware by using the _install_ export of the _DLL_. After that, we reboot the system and execute one of the three mail programs that the malware waits. Then we start _Wireshark_ so as to capture all the traffic and finally we send an email to execute the malicious send module of the sample.
 
 ## Lab 11-3
 
