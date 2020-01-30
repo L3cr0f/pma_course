@@ -171,8 +171,8 @@ The meaning of the instructions of the decryption routing are the following:
 mov     eax, [ebp+key]			-> EAX = 32h = 50
 and     eax, 0FFh			-> EAX = 32h = 50
 imul    eax, 29Ah			-> EAX = 32h * 29Ah = 50 * 666 = 0x8214 = 33300
-sar     eax, 4					-> EAX = 821h = 2081
-movsx   ecx, [ebp+encrypted_char]	 -> ECX = encrypted_char
+sar     eax, 4				-> EAX = 821h = 2081
+movsx   ecx, [ebp+encrypted_char]	-> ECX = encrypted_char
 xor     eax, ecx			-> EAX = 821h ^ encrypted_char = 2081 ^ encrypted_char
 ```
 
