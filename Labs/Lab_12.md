@@ -52,7 +52,7 @@ In this function we can see how the malware makes this check.
 
 ![_IDA Pro_ checking of _explorer.exe_ PID](../Pictures/Lab_12/lab_12-01_2_ida_pro_4.png)
 
-After that, we can see how the malware performs the process injection using the _WINAPI_ functions _VirtualAllocEx_ to allocate memory in the remote process, _WriteProcessMemory_ to write the malicious _DLL_ into the process and _CreateRemoteThread_ to call _LoadLibraryA_ from the remote process.
+After that, we can see how the malware performs the process injection using the _WINAPI_ functions _VirtualAllocEx_ to allocate memory in the remote process, _WriteProcessMemory_ to write the malicious _DLL_ into the process address space and _CreateRemoteThread_ to call _LoadLibraryA_ from the remote process to load the malicious _DLL_.
 
 ![_IDA Pro_ process injection](../Pictures/Lab_12/lab_12-01_2_ida_pro_5.png)
 
