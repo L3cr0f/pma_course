@@ -136,9 +136,25 @@ Once the malware has checked what mail process has loaded it, it suspends all th
 
 ![_IDA Pro_ hooking process 1](../Pictures/Lab_11/lab_11-02_5_ida_pro_1.png)
 
+This process is called inline hook, where the start of the legitimate _send_ function is replaced by a jump to the malicious _send_ function, called in our case _malicous_mail_send_, since it is only executed when an email is sent, by means of the _trampoline_function_. We can see this manipulation in the function _place_hook_ at _0x10001203_
+
+![_Book_ inline hooking](../Pictures/Lab_11/lab_11-02_5_book_1.png)
+
+First of all, this function calculate the difference between the memory addresses of the legit _send_ and _malicous_mail_send_ functions, this result will be saved in a variable we have called _address_to_jump_.
+
+![_IDA Pro_ hooking process 2](../Pictures/Lab_11/lab_11-02_5_ida_pro_2.png)
+
+After that, it calls the function _VirtualProtect_ with the address of the legit _send_ function as parameter to make this region of memory editable, since _VirtualProtect_ will give _read_, _write_ and _execute_ properties. Then, it will reserve memory (variable called _trampoline_), it will copy the first five bytes of legit _send_ function by means of _memcpy_ (this will allow the malware to restore the legit _send_ function), since five bytes is what the _jmp address_ instruction needs.
+
+![_IDA Pro_ hooking process 3](../Pictures/Lab_11/lab_11-02_5_ida_pro_3.png)
+
+Finally, the malware adds the _jmp_ instruction to the legit _send_ function in the _trampoline_ code and also the _jmp_ instruction to the malicious code in the legit _send_ function. Then, it will call _VirtualProtect_ to restore the properties of the memory and will copy the _trampoline_ code to the fourth argument that we have called _trampoline_function_ (this variable appears the previous pictures, so now we understand where it is defined).
+
+![_IDA Pro_ hooking process 4](../Pictures/Lab_11/lab_11-02_5_ida_pro_4.png)
+
 **6. What does the hooking code do?**
 
-The hooking code consists of suspending all threads of the current process, replacing the malicious _send_ function in memory and resuming all threads after.
+The hooking code (_0x1000113D_) consists of checking if an outgoing packet have the string "RCPT TO:" (this indicates that an email has been sent), if so, the malware will add a second "RCPT TO:" pointing to the malicious address.
 
 **7. Which process(es) does this malware attack and why?**
 
