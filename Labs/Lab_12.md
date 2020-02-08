@@ -180,9 +180,46 @@ Analyze the malware found in the file Lab12-04.exe.
 
 **1. What does the code at 0x401000 accomplish?**
 
+This function starts with an _OpenProcess_ _WINAPI_ call with the _PID_ provided as argument, after that, it makes a call to an unknown function that we know based on the executed instructions of the _main_ function that it is _EnumProcessModules_. After that, it makes a call to _GetModuleBaseNameA_, which also we know because its address is calculated in the _main_ function.
+
+![_IDA Pro_ load process functions](../Pictures/Lab_12/lab_12-04_1_ida_pro_1.png)
+
+![_IDA Pro_ _0x401000_ function](../Pictures/Lab_12/lab_12-04_1_ida_pro_2.png)
+
+At this moment we know that the malware has listed the modules loaded by the process and has requested the base name of one specific module. The value of the base name will be stored in the variable _var_118_ which stores the value of _dword_403020_ at this time.
+
+Once the malware executes the function _GetModuleBaseNameA_, it will compare the result of _var_118_ with the value of _var_14_, which is equal to _dword_403010_.
+
+![_IDA Pro_ variables of _0x401000_ function](../Pictures/Lab_12/lab_12-04_1_ida_pro_3.png)
+
+If we take a look at the values of this global variables, we see something confusing. We expected string values!
+
+![_IDA Pro_ global variables wrong](../Pictures/Lab_12/lab_12-04_1_ida_pro_4.png)
+
+This is because _IDA Pro_ has failed to recognize the varaibles properly, we need to fix them. To do so, we click on the first variable and hit the key 'a', we do the same with the second one. Now we have the following strings: 'winlogon.exe' and '<not real>'.
+
+![_IDA Pro_ global variables fixed](../Pictures/Lab_12/lab_12-04_1_ida_pro_5.png)
+
+We know that the string '<not real>' will be overwritten when _GetModuleBaseNameA_ will be called, so the one that we care about is 'winlogon.exe', which the name of a process.
+
+It seems that the malware checks the process name of the _PID_ provided as argument, and if it is _winlogon.exe_, it will return '1' (true), but if not, it will return '0' (false).
+
+So we rename this function to _check_winlogon_process_.
+
 **2. Which process has code injected?**
 
+The malware will inject code into _winlogon.exe_ process, based on the previous exercise and the code of the _main_ function.
+
+The injection process takes place at _0x00401174_ and the malware makes the following process so as to execute the process injection:
+
+1. Enable _SeDebugPrivilege_ permission so as to call _CreateRemoteThread_ and manipulate the memory of the remote process.
+2. Get the address of _sfc_os.dll_.
+3. Get a handle to the remote process.
+4. Call to _CreateRemoteThread_
+
 **3. What DLL is loaded using LoadLibraryA?**
+
+The dll loaded is _sfc_os.dll_.
 
 **4. What is the fourth argument passed to the CreateRemoteThread call?**
 

@@ -11,8 +11,13 @@ Notes about _IDA Pro_.
 
 ```
 [N]: rename
+[R]: change value to ASCII string
+[H]: change value to hexadecimal or decimal
+[A]: change global value to string
 [SPACE]: change IDA view
 Structures tab + [INSERT]: add new structure
 [Y]: change argument types of a function
 [T]: use structure
+[ESC]: go to the previous function
+[CTRL+ENTER]: go to the next function
 ```
