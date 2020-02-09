@@ -213,16 +213,59 @@ The malware will inject code into _winlogon.exe_ process, based on the previous 
 The injection process takes place at _0x00401174_ and the malware makes the following process so as to execute the process injection:
 
 1. Enable _SeDebugPrivilege_ permission so as to call _CreateRemoteThread_ and manipulate the memory of the remote process.
-2. Get the address of _sfc_os.dll_.
+
+![_IDA Pro_ enable _SeDebugPrivilege_](../Pictures/Lab_12/lab_12-04_2_ida_pro_1.png)
+
+2. Get the address of the exported function with ordinal 2 of _sfc_os.dll_.
+
+![_IDA Pro_ exported function 2 of _sfc_os.dll_](../Pictures/Lab_12/lab_12-04_2_ida_pro_2.png)
+
+This _DLL_ is a legit one from Windows, so we need to understand what ordinal 2 means. To do so, we load _sfc_os.dll_ in _PEView_ and check the exports of such library. This reveals us that the ordinal 2 is an undocumented function of such _DLL_, we will have to investigate further so as to understand what this function does.
+
+A simple search on Internet reveals that this function could be named as _SfcTerminateWatcherThread_, this means that this function can disable the System File Checker (SFC), which monitors and prevents programs from replacing critical Windows system files, if its called from _winlogon.exe_. This implementation can be seen in _IDA Pro_ by seting the value _0_ in the key _SfcDisable_ at "\Registry\Machine\Software\Microsoft\Windows NT\CurrentVersion\Winlogon" registry key by means of _NtSetValueKey_ (this is done in the function we have renamed to _NtSetRegistryKey_.
+
+![_IDA Pro_ get a handle to the remote process](../Pictures/Lab_12/lab_12-04_2_ida_pro_3.png)
+
 3. Get a handle to the remote process.
-4. Call to _CreateRemoteThread_
+
+![_IDA Pro_ get a handle to the remote process](../Pictures/Lab_12/lab_12-04_2_ida_pro_4.png)
+
+4. Call to _CreateRemoteThread_ to execute _SfcTerminateWatcherThread_ of _sfc_os.dll_ within the remote process address space.
+
+![_IDA Pro_ execute the _sfc_os.dll_ within the remote process](../Pictures/Lab_12/lab_12-04_2_ida_pro_5.png)
+
+After that, the _SFC Watcher_ will be disabled, allowing the malware to do any change in the filesystem
 
 **3. What DLL is loaded using LoadLibraryA?**
 
-The dll loaded is _sfc_os.dll_.
+The _DLL_ loaded is _sfc_os.dll_, as explained in the previous exercise.
 
 **4. What is the fourth argument passed to the CreateRemoteThread call?**
 
+This is the memory address of the ordinal function 2, also called _SfcTerminateWatcherThread_, of _sfc_os.dll_.
+
 **5. What malware is dropped by the main executable?**
 
+After the injection has taken place, the malware starts the dropping process of a binary stored in it as a resource file called _BIN_ _101_. This file can be seen by means of _Resource Hacker_.
+
+![_Resource Hacker_ resource file](../Pictures/Lab_12/lab_12-04_5_resource_hacker_1.png)
+
+This resource file is loaded and executed in the function at address _0x004011FC_ in a function we have called _load_execute_resource_file_, but let's analyze what happens previously.
+
+Before the resource is loaded, the malware moves the legit _wupdmgr.exe_ binary file (_Windows Update Utility_) located at "C:\Windows\System32" as _winup.exe_ in the temporal path.
+
+![_IDA Pro_ move _wupdmgr.exe_](../Pictures/Lab_12/lab_12-04_5_ida_pro_1.png)
+
+After that, the previously commented _load_execute_resource_file_ function is called. This function will drop the malicious resource binary in the path "C:\Windows\System32" as _wupdmgr.exe_, impersonating the legit _Windows Update Utility_ without raising any alert on the system, because of being disabled the _SFC Watcher_.
+
 **6. What is the purpose of this and the dropped malware?**
+
+Now it is time to analyze the dropped malware. To do so, first we extract the binary by means of _Resource Hacker_, then, we will load it in _IDA Pro_.
+
+The dropped malware will first execute the legit _Windows Update Utility_ located in the temporal path as _winup.exe_.
+
+![_IDA Pro_ execute _Windows Update Utility_ by means of _winup.exe_](../Pictures/Lab_12/lab_12-04_6_ida_pro_1.png)
+
+After that, the malware will make a request to _http://www.practicalmalwareanalysis.com/updater.exe_ by means of _URLDownloadToFileA_ to download the file _updater.exe_. This file will be saved in the path "C:\Windows\System32\wupdmgr.exe", this means that the malware will overwrite itself with this new binary. Then, the malware will execute the newly downloaded binary.
+
+![_IDA Pro_ download and execute _updater.exe_](../Pictures/Lab_12/lab_12-04_6_ida_pro_2.png)
