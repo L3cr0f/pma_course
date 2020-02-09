@@ -222,7 +222,7 @@ The injection process takes place at _0x00401174_ and the malware makes the foll
 
 This _DLL_ is a legit one from Windows, so we need to understand what ordinal 2 means. To do so, we load _sfc_os.dll_ in _PEView_ and check the exports of such library. This reveals us that the ordinal 2 is an undocumented function of such _DLL_, we will have to investigate further so as to understand what this function does.
 
-A simple search on Internet reveals that this function could be named as _SfcTerminateWatcherThread_, this means that this function can disable the System File Checker (SFC), which monitors and prevents programs from replacing critical Windows system files, if its called from _winlogon.exe_. This implementation can be seen in _IDA Pro_ by seting the value _0_ in the key _SfcDisable_ at "\Registry\Machine\Software\Microsoft\Windows NT\CurrentVersion\Winlogon" registry key by means of _NtSetValueKey_ (this is done in the function we have renamed to _NtSetRegistryKey_.
+A simple search on Internet reveals that this function could be named as _SfcTerminateWatcherThread_, this means that this function can disable the _System File Checker_ (SFC), also known as _Windows File Protection_, which monitors and prevents programs from replacing critical Windows system files, if its called from _winlogon.exe_. This implementation can be seen in _IDA Pro_ by seting the value _0_ in the key _SfcDisable_ at "\Registry\Machine\Software\Microsoft\Windows NT\CurrentVersion\Winlogon" registry key by means of _NtSetValueKey_ (this is done in the function we have renamed to _NtSetRegistryKey_.
 
 ![_IDA Pro_ get a handle to the remote process](../Pictures/Lab_12/lab_12-04_2_ida_pro_3.png)
 
