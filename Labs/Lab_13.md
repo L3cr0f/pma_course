@@ -55,11 +55,11 @@ This seems to be the encoding routine that we were looking for.
 
 The key of the decryption routine is the hexadecimal value _0x3B_.
 
-![_IDA Pro_ decryption routine](../Pictures/Lab_12/lab_12-01_2_ida_pro_1.png)
+![_IDA Pro_ decryption routine](../Pictures/Lab_13/lab_13-01_2_ida_pro_1.png)
 
 The encoded data is given by means of a resource file, which can be seen by means of _Resource Hacker_. This file contains the following data:
 
-![_IDA Pro_ load resource file to decrypt](../Pictures/Lab_12/lab_12-01_2_ida_pro_2.png)
+![_IDA Pro_ load resource file to decrypt](../Pictures/Lab_13/lab_13-01_2_ida_pro_2.png)
 
 ```
 4C 4C 4C 15 4B 49 5A 58 4F 52 58 5A 57 56 5A 57 4C 5A 49 5E 5A 55 5A 57 42 48 52 48 15 58 54 56
@@ -90,7 +90,31 @@ The decrypted string is: www.practicalmalwareanalysis.com
 
 **4. Use the static tools FindCrypt2, Krypto ANALyzer (KANAL), and the IDA Entropy Plugin to identify any other encoding mechanisms. What do you find?**
 
+We try to download and use the suggested _IDA Pro_ plugins, but we couldn't find the way to do it. However, we successfully executed the _KANAL_ plugin of _PEid_.
+
+![_PEid_ _KANAL_ 1](../Pictures/Lab_13/lab_13-01_4_peid_1.png)
+
+![_PEid_ _KANAL_ 2](../Pictures/Lab_13/lab_13-01_4_peid_2.png)
+
+As we can see, several references to _base64_ have been found.
+
+After that, we tried to use the plugin _findcrypt-yara_ (https://github.com/polymorf/findcrypt-yara) in the full IDA Pro version. After installing the plugin, we could see the following output.
+
+![_IDA Pro_ _findcrypt-yara_](../Pictures/Lab_13/lab_13-01_4_ida_pro_1.png)
+
+It has detected one coincidence of _base64_ encoding, the same that _KANAL_ detected.
+
 **5. What type of encoding is used for a portion of the network traffic sent by the malware?**
+
+To know the encoding mechanism used by the malware, we need to take into account what the previously used plugins told us. That in the address _0x004050E8_ something related with _base64_ encoding was detected. If we go there, we will see a bunch of bytes that seems to be the alphabet of _base64_ encoding, but _IDA Pro_ has mislabeled, so let's fix it.
+
+![_IDA Pro_ _base64_ alphabet 1](../Pictures/Lab_13/lab_13-01_5_ida_pro_1.png)
+
+We click in the first letter (0x41) or in the variable _byte_4050E8_, and click on the key 'a'.
+
+![_IDA Pro_ _base64_ alphabet 2](../Pictures/Lab_13/lab_13-01_5_ida_pro_2.png)
+
+Now, we can see how this variable is referenced four times in the function at address _0x00401000_, we called _base64_encode_, which is referenced by the function located at _0x004010B1_, which is called just before the _InternetOpen_ _WINAPI_ function call. So we rename the function to _base64_encoding_.
 
 **6. Where is the Base64 function in the disassembly?**
 
