@@ -1,7 +1,7 @@
 from idautils import *
 from idc import *
 
-#Color the Calls and sub functions green
+#Color the Calls and sub functions grey
 heads = Heads(SegStart(ScreenEA()), SegEnd(ScreenEA()))
 funcCalls = []
 for current in heads:
@@ -11,7 +11,7 @@ for current in heads:
 print("Number of calls and sub functions: %d" % (len(funcCalls)))
 
 for current in funcCalls:
-	SetColor(current, CIC_ITEM, 0x00ffcc)
+	SetColor(current, CIC_ITEM, 0xb5b5b5)
 
 
 #Color Anti-VM instructions red and print their location
@@ -57,7 +57,7 @@ for current in push_ret:
 	SetColor(current, CIC_ITEM, 0x00ffff)
 
 
-#Color non-zeroing out xor instructions Orange
+#Color non-zeroing out xor instructions green
 heads = Heads(SegStart(ScreenEA()), SegEnd(ScreenEA()))
 xor = []
 for current in heads:
@@ -68,5 +68,5 @@ for current in heads:
 print("Number of xor: %d" % (len(xor)))
 
 for current in xor:
-	SetColor(current, CIC_ITEM, 0x00a5ff)
+	SetColor(current, CIC_ITEM, 0x8fdf98)
 

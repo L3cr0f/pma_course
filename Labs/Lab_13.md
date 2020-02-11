@@ -118,11 +118,25 @@ Now, we can see how this variable is referenced four times in the function at ad
 
 **6. Where is the Base64 function in the disassembly?**
 
+The _base64_ function is located at _0x004010B1_ and we have renamed it as _base64_encoding_. This function is called before the malware calls the function _InternetOpenA_ at function _CnC_communication_ located at _0x0004011C9_.
+
+![_IDA Pro_ _base64_encoding_ call 1](../Pictures/Lab_13/lab_13-01_6_ida_pro_1.png)
+
 **7. What is the maximum length of the Base64 encoded data that is sent? What is encoded?**
+
+Before the malware encodes the data, it makes a call to _gethostname_ and after that a _strcpy_ with a size of _0x0C_, which is equal to 12. So the malware will only encode 12 bytes of data.
+
+![_IDA Pro_ encode hostname first 12 bytes](../Pictures/Lab_13/lab_13-01_7_ida_pro_1.png)
+
+So the data that it is encoded is the first 12 bytes of the computer hostname.
 
 **8. In this malware, would you ever see the padding characters (= or ==) in the Base64-encoded data?**
 
+Yes, but only if the local hostname have less than 12 characters.
+
 **9. What does this malware do?**
+
+The malware first reads and decrypts the included resource file, it contains the URL of the CnC. After that, it gets the first 12 bytes of the computer's hostname, _base64_ encodes it and uses this value as webpage to make the request, I mean: http://www.practicalmalwareanalysis.com/[base64 encoded hostname]/. After that, the malware sleeps 5 minutes and then exits.
 
 ## Lab 13-2
 
@@ -130,11 +144,55 @@ Analyze the malware found in the file Lab13-02.exe.
 
 **1. Using dynamic analysis, determine what this malware creates.**
 
+To do so we are going to use _RegShot_, which only tells us what we have seen, the malware creates 'n' files in the same path where the malware is located. The files seems to be encoded or something, since no _File Signatures_ (_Magic Numbers_) were identified.
+
+We are going to use _Process Monitor_ to understand better what the malware does.
+
+![_Process Monitor_](../Pictures/Lab_13/lab_13-02_1_process_monitor_1.png)
+
+As we can see, just before the malware creates the file, it loads the library _uxtheme.dll_. However, if we take a look into the imports of the sample, we do not see such _DLL_ loaded:
+
+```
+======================
+KERNEL32.dll
+======================
+GetStringTypeW
+Sleep
+LCMapStringW
+LCMapStringA
+...
+======================
+USER32.dll
+======================
+GetDesktopWindow
+GetDC
+ReleaseDC
+GetSystemMetrics
+======================
+GDI32.dll
+======================
+CreateCompatibleBitmap
+SelectObject
+BitBlt
+GetObjectA
+...
+```
+
 **2. Use static techniques such as an xor search, FindCrypt2, KANAL, and the IDA Entropy Plugin to look for potential encoding. What do you find?**
+
+By using _KANAL_ plugin no encoding is found, may be it uses an own encoding routine. This thinking is supported by the _IDA Python_ script called _ida_highlight.py_ located at "/Scripts/IDA/", which highlights specific instructions like _XOR_ with diferent registers/data. After running this script, a total of 24 instructions like this where found. If we take a look to the code, we can see how the function located at _0x00401739_ contains some of these _XOR_ instructions.
+
+![_IDA Pro_ _XOR_ instructions](../Pictures/Lab_13/lab_13-02_2_ida_pro_1.png)
 
 **3. Based on your answer to question 1, which imported function would be a good prospect for finding the encoding functions?**
 
+Because the file is encoded, the best option to find the encoding routine is looking for _WriteFile_ function. There is only one cross-reference, the one located in the function _0x00401000_.
+
+![_IDA Pro_ _WriteFile_ function](../Pictures/Lab_13/lab_13-02_3_ida_pro_1.png)
+
 **4. Where is the encoding function in the disassembly?**
+
+The encoding function is placed at _0x00401739_ and it is the function where the bunch of _XOR_ instructions where found.
 
 **5. Trace from the encoding function to the source of the encoded content. What is the content?**
 
