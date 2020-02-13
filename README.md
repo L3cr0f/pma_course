@@ -21,3 +21,5 @@ Structures tab + [INSERT]: add new structure
 [ESC]: go to the previous function
 [CTRL+ENTER]: go to the next function
 ```
+
+![_IDA Pro_ shortcuts](Pictures/Others/IDA_Pro_shortcuts.png)
