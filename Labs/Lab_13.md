@@ -192,16 +192,23 @@ Because the file is encoded, the best option to find the encoding routine is loo
 
 **4. Where is the encoding function in the disassembly?**
 
-The encoding function is placed at _0x00401739_ and it is the function where the bunch of _XOR_ instructions where found.
+The encoding function is placed at _0x00401739_ and it is the function where the bunch of _XOR_ instructions where found. This function is renamed as _encoding_function_.
 
+Before this function is executed, one array (probably the key) is innitialized with 68 zeros by means of _memset_.
 
-![_IDA Pro_ _memset_ of argument](../Pictures/Lab_13/lab_13-02_3_ida_pro_2.png)
+![_IDA Pro_ _memset_ of argument](../Pictures/Lab_13/lab_13-02_4_ida_pro_1.png)
 
-To understand the whole code of the function located at _0x004012DD_, we will have to divide it in four parts.
+After that, the _encoding_function_ is called
+
+As we can see, this function will call another function before starting with the _XOR_ encoding process, probably this function will be used to get the key every iteration, so we rename it as _get_key_.
+
+![_IDA Pro_ encoding routine](../Pictures/Lab_13/lab_13-02_4_ida_pro_2.png)
+
+To understand the whole code of the function located at _0x004012DD_, we will have to divide it in four parts and explain it **using the first itaration as example**.
 
 The first block is quite easy to understand, it will set up the variable _var_44_.
 
-![_IDA Pro_ first block of code of _0x004012DD_](../Pictures/Lab_13/lab_13-02_3_ida_pro_3.png)
+![_IDA Pro_ first block of code of _0x004012DD_](../Pictures/Lab_13/lab_13-02_4_ida_pro_3.png)
 
 ```
 mov     ecx, [ebp+counter_to_8]		-> ECX = counter -> max value equal to 8
@@ -215,15 +222,15 @@ As we can see, this variable is an array of 8 elements filled with 0's, so we re
 
 We see that the function has other 7 variables below the array, _IDA Pro_ has mislabeled this variables, since every of them belongs to the same array. To fix this we click [CTRL+K], click on the arrar and select create array of 8 elements.
 
-![_IDA Pro_ fix array 1](../Pictures/Lab_13/lab_13-02_3_ida_pro_4.png)
+![_IDA Pro_ fix array 1](../Pictures/Lab_13/lab_13-02_4_ida_pro_4.png)
 
-![_IDA Pro_ fix array 2](../Pictures/Lab_13/lab_13-02_3_ida_pro_5.png)
+![_IDA Pro_ fix array 2](../Pictures/Lab_13/lab_13-02_4_ida_pro_5.png)
 
-![_IDA Pro_ fix array 3](../Pictures/Lab_13/lab_13-02_3_ida_pro_6.png)
+![_IDA Pro_ fix array 3](../Pictures/Lab_13/lab_13-02_4_ida_pro_6.png)
 
 Done! Now the variables are correctly shown!
 
-![_IDA Pro_ fix array 4](../Pictures/Lab_13/lab_13-02_3_ida_pro_7.png)
+![_IDA Pro_ fix array 4](../Pictures/Lab_13/lab_13-02_4_ida_pro_7.png)
 
 Now that we know what the variables mean, it's time to start with the second block of code:
 
@@ -331,15 +338,15 @@ ZERO[16] = 0;
 
 To check this values we execute the malware in the _Windows XP_ virtual machine, so as to debug the malware remotely. To do so, we copy the file "C:\Program Files\IDA 7.2\dbgsrv\win32_remote.exe" located in the _Windows 10_ to the _Windows XP_ and execute it.
 
-![_IDA Pro_ remote debugging 1](../Pictures/Lab_13/lab_13-02_3_ida_pro_8.png)
+![_IDA Pro_ remote debugging 1](../Pictures/Lab_13/lab_13-02_4_ida_pro_8.png)
 
 Now, we copy the IP address _172.16.231.131:23946_ that the program shows us. Then, we configure the _Remote Windows Debugger_ option in _IDA Pro_
 
-![_IDA Pro_ remote debugging 2](../Pictures/Lab_13/lab_13-02_3_ida_pro_9.png)
+![_IDA Pro_ remote debugging 2](../Pictures/Lab_13/lab_13-02_4_ida_pro_9.png)
 
 After that, we configure the _Process options_ so as to point out where the binary is located and the IP address of the remote machine.
 
-![_IDA Pro_ remote debugging 3](../Pictures/Lab_13/lab_13-02_3_ida_pro_10.png)
+![_IDA Pro_ remote debugging 3](../Pictures/Lab_13/lab_13-02_4_ida_pro_10.png)
 
 In memory we will see the same values, but in reverse order due to _Little Endian_.
 
@@ -421,11 +428,11 @@ This function will be renamed as _setup_second_array_, because it setups the sec
 
 Now, we need to repair again the mislabeled variables in _IDA Pro_, since they build this second array.
 
-![_IDA Pro_ fix second array 1](../Pictures/Lab_13/lab_13-02_3_ida_pro_11.png)
+![_IDA Pro_ fix second array 1](../Pictures/Lab_13/lab_13-02_4_ida_pro_11.png)
 
 We have renamed the array variable to _integer(8)_second_.
 
-![_IDA Pro_ fix second array 2](../Pictures/Lab_13/lab_13-02_3_ida_pro_12.png)
+![_IDA Pro_ fix second array 2](../Pictures/Lab_13/lab_13-02_4_ida_pro_12.png)
 
 Now, we know that this second array of 8 elements is as follows:
 
@@ -440,7 +447,7 @@ second_array[6] = 6902BDC5h
 second_array[7] = DBC39B5h
 ```
 
-![_IDA Pro_ third block of code](../Pictures/Lab_13/lab_13-02_3_ida_pro_13.png)
+![_IDA Pro_ third block of code](../Pictures/Lab_13/lab_13-02_4_ida_pro_13.png)
 
 Finally, the fourth chunk of code is as follows:
 
@@ -560,7 +567,7 @@ ZERO[6] = 7A0D3D67h;
 ZERO[7] = 8260D673h;
 ```
 
-At this moment we have the whole array that will be used as the key of the encryption process:
+At this moment we have the whole array that will be used as the key of the encryption process in the first iteration:
 
 ```
 ZERO[0] = 607D3483h;
@@ -582,7 +589,8 @@ ZERO[15] = D34D34D3h;
 ZERO[16] = 0;
 ```
 
-This function will be renamed as _get_key_ and the buffer that was loaded as argument will be renamed as _key_.
+Now that we understand how the key creation process works, we need to replicate it in a python script.
+
 
 Now, the encryption process will start,
 
