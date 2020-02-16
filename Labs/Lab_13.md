@@ -591,8 +591,199 @@ ZERO[16] = 0;
 
 Now that we understand how the key creation process works, we need to replicate it in a python script.
 
+```
+# Creates an array of 17 elements, 68 bytes in total
+def initialize_key():
+	return [0] * 17
 
-Now, the encryption process will start,
+def setup_first_auxiliar_array(key):
+	first_auxiliar_array = []
+
+	# We fill the indexes 8 to 15 (included) of the array, which corresponds with bytes 32 to 63, with the values of the key
+	for counter in range(8, 16):
+		first_auxiliar_array.append(key[counter])
+
+	return first_auxiliar_array
+
+def get_value_of_second_auxiliar_array(key_value):
+
+	num_1 = key_value & 0xFFFF
+	num_2 = key_value >> 0x10
+	num_3 = (num_1 * num_1) & 0xFFFFFFFF
+	num_4 = num_3 >> 0x11
+	num_5 = (num_1 * num_2) & 0xFFFFFFFF
+	num_6 = (num_4 + num_5) & 0xFFFFFFFF
+	num_7 = num_6 >> 0xF
+	num_8 = (num_2 * num_2) & 0xFFFFFFFF
+	num_9 = (num_7 + num_8) & 0xFFFFFFFF
+	num_10 = (key_value * key_value) & 0xFFFFFFFF
+
+	value = num_9 ^ num_10
+
+	return value
+
+def setup_second_auxiliar_array(key):
+	second_auxiliar_array = []
+
+	# We fill the indexes 0 to 7 (included) of the array, which corresponds with bytes 0 to 31, with the values of the key
+	for counter in range(8, 16):
+		value = get_value_of_second_auxiliar_array(key[counter])
+		second_auxiliar_array.append(value)
+
+	return second_auxiliar_array
+
+def get_second_part_of_key(key, first_auxiliar_array):
+	num_1 = key[16]
+
+	for i in range(8, 16):
+		num_2 = key[i]
+		if i % 3 == 2:
+			value = (num_2 + num_1 + 0x4D34D35D) & 0xFFFFFFFF
+		elif i % 3 == 0:
+			value = (num_2 + num_1 - 0x2CB2CB2D) & 0xFFFFFFFF
+		elif i % 3 == 1:
+			value = (num_2 + num_1 + 0x34D34D34) & 0xFFFFFFFF
+
+		key [i] = value
+	if first_auxiliar_array[i - 8] < value:
+		num_1 = 0
+	else:
+		num_1 = -1
+	
+	key[16] = num_1 & 0xFFFFFFFF
+
+	return key
+
+def rotl(num, bits):
+	INT_BITS = 32
+	return ((num << bits)|(num >> (INT_BITS - bits))) & 0xFFFFFFFF
+
+def get_first_part_of_key(key, second_auxiliar_array):
+
+	num_1 = rotl(second_auxiliar_array[7], 0x10)
+	num_2 = (second_auxiliar_array[0] + num_1) & 0xFFFFFFFF
+	num_3 = rotl(second_auxiliar_array[6], 0x10)
+	key[0] = (num_2 + num_3) & 0xFFFFFFFF
+
+	num_1 = rotl(second_auxiliar_array[0], 0x8)
+	num_2 = (second_auxiliar_array[1] + num_1) & 0xFFFFFFFF
+	key[1] = (num_2 + second_auxiliar_array[7]) & 0xFFFFFFFF
+	
+	num_1 = rotl(second_auxiliar_array[1], 0x10)
+	num_2 = (second_auxiliar_array[2] + num_1) & 0xFFFFFFFF
+	num_3 = rotl(second_auxiliar_array[0], 0x10)
+	key[2] = (num_2 + num_3) & 0xFFFFFFFF
+
+	num_1 = rotl(second_auxiliar_array[2], 0x8)
+	num_2 = (second_auxiliar_array[3] + num_1) & 0xFFFFFFFF
+	key[3] = (second_auxiliar_array[1] + num_2) & 0xFFFFFFFF
+
+	num_1 = rotl(second_auxiliar_array[3], 0x10)
+	num_2 = (second_auxiliar_array[4] + num_1) & 0xFFFFFFFF
+	num_3 = rotl(second_auxiliar_array[2], 0x10)
+	key[4] = (num_2 + num_3) & 0xFFFFFFFF
+
+	num_1 = rotl(second_auxiliar_array[4], 0x8)
+	num_2 = (second_auxiliar_array[5] + num_1) & 0xFFFFFFFF
+	key[5] = (second_auxiliar_array[3] + num_2) & 0xFFFFFFFF
+
+	num_1 = rotl(second_auxiliar_array[5], 0x10)
+	num_2 = (second_auxiliar_array[6] + num_1) & 0xFFFFFFFF
+	num_3 = rotl(second_auxiliar_array[4], 0x10)
+	key[6] = (num_2 + num_3) & 0xFFFFFFFF
+
+	num_1 = rotl(second_auxiliar_array[6], 0x8)
+	num_2 = (second_auxiliar_array[7] + num_1) & 0xFFFFFFFF
+	key[7] = (second_auxiliar_array[5] + num_2) & 0xFFFFFFFF
+
+	return key
+
+def get_key(key):
+	first_auxiliar_array = setup_first_auxiliar_array(key)
+
+	key = get_second_part_of_key(key, first_auxiliar_array)
+	second_auxiliar_array = setup_second_auxiliar_array(key)
+	key = get_first_part_of_key(key, second_auxiliar_array)
+
+	return key
+
+
+key = initialize_key()
+key = get_key(key)
+```
+
+Great, now we can analyze how the encryption routine works.
+
+```
+mov     edx, [ebp+key]						-> EDX = old KEY
+push    edx									-> Put the KEY in the stack (argument for function get_key)
+call    get_key								-> Call to get_key function, this will update the KEY
+add     esp, 4
+mov     eax, [ebp+original_buffer]		-> EAX = ORIGINAL_BUFFER
+mov     ecx, [ebp+key]						-> ECX = KEY
+mov     edx, [eax]							-> EDX = ORIGINAL_BUFFER[0]
+xor     edx, [ecx]							-> EDX = ORIGINAL_BUFFER[0] ^ KEY[0]
+mov     eax, [ebp+key]						-> EAX = KEY
+mov     ecx, [eax+14h]						-> ECX = KEY[5]
+shr     ecx, 10h							-> ECX = KEY[5] >> 10h
+xor     edx, ecx							-> EDX = EDX ^ ECX = (ORIGINAL_BUFFER[0] ^ KEY[0]) ^ (KEY[5] >> 10h)
+mov     eax, [ebp+key]						-> EAX = KEY
+mov     ecx, [eax+0Ch]						-> EAX = KEY[3]
+shl     ecx, 10h							-> ECX = KEY[3] << 10h
+xor     edx, ecx							-> EDX = EDX ^ ECX = ((ORIGINAL_BUFFER[0] ^ KEY[0]) ^ (KEY[5] >> 10h)) ^ (KEY[3] << 10h)
+mov     eax, [ebp+encrypted_buffer]		-> EAX = ENCRYPTED_BUFFER
+mov     [eax], edx							-> ENCRYPTED_BUFFER[0] = EDX
+mov     ecx, [ebp+original_buffer]		-> ECX = ORIGINAL_BUFFER
+mov     edx, [ebp+key]						-> EDX = KEY
+mov     eax, [ecx+4]						-> EAX = ORIGINAL_BUFFER[1]
+xor     eax, [edx+8]						-> EAX = ORIGINAL_BUFFER[1] ^ KEY[2]
+mov     ecx, [ebp+key]						-> ECX = KEY
+mov     edx, [ecx+1Ch]						-> EDX = KEY[6]
+shr     edx, 10h							-> EDX = KEY[6] >> 10h
+xor     eax, edx							-> EAX = EAX ^ EDX = (ORIGINAL_BUFFER[1] ^ KEY[2]) ^ (KEY[6] >> 10h)
+mov     ecx, [ebp+key]						-> ECX = KEY
+mov     edx, [ecx+14h]						-> EDX = KEY[5]
+shl     edx, 10h							-> EDX = KEY[5] << 10h
+xor     eax, edx							-> EAX = EAX ^ EDX = ((ORIGINAL_BUFFER[1] ^ KEY[2]) ^ (KEY[6] >> 10h)) ^ (KEY[5] << 10h)
+mov     ecx, [ebp+encrypted_buffer]		-> ECX = ENCRYPTED_BUFFER
+mov     [ecx+4], eax						-> ENCRYPTED_BUFFER[1] = EAX
+mov     edx, [ebp+original_buffer]		-> EDX = ORIGINAL_BUFFER
+mov     eax, [ebp+key]						-> EAX = KEY
+mov     ecx, [edx+8]						-> ECX = ORIGINAL_BUFFER[2]
+xor     ecx, [eax+10h]						-> ECX = ORIGINAL_BUFFER[2] ^ KEY[4]
+mov     edx, [ebp+key]						-> EDX = KEY
+mov     eax, [edx+4]						-> EAX = KEY[1]
+shr     eax, 10h							-> EAX = KEY[1] >> 10h
+xor     ecx, eax							-> ECX = ECX ^ EAX = (ORIGINAL_BUFFER[2] ^ KEY[4]) ^ (KEY[1] >> 10h)
+mov     edx, [ebp+key]						-> EDX = KEY
+mov     eax, [edx+1Ch]						-> EAX = KEY[7]
+shl     eax, 10h							-> EAX = KEY[7] >> 10h
+xor     ecx, eax							-> ECX = ECX ^ EAX = ((ORIGINAL_BUFFER[2] ^ KEY[4]) ^ (KEY[1] >> 10h)) ^ (KEY[7] << 10h)
+mov     edx, [ebp+encrypted_buffer]		-> EDX = ENCRYPTED_BUFFER
+mov     [edx+8], ecx						-> ENCRYPTED_BUFFER[2] = ECX
+mov     eax, [ebp+original_buffer]		-> EAX = ORIGINAL_BUFFER
+mov     ecx, [ebp+key]						-> ECX = KEY
+mov     edx, [eax+0Ch]						-> EDX = ORIGINAL_BUFFER[3]
+xor     edx, [ecx+18h]						-> EDX = ORIGINAL_BUFFER[3] ^ KEY[6]
+mov     eax, [ebp+key]						-> EAX = KEY
+mov     ecx, [eax+0Ch]						-> ECX = KEY[3]
+shr     ecx, 10h							-> ECX = KEY[3] >> 10h
+xor     edx, ecx							-> EDX = (ORIGINAL_BUFFER[3] ^ KEY[6]) ^ (KEY[3] >> 10h)
+mov     eax, [ebp+key]						-> EAX = KEY
+mov     ecx, [eax+4]						-> ECX = KEY[1]
+shl     ecx, 10h							-> ECX = KEY[1] << 10h
+xor     edx, ecx							-> EDX = EDX ^ ECX = ((ORIGINAL_BUFFER[3] ^ KEY[6]) ^ (KEY[3] >> 10h)) ^ (KEY[1] << 10h)
+mov     eax, [ebp+encrypted_buffer]		-> EAX = ENCRYPTED_BUFFER
+mov     [eax+0Ch], edx						-> ENCRYPTED_BUFFER[3] = EDX
+mov     ecx, [ebp+original_buffer]		-> ECX = Pointer to ORIGINAL_BUFFER
+add     ecx, 10h							-> ECX = (Pointer to ORIGINAL_BUFFER) + 10h
+mov     [ebp+original_buffer], ecx		-> (Pointer to ORIGINAL_BUFFER) = (Pointer to ORIGINAL_BUFFER) + 10h (Pointer update)
+mov     edx, [ebp+encrypted_buffer]		-> EDX = Pointer to ENCRYPTED_BUFFER
+add     edx, 10h							-> EDX = (Pointer to ENCRYPTED_BUFFER) + 10h
+mov     [ebp+encrypted_buffer], edx		-> (Pointer to ENCRYPTED_BUFFER) = (Pointer to ENCRYPTED_BUFFER) + 10h (Pointer update)
+```
+
+At this moment, we should be able to create a script that reproduces the decryption process that the malware performs to the files.
 
 **5. Trace from the encoding function to the source of the encoded content. What is the content?**
 

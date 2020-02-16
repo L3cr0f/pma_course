@@ -1,3 +1,6 @@
+import os
+import sys
+
 # Creates an array of 17 elements, 68 bytes in total
 def initialize_key():
 	return [0] * 17
@@ -113,6 +116,45 @@ def get_key(key):
 
 	return key
 
+def decrypt_file(file):
+	decrypted_bytes = bytearray()
 
-key = initialize_key()
-key = get_key(key)
+	key = initialize_key()
+
+	with open(file, "rb") as encrypted_file:
+		encrypted_bytes = encrypted_file.read(0x10)
+		while encrypted_bytes:
+			key = get_key(key)
+
+			encrypted_bytes_0 = int.from_bytes(encrypted_bytes[0:4], byteorder="little")
+			decrypted_bytes_0 = ((encrypted_bytes_0 ^ ((key[3] << 0x10) & 0xFFFFFFFF)) ^ (key[5] >> 0x10)) ^ key[0]
+
+			encrypted_bytes_1 = int.from_bytes(encrypted_bytes[4:8], byteorder="big")
+			decrypted_bytes_1 = ((encrypted_bytes_1 ^ ((key[5] << 0x10) & 0xFFFFFFFF)) ^ (key[6] >> 0x10)) ^ key[2]
+
+			encrypted_bytes_2 = int.from_bytes(encrypted_bytes[8:12], byteorder="big")
+			decrypted_bytes_2 = ((encrypted_bytes_2 ^ ((key[7] << 0x10) & 0xFFFFFFFF)) ^ (key[1] >> 0x10)) ^ key[4]
+
+			encrypted_bytes_3 = int.from_bytes(encrypted_bytes[12:16], byteorder="big")
+			decrypted_bytes_3 = ((encrypted_bytes_3 ^ ((key[1] << 0x10) & 0xFFFFFFFF)) ^ (key[3] >> 0x10)) ^ key[6]
+
+			# TODO
+			# Copiar los bytes descrifrados a un buffer (conversión a BIG ENDIAN) y copiarlos a un fichero
+
+			break
+			encrypted_bytes = encrypted_file.read(0x10)
+
+def save_decrypted_file(file, decrypted_bytes):
+	decrypted_file = open(file + "_decrypted.bmp", "wb")
+	decrypted_file.write(decrypted_bytes)
+
+def get_file_from_args():
+	filename = sys.argv[1]
+	if os.path.exists(filename):
+		return filename
+
+file = get_file_from_args()
+if file:
+	decrypt_file(file)
+else:
+	print("Please provide a file to decrypt")
