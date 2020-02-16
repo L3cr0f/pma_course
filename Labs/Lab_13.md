@@ -245,8 +245,8 @@ mov     [edx+20h], ecx				-> ZERO [8] = EXC = 4D34D35Dh
 mov     eax, [ebp+integer(17)_0]	-> EAX = int ZERO [17] = [0, ..., 0]
 mov     ecx, [eax+20h]				-> ECX = ZERO [8] = 4D34D35Dh
 cmp     ecx, [ebp+integer(8)_0]		-> Comparison between: 4D34D35Dh and 0, if 0 >= ECX, CF = 1
-sbb     edx, edx					-> EDX = EDX - (EDX - CF) -> CF=0 -> EDX = 0
-neg     edx							-> if EDX = 1 -> EDX = -1
+sbb     edx, edx					-> EDX = EDX - (EDX + CF) -> CF=0 -> EDX = 0
+neg     edx							-> if EDX = -1 -> EDX = 1
 mov     eax, [ebp+integer(17)_0]	-> EAX = int ZERO [17] = [0, ..., 0]
 mov     ecx, [eax+24h]				-> ECX = ZERO [9] = 0
 lea     edx, [ecx+edx-2CB2CB2Dh]	-> EDX = 0 - 2CB2CB2Dh = D34D34D3h (the result will be FFFFD34D34D3h, but only 4 bytes are taken)
@@ -255,8 +255,8 @@ mov     [eax+24h], edx				-> ZERO [9] = EDX = D34D34D3h
 mov     ecx, [ebp+integer(17)_0]	-> ECX = int ZERO [17] = [0, ..., 0]
 mov     edx, [ecx+24h]				-> ECX = ZERO [9] = D34D34D3h
 cmp     edx, [ebp+integer(8)_0+4]	-> Comparison between: D34D34D3h and 0, if 0 >= EDX, CF = 1
-sbb     eax, eax					-> EAX = EAX - (EAX - CF) -> CF=0 -> EAX = 0
-neg     eax							-> if EAX = 1 -> EAX = -1
+sbb     eax, eax					-> EAX = EAX - (EAX + CF) -> CF=0 -> EAX = 0
+neg     eax							-> if EAX = -1 -> EAX = 1
 mov     ecx, [ebp+integer(17)_0]	-> ECX = int ZERO [17] = [0, ..., 0]
 mov     edx, [ecx+28h]				-> EDX = ZERO [10] = 0
 lea     eax, [edx+eax+34D34D34h]	-> EAX = 34D34D34h
@@ -265,8 +265,8 @@ mov     [ecx+28h], eax				-> ZERO [10] = EAX = 34D34D34h
 mov     edx, [ebp+integer(17)_0]	-> EDX = int ZERO [17] = [0, ..., 0]
 mov     eax, [edx+28h]				-> EAX = ZERO [10] = 34D34D34h
 cmp     eax, [ebp+integer(8)_0+8]	-> Comparison between: 34D34D34h and 0, if 0 >= EAX, CF = 1
-sbb     ecx, ecx					-> ECX = ECX - (ECX - CF) -> CF=0 -> ECX = 0
-neg     ecx							-> if ECX = 1 -> ECX = -1
+sbb     ecx, ecx					-> ECX = ECX - (ECX + CF) -> CF=0 -> ECX = 0
+neg     ecx							-> if ECX = -1 -> ECX = 1
 mov     edx, [ebp+integer(17)_0]	-> EDX = int ZERO [17] = [0, ..., 0]
 mov     eax, [edx+2Ch]				-> EAX = ZERO [11] = 0
 lea     ecx, [eax+ecx+4D34D35Dh]	-> ECX = 4D34D35Dh
@@ -275,8 +275,8 @@ mov     [edx+2Ch], ecx				-> ZERO [11] = EXC = 4D34D35Dh
 mov     eax, [ebp+integer(17)_0]	-> EAX = int ZERO [17] = [0, ..., 0]
 mov     ecx, [eax+2Ch]				-> ECX = ZERO [11] = 4D34D35Dh
 cmp     ecx, [ebp+integer(8)_0+0Ch]	-> Comparison between: p4D34D35Dh and 0, if 0 >= ECX, CF = 1
-sbb     edx, edx					-> EDX = EDX - (EDX - CF) -> CF=0 -> EDX = 0
-neg     edx							-> if EDX = 1 -> EDX = -1
+sbb     edx, edx					-> EDX = EDX - (EDX + CF) -> CF=0 -> EDX = 0
+neg     edx							-> if EDX = -1 -> EDX = 1
 mov     eax, [ebp+integer(17)_0]	-> EAX = int ZERO [17] = [0, ..., 0]
 mov     ecx, [eax+30h]				-> ECX = ZERO [12] = 0
 lea     edx, [ecx+edx-2CB2CB2Dh]	-> EDX = 0 - 2CB2CB2Dh = D34D34D3h
@@ -285,8 +285,8 @@ mov     [eax+30h], edx				-> ZERO [12] = EDX = D34D34D3h
 mov     ecx, [ebp+integer(17)_0]	-> ECX = int ZERO [17] = [0, ..., 0]
 mov     edx, [ecx+30h]				-> EDX = ZERO [12] = D34D34D3h
 cmp     edx, [ebp+integer(8)_0+10h]	-> Comparison between: D34D34D3h and 0, if 0 >= EDX, CF = 1
-sbb     eax, eax					-> EAX = EAX - (EAX - CF) -> CF=0 -> EAX = 0
-neg     eax							-> if EAX = 1 -> EAX = -1
+sbb     eax, eax					-> EAX = EAX - (EAX + CF) -> CF=0 -> EAX = 0
+neg     eax							-> if EAX = -1 -> EAX = 1
 mov     ecx, [ebp+integer(17)_0]	-> ECX = int ZERO [17] = [0, ..., 0]
 mov     edx, [ecx+34h]				-> EDX = ZERO [13] = 0
 lea     eax, [edx+eax+34D34D34h]	-> EAX = 34D34D34h
@@ -295,8 +295,8 @@ mov     [ecx+34h], eax				-> ZERO [13] = EAX = 34D34D34h
 mov     edx, [ebp+integer(17)_0]	-> EDX = int ZERO [17] = [0, ..., 0]
 mov     eax, [edx+34h]				-> EAX = ZERO [13] = 34D34D34h
 cmp     eax, [ebp+integer(8)_0+14h]	-> Comparison between: 34D34D34h and 0, if 0 >= EAX, CF = 1
-sbb     ecx, ecx					-> ECX = ECX - (ECX - CF) -> CF=0 -> ECX = 0
-neg     ecx							-> if ECX = 1 -> ECX = -1
+sbb     ecx, ecx					-> ECX = ECX - (ECX + CF) -> CF=0 -> ECX = 0
+neg     ecx							-> if ECX = -1 -> ECX = 1
 mov     edx, [ebp+integer(17)_0]	-> EDX = int ZERO [17] = [0, ..., 0]
 mov     eax, [edx+38h]				-> EAX = ZERO [14] = 0
 lea     ecx, [eax+ecx+4D34D35Dh]	-> ECX = 4D34D35Dh
@@ -305,8 +305,8 @@ mov     [edx+38h], ecx				-> ZERO [14] = EXC = 4D34D35Dh
 mov     eax, [ebp+integer(17)_0]	-> EAX = int ZERO [17] = [0, ..., 0]
 mov     ecx, [eax+38h]				-> ECX = ZERO [14] = 4D34D35Dh
 cmp     ecx, [ebp+integer(8)_0+18h]	-> Comparison between: 4D34D35Dh and 0, if 0 >= ECX, CF = 1
-sbb     edx, edx					-> EDX = EDX - (EDX - CF) -> CF=0 -> EDX = 0
-neg     edx							-> if EDX = 1 -> EDX = -1
+sbb     edx, edx					-> EDX = EDX - (EDX + CF) -> CF=0 -> EDX = 0
+neg     edx							-> if EDX = -1 -> EDX = 1
 mov     eax, [ebp+integer(17)_0]	-> EAX = int ZERO [17] = [0, ..., 0]
 mov     ecx, [eax+3Ch]				-> ECX = ZERO [15] = 0
 lea     edx, [ecx+edx-2CB2CB2Dh]	-> EDX = 0 - 2CB2CB2Dh = D34D34D3h
@@ -315,8 +315,8 @@ mov     [eax+3Ch], edx				-> ZERO [15] = EDX = D34D34D3h
 mov     ecx, [ebp+integer(17)_0]	-> ECX = int ZERO [17] = [0, ..., 0]
 mov     edx, [ecx+3Ch]				-> EDX = ZERO [15] = D34D34D3h
 cmp     edx, [ebp+integer(8)_0+1Ch]	-> Comparison between: D34D34D3h and 0, if 0 >= EDX, CF = 1
-sbb     eax, eax					-> EAX = EAX - (EAX - CF) -> CF=0 -> EAX = 0
-neg     eax							-> if EAX = 1 -> EAX = -1
+sbb     eax, eax					-> EAX = EAX - (EAX + CF) -> CF=0 -> EAX = 0
+neg     eax							-> if EAX = -1 -> EAX = 1
 mov     ecx, [ebp+integer(17)_0]	-> ECX = int ZERO [17] = [0, ..., 0]
 mov     [ecx+40h], eax				-> ZERO [16] = EAX = 0
 mov     [ebp+counter_to_8], 0		-> counter_to_8 = 0
