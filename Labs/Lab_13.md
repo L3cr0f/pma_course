@@ -801,6 +801,8 @@ We have decrypted the file! It is a screenshot from our machine!
 
 After decrypting the file, we have found out that the malware creates screenshots of the infected machine. However, we also could know this by analyzing the function _take_screenshot_ at _0x00401070_
 
+![_IDA Pro_ _take_screenshot_ function](../Pictures/Lab_13/lab_13-02_5_ida_pro_1.png)
+
 **6. Can you find the algorithm used for encoding? If not, how can you decode the content?**
 
 This question has been answered at exercise 4.
