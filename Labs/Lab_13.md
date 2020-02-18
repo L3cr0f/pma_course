@@ -198,9 +198,7 @@ Before this function is executed, one array (probably the key) is innitialized w
 
 ![_IDA Pro_ _memset_ of argument](../Pictures/Lab_13/lab_13-02_4_ida_pro_1.png)
 
-After that, the _encoding_function_ is called
-
-As we can see, this function will call another function before starting with the _XOR_ encoding process, probably this function will be used to get the key every iteration, so we rename it as _get_key_.
+After that, the _encoding_function_ is called and, as we can see, this function will call another function before starting with the _XOR_ encoding process, probably this function will be used to get the key every iteration, so we rename it as _get_key_.
 
 ![_IDA Pro_ encoding routine](../Pictures/Lab_13/lab_13-02_4_ida_pro_2.png)
 
@@ -358,7 +356,7 @@ mov     ecx, [ebp+integer(17)_0]	-> ECX = int ZERO [17] (Notice that this array 
 mov     edx, [ecx+eax*4]			-> EDX = ZERO [0 + counter] -> from 0 to 7th position the array
 mov     eax, [ebp+counter_to_8]		-> EAX = counter
 mov     ecx, [ebp+integer(17)_0]	-> ECX = int ZERO [17]
-add     edx, [ecx+eax*4+20h]		-> EDX = ZERO [counter + 8] -> This will load the elements of the array that are arleady set up
+add     edx, [ecx+eax*4+20h]		-> EDX = EDX + ZERO[counter + 8] = ZERO[counter] + ZERO[counter + 8]
 push    edx							-> Puts EDX in the stack (loaded as argument)
 call    sub_40128D					-> Call to the function sub_40128D
 add     esp, 4						-> Stack adequacy
@@ -738,13 +736,13 @@ mov     edx, [ebp+key]						-> EDX = KEY
 mov     eax, [ecx+4]						-> EAX = ORIGINAL_BUFFER[1]
 xor     eax, [edx+8]						-> EAX = ORIGINAL_BUFFER[1] ^ KEY[2]
 mov     ecx, [ebp+key]						-> ECX = KEY
-mov     edx, [ecx+1Ch]						-> EDX = KEY[6]
-shr     edx, 10h							-> EDX = KEY[6] >> 10h
-xor     eax, edx							-> EAX = EAX ^ EDX = (ORIGINAL_BUFFER[1] ^ KEY[2]) ^ (KEY[6] >> 10h)
+mov     edx, [ecx+1Ch]						-> EDX = KEY[7]
+shr     edx, 10h							-> EDX = KEY[7] >> 10h
+xor     eax, edx							-> EAX = EAX ^ EDX = (ORIGINAL_BUFFER[1] ^ KEY[2]) ^ (KEY[7] >> 10h)
 mov     ecx, [ebp+key]						-> ECX = KEY
 mov     edx, [ecx+14h]						-> EDX = KEY[5]
 shl     edx, 10h							-> EDX = KEY[5] << 10h
-xor     eax, edx							-> EAX = EAX ^ EDX = ((ORIGINAL_BUFFER[1] ^ KEY[2]) ^ (KEY[6] >> 10h)) ^ (KEY[5] << 10h)
+xor     eax, edx							-> EAX = EAX ^ EDX = ((ORIGINAL_BUFFER[1] ^ KEY[2]) ^ (KEY[7] >> 10h)) ^ (KEY[5] << 10h)
 mov     ecx, [ebp+encrypted_buffer]		-> ECX = ENCRYPTED_BUFFER
 mov     [ecx+4], eax						-> ENCRYPTED_BUFFER[1] = EAX
 mov     edx, [ebp+original_buffer]		-> EDX = ORIGINAL_BUFFER
@@ -785,11 +783,72 @@ mov     [ebp+encrypted_buffer], edx		-> (Pointer to ENCRYPTED_BUFFER) = (Pointer
 
 At this moment, we should be able to create a script that reproduces the decryption process that the malware performs to the files.
 
+This file it is stored in the path "Scripts/Others/Lab_13/lab13_02_decryption_file.py"
+
+We execute it as follows:
+
+```
+$ python3 Scripts/Others/Lab_13/lab13_02_decryption_file.py Scripts/Others/Lab_13/temp0010e67e 
+```
+
+And voilà!
+
+![_IDA Pro_ decrypted file](../Pictures/Lab_13/lab_13-02_4_ida_pro_14.bmp)
+
+We have decrypted the file! It is a screenshot from our machine!
+
 **5. Trace from the encoding function to the source of the encoded content. What is the content?**
+
+After decrypting the file, we have found out that the malware creates screenshots of the infected machine. However, we also could know this by analyzing the function _take_screenshot_ at _0x00401070_
 
 **6. Can you find the algorithm used for encoding? If not, how can you decode the content?**
 
+This question has been answered at exercise 4.
+
 **7. Using instrumentation, can you recover the original source of one of the encoded files?**
+
+To do so, we have used _IDA Pro_ and its library _IDAPython_.
+
+The first thing we did was selecting one address from we could extract the buffer of the previously created screenshot, the address we chose was _0x0040187F_, since there we could extract the two values we needed, the _buffer_ and its _length_.
+
+![_IDA Pro_ buffer address](../Pictures/Lab_13/lab_13-02_7_ida_pro_1.png)
+
+Then, we developed the following script:
+
+```
+from idautils import *
+from idc import *
+import os
+
+def dump_buffer_to_file(address, size, filepath):
+	data = GetManyBytes(address, size)
+	with open(filepath, "wb") as file:
+		file.write(data)
+	print "Memdump Success!"
+
+StartDebugger("","","")
+
+# Address before the encryption routine
+address = 0x0040187F
+
+# Executes to address
+RunTo(address)
+
+# Waits the debugger
+GetDebuggerEvent(WFNE_SUSP, -1);
+
+# Get the value of the registers
+buffer_address = GetRegValue('EAX')
+bytes_to_write = GetRegValue('EDX')
+
+desktop = os.path.join(os.environ["HOMEPATH"], "Desktop")
+filepath = desktop +  "\\original_file.bmp"
+
+# Dump file content
+dump_buffer_to_file(buffer_address, bytes_to_write, filepath)
+```
+
+After executing, we can see how we have obtained the screenshot of the infected machine in our _Desktop_ path
 
 ## Lab 13-3
 

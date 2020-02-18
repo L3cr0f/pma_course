@@ -5,10 +5,20 @@ MAX_VALUE = 0xFFFFFFFF
 MAX_BYTE_VALUE = 0xFF
 INT_BITS = 32
 
+# Left rotate of bits
+def rotl(num, bits):
+	return ((num << bits)|(num >> (INT_BITS - bits))) & MAX_VALUE
+
+# Saves the decrypted file
+def save_decrypted_file(file, decrypted_bytes):
+	decrypted_file = open(file + "_decrypted.bmp", "wb")
+	decrypted_file.write(decrypted_bytes)
+
 # Creates an array of 17 elements, 68 bytes in total
 def initialize_key():
 	return [0] * 17
 
+# Creates the first auxiliary array, it is used to create the second part of the key
 def setup_first_auxiliar_array(key):
 	first_auxiliar_array = []
 
@@ -18,6 +28,7 @@ def setup_first_auxiliar_array(key):
 
 	return first_auxiliar_array
 
+# Gets the value of every element of the second auxiliary array
 def get_value_of_second_auxiliar_array(key_value):
 
 	num_1 = key_value & 0xFFFF
@@ -35,16 +46,19 @@ def get_value_of_second_auxiliar_array(key_value):
 
 	return value
 
+# Creates the second auxiliary array, it is used to create the first part of the key
 def setup_second_auxiliar_array(key):
 	second_auxiliar_array = []
 
 	# We fill the indexes 0 to 7 (included) of the array, which corresponds with bytes 0 to 31, with the values of the key
-	for counter in range(8, 16):
-		value = get_value_of_second_auxiliar_array(key[counter])
+	for counter in range(8):
+		argument = (key[counter] + key[counter + 8]) & MAX_VALUE
+		value = get_value_of_second_auxiliar_array(argument)
 		second_auxiliar_array.append(value)
 
 	return second_auxiliar_array
 
+# Gets the first part of the key, it is used as initialization of the first part of the key
 def get_second_part_of_key(key, first_auxiliar_array):
 	num_1 = key[16]
 
@@ -58,19 +72,17 @@ def get_second_part_of_key(key, first_auxiliar_array):
 			value = (num_2 + num_1 + 0x34D34D34) & MAX_VALUE
 
 		key [i] = value
-	# TODO ARREGLAR
-	if first_auxiliar_array[i - 8] < value:
-		num_1 = 0
-	else:
-		num_1 = 1
+
+		if first_auxiliar_array[i - 8] < value:
+			num_1 = 0
+		else:
+			num_1 = 1
 	
 	key[16] = num_1 & MAX_VALUE
 
 	return key
 
-def rotl(num, bits):
-	return ((num << bits)|(num >> (INT_BITS - bits))) & MAX_VALUE
-
+# Gets the first part of the key, this is what is going to be used for the encryption process
 def get_first_part_of_key(key, second_auxiliar_array):
 
 	num_1 = rotl(second_auxiliar_array[7], 0x10)
@@ -80,7 +92,7 @@ def get_first_part_of_key(key, second_auxiliar_array):
 
 	num_1 = rotl(second_auxiliar_array[0], 0x8)
 	num_2 = (second_auxiliar_array[1] + num_1) & MAX_VALUE
-	key[1] = (num_2 + second_auxiliar_array[7]) & MAX_VALUE
+	key[1] = (second_auxiliar_array[7] + num_2) & MAX_VALUE
 	
 	num_1 = rotl(second_auxiliar_array[1], 0x10)
 	num_2 = (second_auxiliar_array[2] + num_1) & MAX_VALUE
@@ -111,23 +123,21 @@ def get_first_part_of_key(key, second_auxiliar_array):
 
 	return key
 
+# Gets the key of every iteration
 def get_key(key):
 	first_auxiliar_array = setup_first_auxiliar_array(key)
-
 	key = get_second_part_of_key(key, first_auxiliar_array)
-
 	second_auxiliar_array = setup_second_auxiliar_array(key)
-	
 	key = get_first_part_of_key(key, second_auxiliar_array)
 
 	return key
 
+# Decrypts the file
 def decrypt_file(file):
 	decrypted_bytes = bytearray()
 
 	key = initialize_key()
 
-	count = 0
 	with open(file, "rb") as encrypted_file:
 		encrypted_bytes = encrypted_file.read(0x10)
 		while encrypted_bytes:
@@ -151,7 +161,7 @@ def decrypt_file(file):
 
 			# Decryption of the second chunk of 4 bytes (LITTLE ENDIAN)
 			encrypted_bytes_1 = int.from_bytes(encrypted_bytes[4:8], byteorder="little")
-			decrypted_bytes_1 = ((encrypted_bytes_1 ^ ((key[5] << 0x10) & MAX_VALUE)) ^ (key[6] >> 0x10)) ^ key[2]
+			decrypted_bytes_1 = ((encrypted_bytes_1 ^ ((key[5] << 0x10) & MAX_VALUE)) ^ (key[7] >> 0x10)) ^ key[2]
 
 			# We invert the order to BIG ENDIAN
 			decrypted_bytes_1_0 = decrypted_bytes_1 & MAX_BYTE_VALUE
@@ -200,22 +210,9 @@ def decrypt_file(file):
 			# Next chunk of 16 bytes
 			encrypted_bytes = encrypted_file.read(0x10)
 
-			print(str(count) + " ##############################")
-			for i in range(len(key)):
-				print(hex(key[i]))
+	save_decrypted_file(file, decrypted_bytes)
 
-			if count >= 4:
-				break
-			count = count + 1
-
-	#save_decrypted_file(file, decrypted_bytes)
-	for i in range(len(key)):
-		print(hex(key[i]) + " ")
-
-def save_decrypted_file(file, decrypted_bytes):
-	decrypted_file = open(file + "_decrypted.bmp", "wb")
-	decrypted_file.write(decrypted_bytes)
-
+# Gets file from args
 def get_file_from_args():
 	if len(sys.argv) == 2:
 		filename = sys.argv[1]
