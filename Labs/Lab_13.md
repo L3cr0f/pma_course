@@ -234,89 +234,89 @@ Now that we know what the variables mean, it's time to start with the second blo
 
 ```
 mov     eax, [ebp+integer(17)_0]	-> EAX = int ZERO [17] = [0, ..., 0]
-mov     ecx, [eax+40h]				-> ECX = ZERO [16] = 0
+mov     ecx, [eax+40h]			-> ECX = ZERO [16] = 0
 mov     edx, [ebp+integer(17)_0]	-> EDX = int ZERO [17] = [0, ..., 0]
-mov     eax, [edx+20h]				-> EAX = ZERO [8] = 0
+mov     eax, [edx+20h]			-> EAX = ZERO [8] = 0
 lea     ecx, [eax+ecx+4D34D35Dh]	-> ECX = 0 + 0 + 4D34D35Dh = 4D34D35Dh
 mov     edx, [ebp+integer(17)_0]	-> EDX = int ZERO [17] = [0, ..., 0]
-mov     [edx+20h], ecx				-> ZERO [8] = EXC = 4D34D35Dh
+mov     [edx+20h], ecx			-> ZERO [8] = EXC = 4D34D35Dh
 mov     eax, [ebp+integer(17)_0]	-> EAX = int ZERO [17] = [0, ..., 0]
-mov     ecx, [eax+20h]				-> ECX = ZERO [8] = 4D34D35Dh
+mov     ecx, [eax+20h]			-> ECX = ZERO [8] = 4D34D35Dh
 cmp     ecx, [ebp+integer(8)_0]		-> Comparison between: 4D34D35Dh and 0, if 0 >= ECX, CF = 1
-sbb     edx, edx					-> EDX = EDX - (EDX + CF) -> CF=0 -> EDX = 0
-neg     edx							-> if EDX = -1 -> EDX = 1
+sbb     edx, edx			-> EDX = EDX - (EDX + CF) -> CF=0 -> EDX = 0
+neg     edx				-> if EDX = -1 -> EDX = 1
 mov     eax, [ebp+integer(17)_0]	-> EAX = int ZERO [17] = [0, ..., 0]
-mov     ecx, [eax+24h]				-> ECX = ZERO [9] = 0
+mov     ecx, [eax+24h]			-> ECX = ZERO [9] = 0
 lea     edx, [ecx+edx-2CB2CB2Dh]	-> EDX = 0 - 2CB2CB2Dh = D34D34D3h (the result will be FFFFD34D34D3h, but only 4 bytes are taken)
 mov     eax, [ebp+integer(17)_0]	-> EAX = int ZERO [17] = [0, ..., 0]
-mov     [eax+24h], edx				-> ZERO [9] = EDX = D34D34D3h
+mov     [eax+24h], edx			-> ZERO [9] = EDX = D34D34D3h
 mov     ecx, [ebp+integer(17)_0]	-> ECX = int ZERO [17] = [0, ..., 0]
-mov     edx, [ecx+24h]				-> ECX = ZERO [9] = D34D34D3h
+mov     edx, [ecx+24h]			-> ECX = ZERO [9] = D34D34D3h
 cmp     edx, [ebp+integer(8)_0+4]	-> Comparison between: D34D34D3h and 0, if 0 >= EDX, CF = 1
-sbb     eax, eax					-> EAX = EAX - (EAX + CF) -> CF=0 -> EAX = 0
-neg     eax							-> if EAX = -1 -> EAX = 1
+sbb     eax, eax			-> EAX = EAX - (EAX + CF) -> CF=0 -> EAX = 0
+neg     eax				-> if EAX = -1 -> EAX = 1
 mov     ecx, [ebp+integer(17)_0]	-> ECX = int ZERO [17] = [0, ..., 0]
-mov     edx, [ecx+28h]				-> EDX = ZERO [10] = 0
+mov     edx, [ecx+28h]			-> EDX = ZERO [10] = 0
 lea     eax, [edx+eax+34D34D34h]	-> EAX = 34D34D34h
 mov     ecx, [ebp+integer(17)_0]	-> ECX = int ZERO [17] = [0, ..., 0]
-mov     [ecx+28h], eax				-> ZERO [10] = EAX = 34D34D34h
+mov     [ecx+28h], eax			-> ZERO [10] = EAX = 34D34D34h
 mov     edx, [ebp+integer(17)_0]	-> EDX = int ZERO [17] = [0, ..., 0]
-mov     eax, [edx+28h]				-> EAX = ZERO [10] = 34D34D34h
+mov     eax, [edx+28h]			-> EAX = ZERO [10] = 34D34D34h
 cmp     eax, [ebp+integer(8)_0+8]	-> Comparison between: 34D34D34h and 0, if 0 >= EAX, CF = 1
-sbb     ecx, ecx					-> ECX = ECX - (ECX + CF) -> CF=0 -> ECX = 0
-neg     ecx							-> if ECX = -1 -> ECX = 1
+sbb     ecx, ecx			-> ECX = ECX - (ECX + CF) -> CF=0 -> ECX = 0
+neg     ecx				-> if ECX = -1 -> ECX = 1
 mov     edx, [ebp+integer(17)_0]	-> EDX = int ZERO [17] = [0, ..., 0]
-mov     eax, [edx+2Ch]				-> EAX = ZERO [11] = 0
+mov     eax, [edx+2Ch]			-> EAX = ZERO [11] = 0
 lea     ecx, [eax+ecx+4D34D35Dh]	-> ECX = 4D34D35Dh
 mov     edx, [ebp+integer(17)_0]	-> EDX = int ZERO [17] = [0, ..., 0]
-mov     [edx+2Ch], ecx				-> ZERO [11] = EXC = 4D34D35Dh
+mov     [edx+2Ch], ecx			-> ZERO [11] = EXC = 4D34D35Dh
 mov     eax, [ebp+integer(17)_0]	-> EAX = int ZERO [17] = [0, ..., 0]
-mov     ecx, [eax+2Ch]				-> ECX = ZERO [11] = 4D34D35Dh
+mov     ecx, [eax+2Ch]			-> ECX = ZERO [11] = 4D34D35Dh
 cmp     ecx, [ebp+integer(8)_0+0Ch]	-> Comparison between: p4D34D35Dh and 0, if 0 >= ECX, CF = 1
-sbb     edx, edx					-> EDX = EDX - (EDX + CF) -> CF=0 -> EDX = 0
-neg     edx							-> if EDX = -1 -> EDX = 1
+sbb     edx, edx			-> EDX = EDX - (EDX + CF) -> CF=0 -> EDX = 0
+neg     edx				-> if EDX = -1 -> EDX = 1
 mov     eax, [ebp+integer(17)_0]	-> EAX = int ZERO [17] = [0, ..., 0]
-mov     ecx, [eax+30h]				-> ECX = ZERO [12] = 0
+mov     ecx, [eax+30h]			-> ECX = ZERO [12] = 0
 lea     edx, [ecx+edx-2CB2CB2Dh]	-> EDX = 0 - 2CB2CB2Dh = D34D34D3h
 mov     eax, [ebp+integer(17)_0]	-> EAX = int ZERO [17] = [0, ..., 0]
-mov     [eax+30h], edx				-> ZERO [12] = EDX = D34D34D3h
+mov     [eax+30h], edx			-> ZERO [12] = EDX = D34D34D3h
 mov     ecx, [ebp+integer(17)_0]	-> ECX = int ZERO [17] = [0, ..., 0]
-mov     edx, [ecx+30h]				-> EDX = ZERO [12] = D34D34D3h
+mov     edx, [ecx+30h]			-> EDX = ZERO [12] = D34D34D3h
 cmp     edx, [ebp+integer(8)_0+10h]	-> Comparison between: D34D34D3h and 0, if 0 >= EDX, CF = 1
-sbb     eax, eax					-> EAX = EAX - (EAX + CF) -> CF=0 -> EAX = 0
-neg     eax							-> if EAX = -1 -> EAX = 1
+sbb     eax, eax			-> EAX = EAX - (EAX + CF) -> CF=0 -> EAX = 0
+neg     eax				-> if EAX = -1 -> EAX = 1
 mov     ecx, [ebp+integer(17)_0]	-> ECX = int ZERO [17] = [0, ..., 0]
-mov     edx, [ecx+34h]				-> EDX = ZERO [13] = 0
+mov     edx, [ecx+34h]			-> EDX = ZERO [13] = 0
 lea     eax, [edx+eax+34D34D34h]	-> EAX = 34D34D34h
 mov     ecx, [ebp+integer(17)_0]	-> ECX = int ZERO [17] = [0, ..., 0]
-mov     [ecx+34h], eax				-> ZERO [13] = EAX = 34D34D34h
+mov     [ecx+34h], eax			-> ZERO [13] = EAX = 34D34D34h
 mov     edx, [ebp+integer(17)_0]	-> EDX = int ZERO [17] = [0, ..., 0]
-mov     eax, [edx+34h]				-> EAX = ZERO [13] = 34D34D34h
+mov     eax, [edx+34h]			-> EAX = ZERO [13] = 34D34D34h
 cmp     eax, [ebp+integer(8)_0+14h]	-> Comparison between: 34D34D34h and 0, if 0 >= EAX, CF = 1
-sbb     ecx, ecx					-> ECX = ECX - (ECX + CF) -> CF=0 -> ECX = 0
-neg     ecx							-> if ECX = -1 -> ECX = 1
+sbb     ecx, ecx			-> ECX = ECX - (ECX + CF) -> CF=0 -> ECX = 0
+neg     ecx				-> if ECX = -1 -> ECX = 1
 mov     edx, [ebp+integer(17)_0]	-> EDX = int ZERO [17] = [0, ..., 0]
-mov     eax, [edx+38h]				-> EAX = ZERO [14] = 0
+mov     eax, [edx+38h]			-> EAX = ZERO [14] = 0
 lea     ecx, [eax+ecx+4D34D35Dh]	-> ECX = 4D34D35Dh
 mov     edx, [ebp+integer(17)_0]	-> EDX = int ZERO [17] = [0, ..., 0]
-mov     [edx+38h], ecx				-> ZERO [14] = EXC = 4D34D35Dh
+mov     [edx+38h], ecx			-> ZERO [14] = EXC = 4D34D35Dh
 mov     eax, [ebp+integer(17)_0]	-> EAX = int ZERO [17] = [0, ..., 0]
-mov     ecx, [eax+38h]				-> ECX = ZERO [14] = 4D34D35Dh
+mov     ecx, [eax+38h]			-> ECX = ZERO [14] = 4D34D35Dh
 cmp     ecx, [ebp+integer(8)_0+18h]	-> Comparison between: 4D34D35Dh and 0, if 0 >= ECX, CF = 1
-sbb     edx, edx					-> EDX = EDX - (EDX + CF) -> CF=0 -> EDX = 0
-neg     edx							-> if EDX = -1 -> EDX = 1
+sbb     edx, edx			-> EDX = EDX - (EDX + CF) -> CF=0 -> EDX = 0
+neg     edx				-> if EDX = -1 -> EDX = 1
 mov     eax, [ebp+integer(17)_0]	-> EAX = int ZERO [17] = [0, ..., 0]
-mov     ecx, [eax+3Ch]				-> ECX = ZERO [15] = 0
+mov     ecx, [eax+3Ch]			-> ECX = ZERO [15] = 0
 lea     edx, [ecx+edx-2CB2CB2Dh]	-> EDX = 0 - 2CB2CB2Dh = D34D34D3h
 mov     eax, [ebp+integer(17)_0]	-> EAX = int ZERO [17] = [0, ..., 0]
-mov     [eax+3Ch], edx				-> ZERO [15] = EDX = D34D34D3h
+mov     [eax+3Ch], edx			-> ZERO [15] = EDX = D34D34D3h
 mov     ecx, [ebp+integer(17)_0]	-> ECX = int ZERO [17] = [0, ..., 0]
-mov     edx, [ecx+3Ch]				-> EDX = ZERO [15] = D34D34D3h
+mov     edx, [ecx+3Ch]			-> EDX = ZERO [15] = D34D34D3h
 cmp     edx, [ebp+integer(8)_0+1Ch]	-> Comparison between: D34D34D3h and 0, if 0 >= EDX, CF = 1
-sbb     eax, eax					-> EAX = EAX - (EAX + CF) -> CF=0 -> EAX = 0
-neg     eax							-> if EAX = -1 -> EAX = 1
+sbb     eax, eax			-> EAX = EAX - (EAX + CF) -> CF=0 -> EAX = 0
+neg     eax				-> if EAX = -1 -> EAX = 1
 mov     ecx, [ebp+integer(17)_0]	-> ECX = int ZERO [17] = [0, ..., 0]
-mov     [ecx+40h], eax				-> ZERO [16] = EAX = 0
+mov     [ecx+40h], eax			-> ZERO [16] = EAX = 0
 mov     [ebp+counter_to_8], 0		-> counter_to_8 = 0
 ```
 
@@ -353,13 +353,13 @@ Now, let's start with the foyrth chunk of code. This block of code includes a ca
 ```
 mov     eax, [ebp+counter_to_8]		-> EAX = counter
 mov     ecx, [ebp+integer(17)_0]	-> ECX = int ZERO [17] (Notice that this array will not be filled with 0s anymore)
-mov     edx, [ecx+eax*4]			-> EDX = ZERO [0 + counter] -> from 0 to 7th position the array
+mov     edx, [ecx+eax*4]		-> EDX = ZERO [0 + counter] -> from 0 to 7th position the array
 mov     eax, [ebp+counter_to_8]		-> EAX = counter
 mov     ecx, [ebp+integer(17)_0]	-> ECX = int ZERO [17]
 add     edx, [ecx+eax*4+20h]		-> EDX = EDX + ZERO[counter + 8] = ZERO[counter] + ZERO[counter + 8]
-push    edx							-> Puts EDX in the stack (loaded as argument)
-call    sub_40128D					-> Call to the function sub_40128D
-add     esp, 4						-> Stack adequacy
+push    edx				-> Puts EDX in the stack (loaded as argument)
+call    sub_40128D			-> Call to the function sub_40128D
+add     esp, 4				-> Stack adequacy
 mov     edx, [ebp+counter_to_8]		-> EDX = counter
 mov     [ebp+edx*4+var_20], eax		-> ZERO [counter + 8] = result of function sub_40128D
 ```
@@ -367,10 +367,10 @@ So now, we have to dig into the function _sub_40128D_.
 
 ```
 mov     eax, [ebp+arg_0]	-> EAX = ARG_0 (remeber that ARG_0 = ZERO [8 + counter])
-and     eax, 0FFFFh			-> EAX = first 4 bytes of ARG_0 = ARG_0
+and     eax, 0FFFFh		-> EAX = first 4 bytes of ARG_0 = ARG_0
 mov     [ebp+var_4], eax	-> VAR_4 = EAX = first 4 bytes of ARG_0
 mov     ecx, [ebp+arg_0]	-> ECX = ARG_0
-shr     ecx, 10h			-> ECX = last 4 bytes of ARG_0
+shr     ecx, 10h		-> ECX = last 4 bytes of ARG_0
 	-> ECX = 4D34D35Dh >> 10h = 4D34h
 	-> ECX = D34D34D3h >> 10h = D34Dh
 	-> ECX = 34D34D34h >> 10h = 34D3h
@@ -380,7 +380,7 @@ imul    edx, [ebp+var_4]	-> EDX = EDX * VAR_4 = EDX * EDX (Notice that EDX is 4 
 	-> EDX = D35Dh * D35Dh = AE826FC9h
 	-> EDX = 34D3h * 34D3h = AE665E9h
 	-> EDX = 4D34h * 4D34h = 17485290h
-shr     edx, 11h			-> EDX = EDX >> 11h
+shr     edx, 11h		-> EDX = EDX >> 11h
 	-> EDX = AE826FC9h -> EDX = 5741h
 	-> EDX = AE665E9h -> EDX = 573h
 	-> EDX = 17485290h -> EDX = BA4h
@@ -405,7 +405,7 @@ imul    ecx, [ebp+var_8]	-> ECX = VAR_8 * VAR_8
 	-> ECX = 4D34h * 4D34h = 17485290h
 	-> ECX = D34Dh * D34Dh = AE680529h
 	-> ECX = 34D3h * 34D3h = AE665E9h
-add     edx, ecx			-> EDX = EDX + ECX
+add     edx, ecx		-> EDX = EDX + ECX
 	-> EDX = 7F7Ch + 17485290h = 1748D20Ch
 	-> EDX = 5733h + AE680529h = AE685C5Ch
 	-> EDX = 1FDCh + AE665E9h = AE685C5h
@@ -450,106 +450,106 @@ second_array[7] = DBC39B5h
 Finally, the fourth chunk of code is as follows:
 
 ```
-push    10h									-> Puts 10h into the stack (second argument of the next function)
+push    10h					-> Puts 10h into the stack (second argument of the next function)
 mov     eax, [ebp+integer(8)_second+1Ch]	-> EAX = second_array [7] = DBC39B5h 
 push    eax             ; unsigned int		-> Puts EAX into the stack (first argument of the next function)
-call    __rotl								-> Calls to __rotl = shl eax, 10h = 39B50DBCh
+call    __rotl					-> Calls to __rotl = shl eax, 10h = 39B50DBCh
 add     esp, 8
 mov     esi, [ebp+integer(8)_second]		-> ESI = second_array [0] = 6902BDC5h 
-add     esi, eax							-> ESI = 6902BDC5h + 39B50DBCh = A2B7CB81h
-push    10h             ; int				-> Puts 10h into the stack (second argument of the next function)
+add     esi, eax				-> ESI = 6902BDC5h + 39B50DBCh = A2B7CB81h
+push    10h             ; int			-> Puts 10h into the stack (second argument of the next function)
 mov     ecx, [ebp+integer(8)_second+18h]	-> ECX = second_array [6] = 6902BDC5h 
 push    ecx             ; unsigned int		-> Puts ECX into the stack (first argument of the next function)
-call    __rotl								-> Calls to __rotl = shl ecx, 10h (notice the result is stored in eax) = BDC56902 -> EAX = BDC56902h
+call    __rotl					-> Calls to __rotl = shl ecx, 10h (notice the result is stored in eax) = BDC56902 -> EAX = BDC56902h
 add     esp, 8
-add     esi, eax							-> ESI = A2B7CB81h + BDC56902h = 1607D3483h -> ESI = 607D3483h
-mov     edx, [ebp+integer(17)_0]			-> EDX = ZERO [0]
-mov     [edx], esi							-> ZERO [0] = 607D3483h
-push    8               ; int				-> Puts 8h into the stack (second argument of the next function)
+add     esi, eax				-> ESI = A2B7CB81h + BDC56902h = 1607D3483h -> ESI = 607D3483h
+mov     edx, [ebp+integer(17)_0]		-> EDX = ZERO [0]
+mov     [edx], esi				-> ZERO [0] = 607D3483h
+push    8               ; int			-> Puts 8h into the stack (second argument of the next function)
 mov     eax, [ebp+integer(8)_second]		-> EAX = second_array [0] = 6902BDC5h
 push    eax             ; unsigned int		-> Puts EAX into the stack (first argument of the next function)
-call    __rotl								-> Calls to __rotl = shl eax, 8h = 02BDC569h -> EAX = 2BDC569h
+call    __rotl					-> Calls to __rotl = shl eax, 8h = 02BDC569h -> EAX = 2BDC569h
 add     esp, 8
 mov     ecx, [ebp+integer(8)_second+4]		-> ECX = second_array [1] = DBC39B5h
-add     ecx, eax							-> ECX = DBC39B5h + 2BDC569h = 1079FF1Eh
+add     ecx, eax				-> ECX = DBC39B5h + 2BDC569h = 1079FF1Eh
 add     ecx, [ebp+integer(8)_second+1Ch]	-> ECX = ECX + second_array [7] = 1079FF1Eh + DBC39B5h = 1E3638D3h
-mov     edx, [ebp+integer(17)_0]			-> EDX = ZERO[0]
-mov     [edx+4], ecx						-> ZERO [1] = 1E3638D3h
-push    10h             ; int				-> Puts 10h into the stack (second argument of the next function)
+mov     edx, [ebp+integer(17)_0]		-> EDX = ZERO[0]
+mov     [edx+4], ecx				-> ZERO [1] = 1E3638D3h
+push    10h             ; int			-> Puts 10h into the stack (second argument of the next function)
 mov     eax, [ebp+integer(8)_second+4]		-> EAX = second_array [1] = DBC39B5h
 push    eax             ; unsigned int		-> Puts EAX into the stack (first argument of the next function)
-call    __rotl								-> Calls to __rotl = shl eax, 10h = 39B50DBCh
+call    __rotl					-> Calls to __rotl = shl eax, 10h = 39B50DBCh
 add     esp, 8
 mov     esi, [ebp+integer(8)_second+8]		-> ESI = second_array [2] = 71E6D755h
-add     esi, eax							-> ESI = 71E6D755h + 39B50DBCh = AB9BE511h
-push    10h             ; int				-> Puts 10h into the stack (second argument of the next function)
+add     esi, eax				-> ESI = 71E6D755h + 39B50DBCh = AB9BE511h
+push    10h             ; int			-> Puts 10h into the stack (second argument of the next function)
 mov     ecx, [ebp+integer(8)_second]		-> ECX = second_array [0] = 6902BDC5h
 push    ecx             ; unsigned int		-> Puts ECX into the stack (first argument of the next function)
-call    __rotl								-> Calls to __rotl = shl eax, 10h (notice the result is stored in eax) = BDC56902h -> EAX = BDC56902h
+call    __rotl					-> Calls to __rotl = shl eax, 10h (notice the result is stored in eax) = BDC56902h -> EAX = BDC56902h
 add     esp, 8
-add     esi, eax							-> ESI = AB9BE511h + BDC56902h = 169614E13h -> ESI = 69614E13h
-mov     edx, [ebp+integer(17)_0]			-> EDX = ZERO[0]
-mov     [edx+8], esi						-> ZERO[2] = 69614E13h
-push    8               ; int				-> Puts 8h into the stack (second argument of the next function)
+add     esi, eax				-> ESI = AB9BE511h + BDC56902h = 169614E13h -> ESI = 69614E13h
+mov     edx, [ebp+integer(17)_0]		-> EDX = ZERO[0]
+mov     [edx+8], esi				-> ZERO[2] = 69614E13h
+push    8               ; int			-> Puts 8h into the stack (second argument of the next function)
 mov     eax, [ebp+integer(8)_second+8]		-> EAX = second_array [2] = 71E6D755h
 push    eax             ; unsigned int		-> Puts EAX into the stack (first argument of the next function)
-call    __rotl								-> Calls to __rotl = shl eax, 8h = E6D75571h -> EAX = E6D75571h
+call    __rotl					-> Calls to __rotl = shl eax, 8h = E6D75571h -> EAX = E6D75571h
 add     esp, 8
 mov     ecx, [ebp+integer(8)_second+0Ch]	-> ECX = second_array [3] = 6902BDC5h
-add     ecx, eax							-> ECX = 6902BDC5h + E6D75571h = 14FDA1336h -> ECX = 4FDA1336h
+add     ecx, eax				-> ECX = 6902BDC5h + E6D75571h = 14FDA1336h -> ECX = 4FDA1336h
 add     ecx, [ebp+integer(8)_second+4]		-> ECX = 4FDA1336h + DBC39B5h = 5D964CEBh
-mov     edx, [ebp+integer(17)_0]			-> EDX = ZERO[0]
-mov     [edx+0Ch], ecx						-> ZERO[3] = 5D964CEBh
-push    10h             ; int				-> Puts 10h into the stack (second argument of the next function)
+mov     edx, [ebp+integer(17)_0]		-> EDX = ZERO[0]
+mov     [edx+0Ch], ecx				-> ZERO[3] = 5D964CEBh
+push    10h             ; int			-> Puts 10h into the stack (second argument of the next function)
 mov     eax, [ebp+integer(8)_second+0Ch]	-> EAX = second_array [3] = 6902BDC5h
 push    eax             ; unsigned int		-> Puts EAX into the stack (first argument of the next function)
-call    __rotl								-> Calls to __rotl = shl eax, 10h = BDC56902h
+call    __rotl					-> Calls to __rotl = shl eax, 10h = BDC56902h
 add     esp, 8
 mov     esi, [ebp+integer(8)_second+10h]	-> ESI = second_array [4] = DBC39B5h
-add     esi, eax							-> ESI = DBC39B5h + BDC56902h = CB81A2B7h
-push    10h             ; int				-> Puts 10h into the stack (second argument of the next function)
+add     esi, eax				-> ESI = DBC39B5h + BDC56902h = CB81A2B7h
+push    10h             ; int			-> Puts 10h into the stack (second argument of the next function)
 mov     ecx, [ebp+integer(8)_second+8]		-> ECX = second_array [2] = 71E6D755h
 push    ecx             ; unsigned int		-> Puts ECX into the stack (first argument of the next function)
-call    __rotl								-> Calls to __rotl = shl ecx, 10h (notice the result is stored in eax) = D75571E6h
+call    __rotl					-> Calls to __rotl = shl ecx, 10h (notice the result is stored in eax) = D75571E6h
 add     esp, 8
-add     esi, eax							-> ESI = CB81A2B7h + D75571E6h = 1A2D7149Dh -> ESI = A2D7149Dh
-mov     edx, [ebp+integer(17)_0]			-> EDX = ZERO[0]
-mov     [edx+10h], esi						-> ZERO[4] = A2D7149Dh
-push    8               ; int				-> Puts 8h into the stack (second argument of the next function)
+add     esi, eax				-> ESI = CB81A2B7h + D75571E6h = 1A2D7149Dh -> ESI = A2D7149Dh
+mov     edx, [ebp+integer(17)_0]		-> EDX = ZERO[0]
+mov     [edx+10h], esi				-> ZERO[4] = A2D7149Dh
+push    8               ; int			-> Puts 8h into the stack (second argument of the next function)
 mov     eax, [ebp+integer(8)_second+10h]	-> EAX = second_array [4] = DBC39B5h
 push    eax             ; unsigned int		-> Puts EAX into the stack (first argument of the next function)
-call    __rotl								-> Calls to __rotl = shl eax, 8h = BC39B50Dh
+call    __rotl					-> Calls to __rotl = shl eax, 8h = BC39B50Dh
 add     esp, 8
 mov     ecx, [ebp+integer(8)_second+14h]	-> ECX = second_array [5] = 71E6D755h
-add     ecx, eax							-> ECX = 71E6D755h + BC39B50Dh = 12E208C62h -> ECX = 2E208C62h
+add     ecx, eax				-> ECX = 71E6D755h + BC39B50Dh = 12E208C62h -> ECX = 2E208C62h
 add     ecx, [ebp+integer(8)_second+0Ch]	-> ECX = 2E208C62h + 6902BDC5h = 97234A27h
-mov     edx, [ebp+integer(17)_0]			-> EDX = ZERO[0]
-mov     [edx+14h], ecx						-> ZERO[5] = 97234A27h
-push    10h             ; int				-> Puts 10h into the stack (second argument of the next function)
+mov     edx, [ebp+integer(17)_0]		-> EDX = ZERO[0]
+mov     [edx+14h], ecx				-> ZERO[5] = 97234A27h
+push    10h             ; int			-> Puts 10h into the stack (second argument of the next function)
 mov     eax, [ebp+integer(8)_second+14h]	-> EAX = second_array [5] = 71E6D755h
 push    eax             ; unsigned int		-> Puts EAX into the stack (first argument of the next function)
-call    __rotl								-> Calls to __rotl = shl eax, 10h = D75571E6h
+call    __rotl					-> Calls to __rotl = shl eax, 10h = D75571E6h
 add     esp, 8
 mov     esi, [ebp+integer(8)_second+18h]	-> ESI = second_array [6] = 6902BDC5h
-add     esi, eax							-> ESI = 6902BDC5h + D75571E6h = 140582FABh -> ESI = 40582FABh
-push    10h             ; int				-> Puts 10h into the stack (second argument of the next function)
+add     esi, eax				-> ESI = 6902BDC5h + D75571E6h = 140582FABh -> ESI = 40582FABh
+push    10h             ; int			-> Puts 10h into the stack (second argument of the next function)
 mov     ecx, [ebp+integer(8)_second+10h]	-> ECX = second_array [4] = DBC39B5h
 push    ecx             ; unsigned int		-> Puts ECX into the stack (first argument of the next function)
-call    __rotl								-> Calls to __rotl = shl ecx, 10h (notice the result is stored in eax) = 39B50DBCh
+call    __rotl					-> Calls to __rotl = shl ecx, 10h (notice the result is stored in eax) = 39B50DBCh
 add     esp, 8	
-add     esi, eax							-> ESI = 40582FABh + 39B50DBCh = 7A0D3D67h
-mov     edx, [ebp+integer(17)_0]			-> EDX = ZERO[0]
-mov     [edx+18h], esi						-> ZERO[6] = 7A0D3D67h
-push    8               ; int				-> Puts 8h into the stack (second argument of the next function)
+add     esi, eax				-> ESI = 40582FABh + 39B50DBCh = 7A0D3D67h
+mov     edx, [ebp+integer(17)_0]		-> EDX = ZERO[0]
+mov     [edx+18h], esi				-> ZERO[6] = 7A0D3D67h
+push    8               ; int			-> Puts 8h into the stack (second argument of the next function)
 mov     eax, [ebp+integer(8)_second+18h]	-> EAX = second_array [6] = 6902BDC5h
 push    eax             ; unsigned int		-> Puts EAX into the stack (first argument of the next function)
-call    __rotl								-> Calls to __rotl = shl eax, 8h = 02BDC569h
+call    __rotl					-> Calls to __rotl = shl eax, 8h = 02BDC569h
 add     esp, 8
 mov     ecx, [ebp+integer(8)_second+1Ch]	-> ECX = second_array [7] = DBC39B5h
-add     ecx, eax							-> ECX = DBC39B5h + 02BDC569h = 1079FF1Eh
+add     ecx, eax				-> ECX = DBC39B5h + 02BDC569h = 1079FF1Eh
 add     ecx, [ebp+integer(8)_second+14h]	-> ECX = 1079FF1Eh + 71E6D755h = 8260D673h
-mov     edx, [ebp+integer(17)_0]			-> EDX = ZERO[0]
-mov     [edx+1Ch], ecx						-> ZERO[7] = 8260D673h
+mov     edx, [ebp+integer(17)_0]		-> EDX = ZERO[0]
+mov     [edx+1Ch], ecx				-> ZERO[7] = 8260D673h
 ```
 
 So the first part of the array will: 
@@ -589,201 +589,82 @@ ZERO[16] = 0;
 
 Now that we understand how the key creation process works, we need to replicate it in a python script.
 
-```
-# Creates an array of 17 elements, 68 bytes in total
-def initialize_key():
-	return [0] * 17
-
-def setup_first_auxiliar_array(key):
-	first_auxiliar_array = []
-
-	# We fill the indexes 8 to 15 (included) of the array, which corresponds with bytes 32 to 63, with the values of the key
-	for counter in range(8, 16):
-		first_auxiliar_array.append(key[counter])
-
-	return first_auxiliar_array
-
-def get_value_of_second_auxiliar_array(key_value):
-
-	num_1 = key_value & 0xFFFF
-	num_2 = key_value >> 0x10
-	num_3 = (num_1 * num_1) & 0xFFFFFFFF
-	num_4 = num_3 >> 0x11
-	num_5 = (num_1 * num_2) & 0xFFFFFFFF
-	num_6 = (num_4 + num_5) & 0xFFFFFFFF
-	num_7 = num_6 >> 0xF
-	num_8 = (num_2 * num_2) & 0xFFFFFFFF
-	num_9 = (num_7 + num_8) & 0xFFFFFFFF
-	num_10 = (key_value * key_value) & 0xFFFFFFFF
-
-	value = num_9 ^ num_10
-
-	return value
-
-def setup_second_auxiliar_array(key):
-	second_auxiliar_array = []
-
-	# We fill the indexes 0 to 7 (included) of the array, which corresponds with bytes 0 to 31, with the values of the key
-	for counter in range(8, 16):
-		value = get_value_of_second_auxiliar_array(key[counter])
-		second_auxiliar_array.append(value)
-
-	return second_auxiliar_array
-
-def get_second_part_of_key(key, first_auxiliar_array):
-	num_1 = key[16]
-
-	for i in range(8, 16):
-		num_2 = key[i]
-		if i % 3 == 2:
-			value = (num_2 + num_1 + 0x4D34D35D) & 0xFFFFFFFF
-		elif i % 3 == 0:
-			value = (num_2 + num_1 - 0x2CB2CB2D) & 0xFFFFFFFF
-		elif i % 3 == 1:
-			value = (num_2 + num_1 + 0x34D34D34) & 0xFFFFFFFF
-
-		key [i] = value
-	if first_auxiliar_array[i - 8] < value:
-		num_1 = 0
-	else:
-		num_1 = -1
-	
-	key[16] = num_1 & 0xFFFFFFFF
-
-	return key
-
-def rotl(num, bits):
-	INT_BITS = 32
-	return ((num << bits)|(num >> (INT_BITS - bits))) & 0xFFFFFFFF
-
-def get_first_part_of_key(key, second_auxiliar_array):
-
-	num_1 = rotl(second_auxiliar_array[7], 0x10)
-	num_2 = (second_auxiliar_array[0] + num_1) & 0xFFFFFFFF
-	num_3 = rotl(second_auxiliar_array[6], 0x10)
-	key[0] = (num_2 + num_3) & 0xFFFFFFFF
-
-	num_1 = rotl(second_auxiliar_array[0], 0x8)
-	num_2 = (second_auxiliar_array[1] + num_1) & 0xFFFFFFFF
-	key[1] = (num_2 + second_auxiliar_array[7]) & 0xFFFFFFFF
-	
-	num_1 = rotl(second_auxiliar_array[1], 0x10)
-	num_2 = (second_auxiliar_array[2] + num_1) & 0xFFFFFFFF
-	num_3 = rotl(second_auxiliar_array[0], 0x10)
-	key[2] = (num_2 + num_3) & 0xFFFFFFFF
-
-	num_1 = rotl(second_auxiliar_array[2], 0x8)
-	num_2 = (second_auxiliar_array[3] + num_1) & 0xFFFFFFFF
-	key[3] = (second_auxiliar_array[1] + num_2) & 0xFFFFFFFF
-
-	num_1 = rotl(second_auxiliar_array[3], 0x10)
-	num_2 = (second_auxiliar_array[4] + num_1) & 0xFFFFFFFF
-	num_3 = rotl(second_auxiliar_array[2], 0x10)
-	key[4] = (num_2 + num_3) & 0xFFFFFFFF
-
-	num_1 = rotl(second_auxiliar_array[4], 0x8)
-	num_2 = (second_auxiliar_array[5] + num_1) & 0xFFFFFFFF
-	key[5] = (second_auxiliar_array[3] + num_2) & 0xFFFFFFFF
-
-	num_1 = rotl(second_auxiliar_array[5], 0x10)
-	num_2 = (second_auxiliar_array[6] + num_1) & 0xFFFFFFFF
-	num_3 = rotl(second_auxiliar_array[4], 0x10)
-	key[6] = (num_2 + num_3) & 0xFFFFFFFF
-
-	num_1 = rotl(second_auxiliar_array[6], 0x8)
-	num_2 = (second_auxiliar_array[7] + num_1) & 0xFFFFFFFF
-	key[7] = (second_auxiliar_array[5] + num_2) & 0xFFFFFFFF
-
-	return key
-
-def get_key(key):
-	first_auxiliar_array = setup_first_auxiliar_array(key)
-
-	key = get_second_part_of_key(key, first_auxiliar_array)
-	second_auxiliar_array = setup_second_auxiliar_array(key)
-	key = get_first_part_of_key(key, second_auxiliar_array)
-
-	return key
-
-
-key = initialize_key()
-key = get_key(key)
-```
+The python functions regarding the key generation can be found in the python script located at "Scripts/Others/Lab_13/lab13_02_decryption_file.py" (this also includes the whole decryption process that we will explain further).
 
 Great, now we can analyze how the encryption routine works.
 
 ```
-mov     edx, [ebp+key]						-> EDX = old KEY
-push    edx									-> Put the KEY in the stack (argument for function get_key)
-call    get_key								-> Call to get_key function, this will update the KEY
+mov     edx, [ebp+key]				-> EDX = old KEY
+push    edx					-> Put the KEY in the stack (argument for function get_key)
+call    get_key					-> Call to get_key function, this will update the KEY
 add     esp, 4
 mov     eax, [ebp+original_buffer]		-> EAX = ORIGINAL_BUFFER
-mov     ecx, [ebp+key]						-> ECX = KEY
-mov     edx, [eax]							-> EDX = ORIGINAL_BUFFER[0]
-xor     edx, [ecx]							-> EDX = ORIGINAL_BUFFER[0] ^ KEY[0]
-mov     eax, [ebp+key]						-> EAX = KEY
-mov     ecx, [eax+14h]						-> ECX = KEY[5]
-shr     ecx, 10h							-> ECX = KEY[5] >> 10h
-xor     edx, ecx							-> EDX = EDX ^ ECX = (ORIGINAL_BUFFER[0] ^ KEY[0]) ^ (KEY[5] >> 10h)
-mov     eax, [ebp+key]						-> EAX = KEY
-mov     ecx, [eax+0Ch]						-> EAX = KEY[3]
-shl     ecx, 10h							-> ECX = KEY[3] << 10h
-xor     edx, ecx							-> EDX = EDX ^ ECX = ((ORIGINAL_BUFFER[0] ^ KEY[0]) ^ (KEY[5] >> 10h)) ^ (KEY[3] << 10h)
+mov     ecx, [ebp+key]				-> ECX = KEY
+mov     edx, [eax]				-> EDX = ORIGINAL_BUFFER[0]
+xor     edx, [ecx]				-> EDX = ORIGINAL_BUFFER[0] ^ KEY[0]
+mov     eax, [ebp+key]				-> EAX = KEY
+mov     ecx, [eax+14h]				-> ECX = KEY[5]
+shr     ecx, 10h				-> ECX = KEY[5] >> 10h
+xor     edx, ecx				-> EDX = EDX ^ ECX = (ORIGINAL_BUFFER[0] ^ KEY[0]) ^ (KEY[5] >> 10h)
+mov     eax, [ebp+key]				-> EAX = KEY
+mov     ecx, [eax+0Ch]				-> EAX = KEY[3]
+shl     ecx, 10h				-> ECX = KEY[3] << 10h
+xor     edx, ecx				-> EDX = EDX ^ ECX = ((ORIGINAL_BUFFER[0] ^ KEY[0]) ^ (KEY[5] >> 10h)) ^ (KEY[3] << 10h)
 mov     eax, [ebp+encrypted_buffer]		-> EAX = ENCRYPTED_BUFFER
-mov     [eax], edx							-> ENCRYPTED_BUFFER[0] = EDX
+mov     [eax], edx				-> ENCRYPTED_BUFFER[0] = EDX
 mov     ecx, [ebp+original_buffer]		-> ECX = ORIGINAL_BUFFER
-mov     edx, [ebp+key]						-> EDX = KEY
-mov     eax, [ecx+4]						-> EAX = ORIGINAL_BUFFER[1]
-xor     eax, [edx+8]						-> EAX = ORIGINAL_BUFFER[1] ^ KEY[2]
-mov     ecx, [ebp+key]						-> ECX = KEY
-mov     edx, [ecx+1Ch]						-> EDX = KEY[7]
-shr     edx, 10h							-> EDX = KEY[7] >> 10h
-xor     eax, edx							-> EAX = EAX ^ EDX = (ORIGINAL_BUFFER[1] ^ KEY[2]) ^ (KEY[7] >> 10h)
-mov     ecx, [ebp+key]						-> ECX = KEY
-mov     edx, [ecx+14h]						-> EDX = KEY[5]
-shl     edx, 10h							-> EDX = KEY[5] << 10h
-xor     eax, edx							-> EAX = EAX ^ EDX = ((ORIGINAL_BUFFER[1] ^ KEY[2]) ^ (KEY[7] >> 10h)) ^ (KEY[5] << 10h)
+mov     edx, [ebp+key]				-> EDX = KEY
+mov     eax, [ecx+4]				-> EAX = ORIGINAL_BUFFER[1]
+xor     eax, [edx+8]				-> EAX = ORIGINAL_BUFFER[1] ^ KEY[2]
+mov     ecx, [ebp+key]				-> ECX = KEY
+mov     edx, [ecx+1Ch]				-> EDX = KEY[7]
+shr     edx, 10h				-> EDX = KEY[7] >> 10h
+xor     eax, edx				-> EAX = EAX ^ EDX = (ORIGINAL_BUFFER[1] ^ KEY[2]) ^ (KEY[7] >> 10h)
+mov     ecx, [ebp+key]				-> ECX = KEY
+mov     edx, [ecx+14h]				-> EDX = KEY[5]
+shl     edx, 10h				-> EDX = KEY[5] << 10h
+xor     eax, edx				-> EAX = EAX ^ EDX = ((ORIGINAL_BUFFER[1] ^ KEY[2]) ^ (KEY[7] >> 10h)) ^ (KEY[5] << 10h)
 mov     ecx, [ebp+encrypted_buffer]		-> ECX = ENCRYPTED_BUFFER
-mov     [ecx+4], eax						-> ENCRYPTED_BUFFER[1] = EAX
+mov     [ecx+4], eax				-> ENCRYPTED_BUFFER[1] = EAX
 mov     edx, [ebp+original_buffer]		-> EDX = ORIGINAL_BUFFER
-mov     eax, [ebp+key]						-> EAX = KEY
-mov     ecx, [edx+8]						-> ECX = ORIGINAL_BUFFER[2]
-xor     ecx, [eax+10h]						-> ECX = ORIGINAL_BUFFER[2] ^ KEY[4]
-mov     edx, [ebp+key]						-> EDX = KEY
-mov     eax, [edx+4]						-> EAX = KEY[1]
-shr     eax, 10h							-> EAX = KEY[1] >> 10h
-xor     ecx, eax							-> ECX = ECX ^ EAX = (ORIGINAL_BUFFER[2] ^ KEY[4]) ^ (KEY[1] >> 10h)
-mov     edx, [ebp+key]						-> EDX = KEY
-mov     eax, [edx+1Ch]						-> EAX = KEY[7]
-shl     eax, 10h							-> EAX = KEY[7] >> 10h
-xor     ecx, eax							-> ECX = ECX ^ EAX = ((ORIGINAL_BUFFER[2] ^ KEY[4]) ^ (KEY[1] >> 10h)) ^ (KEY[7] << 10h)
+mov     eax, [ebp+key]				-> EAX = KEY
+mov     ecx, [edx+8]				-> ECX = ORIGINAL_BUFFER[2]
+xor     ecx, [eax+10h]				-> ECX = ORIGINAL_BUFFER[2] ^ KEY[4]
+mov     edx, [ebp+key]				-> EDX = KEY
+mov     eax, [edx+4]				-> EAX = KEY[1]
+shr     eax, 10h				-> EAX = KEY[1] >> 10h
+xor     ecx, eax				-> ECX = ECX ^ EAX = (ORIGINAL_BUFFER[2] ^ KEY[4]) ^ (KEY[1] >> 10h)
+mov     edx, [ebp+key]				-> EDX = KEY
+mov     eax, [edx+1Ch]				-> EAX = KEY[7]
+shl     eax, 10h				-> EAX = KEY[7] >> 10h
+xor     ecx, eax				-> ECX = ECX ^ EAX = ((ORIGINAL_BUFFER[2] ^ KEY[4]) ^ (KEY[1] >> 10h)) ^ (KEY[7] << 10h)
 mov     edx, [ebp+encrypted_buffer]		-> EDX = ENCRYPTED_BUFFER
-mov     [edx+8], ecx						-> ENCRYPTED_BUFFER[2] = ECX
+mov     [edx+8], ecx				-> ENCRYPTED_BUFFER[2] = ECX
 mov     eax, [ebp+original_buffer]		-> EAX = ORIGINAL_BUFFER
-mov     ecx, [ebp+key]						-> ECX = KEY
-mov     edx, [eax+0Ch]						-> EDX = ORIGINAL_BUFFER[3]
-xor     edx, [ecx+18h]						-> EDX = ORIGINAL_BUFFER[3] ^ KEY[6]
-mov     eax, [ebp+key]						-> EAX = KEY
-mov     ecx, [eax+0Ch]						-> ECX = KEY[3]
-shr     ecx, 10h							-> ECX = KEY[3] >> 10h
-xor     edx, ecx							-> EDX = (ORIGINAL_BUFFER[3] ^ KEY[6]) ^ (KEY[3] >> 10h)
-mov     eax, [ebp+key]						-> EAX = KEY
-mov     ecx, [eax+4]						-> ECX = KEY[1]
-shl     ecx, 10h							-> ECX = KEY[1] << 10h
-xor     edx, ecx							-> EDX = EDX ^ ECX = ((ORIGINAL_BUFFER[3] ^ KEY[6]) ^ (KEY[3] >> 10h)) ^ (KEY[1] << 10h)
+mov     ecx, [ebp+key]				-> ECX = KEY
+mov     edx, [eax+0Ch]				-> EDX = ORIGINAL_BUFFER[3]
+xor     edx, [ecx+18h]				-> EDX = ORIGINAL_BUFFER[3] ^ KEY[6]
+mov     eax, [ebp+key]				-> EAX = KEY
+mov     ecx, [eax+0Ch]				-> ECX = KEY[3]
+shr     ecx, 10h				-> ECX = KEY[3] >> 10h
+xor     edx, ecx				-> EDX = (ORIGINAL_BUFFER[3] ^ KEY[6]) ^ (KEY[3] >> 10h)
+mov     eax, [ebp+key]				-> EAX = KEY
+mov     ecx, [eax+4]				-> ECX = KEY[1]
+shl     ecx, 10h				-> ECX = KEY[1] << 10h
+xor     edx, ecx				-> EDX = EDX ^ ECX = ((ORIGINAL_BUFFER[3] ^ KEY[6]) ^ (KEY[3] >> 10h)) ^ (KEY[1] << 10h)
 mov     eax, [ebp+encrypted_buffer]		-> EAX = ENCRYPTED_BUFFER
-mov     [eax+0Ch], edx						-> ENCRYPTED_BUFFER[3] = EDX
+mov     [eax+0Ch], edx				-> ENCRYPTED_BUFFER[3] = EDX
 mov     ecx, [ebp+original_buffer]		-> ECX = Pointer to ORIGINAL_BUFFER
-add     ecx, 10h							-> ECX = (Pointer to ORIGINAL_BUFFER) + 10h
+add     ecx, 10h				-> ECX = (Pointer to ORIGINAL_BUFFER) + 10h
 mov     [ebp+original_buffer], ecx		-> (Pointer to ORIGINAL_BUFFER) = (Pointer to ORIGINAL_BUFFER) + 10h (Pointer update)
 mov     edx, [ebp+encrypted_buffer]		-> EDX = Pointer to ENCRYPTED_BUFFER
-add     edx, 10h							-> EDX = (Pointer to ENCRYPTED_BUFFER) + 10h
+add     edx, 10h				-> EDX = (Pointer to ENCRYPTED_BUFFER) + 10h
 mov     [ebp+encrypted_buffer], edx		-> (Pointer to ENCRYPTED_BUFFER) = (Pointer to ENCRYPTED_BUFFER) + 10h (Pointer update)
 ```
 
 At this moment, we should be able to create a script that reproduces the decryption process that the malware performs to the files.
 
-This file it is stored in the path "Scripts/Others/Lab_13/lab13_02_decryption_file.py"
+This file it is stored in the path "Scripts/Others/Lab_13/lab13_02_decryption_file.py".
 
 We execute it as follows:
 
