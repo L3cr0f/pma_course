@@ -682,7 +682,17 @@ We have decrypted the file! It is a screenshot from our machine!
 
 After decrypting the file, we have found out that the malware creates screenshots of the infected machine. However, we also could know this by analyzing the function _take_screenshot_ at _0x00401070_
 
-![_IDA Pro_ _take_screenshot_ function](../Pictures/Lab_13/lab_13-02_5_ida_pro_1.png)
+To do so, the malware first calls the _WINAPI_ function _GetSystemMetrics_ with the argument _SM_CXSCREEN_, this will return the width of the screen of the primary monitor in pixels. Then, it will call the same function but with argument _SM_CYSCREEN_, which will return the height of the screen. After that, it will get a handle to the desktop window by means of _GetDesktopWindow_, which will be used to get a handle to the device context (DC) of the display by means of _GetDC_. Now, the binary will call _CreateCompatibleDC_ to create a memory device context based on the previously obtained handle to the device context.
+
+![_IDA Pro_ _take_screenshot_ function 1](../Pictures/Lab_13/lab_13-02_5_ida_pro_1.png)
+
+The next step the malware does is calling _CreateCompatibleBitmap_ so as to create a bitmap that is compatible to the device context. Then, it selects the bitmap using _SelectObject_ and calls the function _BitBlt_ with _ROP_ argument as _SRCCOPY_, which will copy the source rectangle (screenshot) into the destination rectangle (bitmap).
+
+![_IDA Pro_ _take_screenshot_ function 2](../Pictures/Lab_13/lab_13-02_5_ida_pro_2.png)
+
+After that, the sample reserves some memory and then calls _GetDIBits_ to get the bits of the specified compatible bitmap and copy them into the specified buffer.
+
+Finally, the malware releases the device context by means of _ReleaseDC_ and _DeleteDC_.
 
 **6. Can you find the algorithm used for encoding? If not, how can you decode the content?**
 
@@ -731,7 +741,7 @@ filepath = desktop +  "\\original_file.bmp"
 dump_buffer_to_file(buffer_address, bytes_to_write, filepath)
 ```
 
-After executing, we can see how we have obtained the screenshot of the infected machine in our _Desktop_ path
+After executing, we can see how we have obtained the screenshot of the infected machine in our _Desktop_ path.
 
 ## Lab 13-3
 
