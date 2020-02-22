@@ -5,7 +5,8 @@ from idc import *
 heads = Heads(SegStart(ScreenEA()), SegEnd(ScreenEA()))
 funcCalls = []
 for current in heads:
-	if (GetMnem(current) == "call" or "sub" in GetOpnd(current, 0)):
+	if (GetMnem(current) == "call" or "sub" in GetOpnd(current, 0)
+		or GetOpnd(current, 0) == "offset StartAddress"):
 		funcCalls.append(current)
 
 print("Number of calls and sub functions: %d" % (len(funcCalls)))
@@ -18,7 +19,10 @@ for current in funcCalls:
 heads = Heads(SegStart(ScreenEA()), SegEnd(ScreenEA()))
 antiVM = []
 for current in heads:
-	if (GetMnem(current) == "sidt" or GetMnem(current) == "sgdt" or GetMnem(current) == "sldt" or GetMnem(current) == "smsw" or GetMnem(current) == "str" or GetMnem(current) == "in" or GetMnem(current) == "cpuid"):
+	if (GetMnem(current) == "sidt" or GetMnem(current) == "sgdt"
+		or GetMnem(current) == "sldt" or GetMnem(current) == "smsw"
+		or GetMnem(current) == "str" or GetMnem(current) == "in"
+		or GetMnem(current) == "cpuid"):
 		antiVM.append(current)
 
 print("Number of potential Anti-VM instructions: %d" % (len(antiVM)))

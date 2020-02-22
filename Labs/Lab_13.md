@@ -749,16 +749,145 @@ Analyze the malware found in the file Lab13-03.exe.
 
 **1. Compare the output of strings with the information available via dynamic analysis. Based on this comparison, which elements might be encoded?**
 
+When we execute the _strings_ command with this sample we see the following interesiting strings:
+
+```
+...
+www.practicalmalwareanalysis.com
+L"A
+d"A
+Object not Initialized
+Data not multiple of Block Size
+Empty key
+Incorrect key length
+Incorrect block length
+...
+```
+
+As we can see, it seems that the malware will make some HTTP requests to _www.practicalmalwareanalysis.com/_, also it seems that it will need some kind of key.
+
+If we execute the sample, we can see how the sample seems to be broken or may be it expects some kind of argument to be executed, since the process does not pop up.
+
 **2. Use static analysis to look for potential encoding by searching for the string xor. What type of encoding do you find?**
+
+Time to start _IDA Pro_ and see what we see, but before start analyzing the sample, we execute the _IDAPython_ script _ida_highlight_ to improve the analysis process and see if there are _XOR_ operations used to encode something.
+
+```
+Number of xor: 116
+```
+
+Wow! There is a bunch of _XOR_ encoding instructions. Now, it's time to analyze the malware and look for these encryption routines.
+
+The first function the malware calls in the _main_ function is located at _0x00401AC2_, this seems to be the encryption routine we were expecting, since it contains a bunch of encoding _XOR_, multiplication, shift left and right instructions and many more stuff related, we will call this function _innitial_encryption_.
+
+Also, digging inside the malware we see some functions that make use of _XOR_ encoding instructions, like the ones located at _0x00403990_ (_small_encryption_), _0x00402DA8_ (_big_encryption_) and _0x0040223A_ (_\_big_encryption_, since it is called inside of the previous function). All of these functions are called by the one located at _0x0040352D_ that we have called _encrypt_aes_.
 
 **3. Use static tools like FindCrypt2, KANAL, and the IDA Entropy Plugin to identify any other encoding mechanisms. How do these findings compare with the XOR findings?**
 
+We are going to use _KANAL_ to determine what encryption routines this malware is using.
+
+Interesting, _KANAL_ says that this malware is using _Rijndael_ encryption, also known as _AES_.
+
+![_PEID_ _KANAL_](../Pictures/Lab_13/lab_13-03_3_peid_1.png)
+
+```
+RIJNDAEL [S] [char] :: 0000C908 :: 0040C908
+	Referenced at 00401E95
+	Referenced at 00401EB0
+	...
+RIJNDAEL [S-inv] [char] :: 0000CA08 :: 0040CA08
+	Referenced at 00402BAC
+	Referenced at 00402BCB
+	...
+```
+
+As we can see in the following screen, the first reference is called 28 times in different encryption routines we had previously identified.
+
+![_IDA Pro_ _AES_ references 1](../Pictures/Lab_13/lab_13-03_3_ida_pro_1.png)
+
+Also, we believe that the function we have called _innitial_encryption_ is the key generation algorithm, something we can also infer by reading the strings and checks this function has.
+
+![_IDA Pro_ key generation code](../Pictures/Lab_13/lab_13-03_3_ida_pro_2.png)
+
+So we decide to change the name of this function to _key_generation_
+
+Also, the second reference is called 20 times in two functions that seems to not be used by the malware at any time, so probably these functions are related with the decryption process.
+
+![_IDA Pro_ _AES_ references 2](../Pictures/Lab_13/lab_13-03_3_ida_pro_3.png)
+
+We can conclude that the occurrence located at _0x0040C908_ corresponds with the encryption algorithm and the key generation algorithm. Also, the ones located at _0x0040CA08_ is related with the decryption algorithm.
+
 **4. Which two encoding techniques are used in this malware?**
+
+We have found two encryption routines based on _AES_ that are used, the first one located at _key_generation_, the key generation process, and the second one at _encrypt_aes_, the encryption process.
+
+We also have found the string "DEFGHIJKLMNOPQRSTUVWXYZABcdefghijklmnopqrstuvwxyzab0123456789+/", which seems to be an adaptation of _base64_ encoding. This string have no cross references, something strange. However, we see how the byte located just before the string have cross references, also, this byte has the value _0x43_, "C" in ASCII, so this value seems to belong to the custom _base64_ encoding.
+
+![_IDA Pro_ custom _base64_ encoding 1](../Pictures/Lab_13/lab_13-03_4_ida_pro_1.png)
+
+To repair this string, we click on the byte _0x43_ and click the letter "a", this will convert this byte to string.
+
+![_IDA Pro_ custom _base64_ encoding 2](../Pictures/Lab_13/lab_13-03_4_ida_pro_2.png)
+
+This string is called by the function located at _0x0040103F_ (_\_base64_ for us), this function is called by the one we have called _base64_ located at _0x00401082_. Here we can see how the original buffer is splitted in 4 bytes chunks before calling _\_base64_, telling us that this function is a _base64_ decoding function.
+
+![_IDA Pro_ custom _base64_ decoding](../Pictures/Lab_13/lab_13-03_4_ida_pro_3.png)
 
 **5. For each encoding technique, what is the key?**
 
+The key of the _AES_ routines seems to be the string "ijklmnopqrstuvwx". This key is used to generate the key that will be used by _AES_ later.
+
+In the case of the _base64_ implementation, the key would be the string "CDEFGHIJKLMNOPQRSTUVWXYZABcdefghijklmnopqrstuvwxyzab0123456789+/".
+
+In the case of the second encryption routine, _encrypt_aes_. It seems that the key is
+
 **6. For the cryptographic encryption algorithm, is the key sufficient? What else must be known?**
 
+To decrypt the encrypted content, we also must known the specific mode operation used by the _AES_ algorithm, also the key generation algorithm, the key size (in this case we already know it is 16 bytes) and the initialization vector.
+
+In the case of the custom _base64_ encoding, we just need the custom alphabet it uses.
+
 **7. What does this malware do?**
+
+The malware first calls _key_generation_, which seems to be where the malware generates the key for the _AES_ algorithm, this generated key will be stored in a global variable called _aes_key_.
+
+![_IDA Pro_ _key_generation_ key](../Pictures/Lab_13/lab_13-03_7_ida_pro_1.png)
+
+After that, it sets up the Internet connection to _www.practicalmalwareanalysis.com/_ by means of _WSAStartup_, _gethostbyname_ and _connect_.
+
+![_IDA Pro_ C&C connection](../Pictures/Lab_13/lab_13-03_7_ida_pro_2.png)
+
+Then, if everything is successful, the sample will create two pipes as follows.
+
+![_IDA Pro_ pipes creation](../Pictures/Lab_13/lab_13-03_7_ida_pro_3.png)
+
+Then, it will duplicate the write handles of both pipes and also the read handle of the first pipe.
+
+![_IDA Pro_ pipes creation](../Pictures/Lab_13/lab_13-03_7_ida_pro_4.png)
+
+Then, it will create a _CMD_ process and will redirect the input to the read handle of the second pipe and the output (including errors) to the write handle of the first pipe.
+
+![_IDA Pro_ _CMD_ process creation](../Pictures/Lab_13/lab_13-03_7_ida_pro_5.png)
+
+After that, it will start the encoding and encryption processes. First, the binary will call the _base64_ decoding process by means of _CreateThread_ function, which will call to _base64_decode_.
+
+![_IDA Pro_ _base64_decode_ calling](../Pictures/Lab_13/lab_13-03_7_ida_pro_6.png)
+
+Notice the variables created before calling _CreateThread_, this will be accessed by means of the argument _lpThreadParameter_.
+
+In this function, _base64_decode_, the program will first call _ReadFile_, using the _lpThreadParameter_ argument to get the socket as handler of the file, meaning the malware will read the data sent via this socket before decoding it.
+
+![_IDA Pro_ _base64_decode_ reading](../Pictures/Lab_13/lab_13-03_7_ida_pro_7.png)
+
+Then, the malware will decode the data sent by the socket and will write it using the second pipe write handler.
+
+![_IDA Pro_ _base64_decode_ writing](../Pictures/Lab_13/lab_13-03_7_ida_pro_8.png)
+
+Now, malware will call the function _encrypt_aes_ by means of _CreateThread_.
+
+
+
+
+So now, when the _encrypt_aes_ calls _ReadFile_ 
 
 **8. Create code to decrypt some of the content produced during dynamic analysis. What is this content?**
