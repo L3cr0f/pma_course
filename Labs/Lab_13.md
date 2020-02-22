@@ -885,9 +885,57 @@ Then, the malware will decode the data sent by the socket and will write it usin
 
 Now, malware will call the function _encrypt_aes_ by means of _CreateThread_.
 
+![_IDA Pro_ _encrypt_aes_ calling](../Pictures/Lab_13/lab_13-03_7_ida_pro_9.png)
 
+As previously mentioned in the _base64_decode_ calling, it is important to see how the malware set the _lpThreadParameter_ argument. This information will be accessed during thread execution so as to execute different tasks.
 
+Now, in the _encrypt_aes_ function, first, the malware will call _ReadFile_ using the _lpThreadParameter_ to access the read handle of the second pipe, which will contain the data gathered by the malware using the _CMD_ process.
 
-So now, when the _encrypt_aes_ calls _ReadFile_ 
+![_IDA Pro_ _encrypt_aes_ reading](../Pictures/Lab_13/lab_13-03_7_ida_pro_10.png)
+
+Then, te malware will call the encryption function so as to encrypt the previously obtained buffer of data using _CBC_ (Cipher Block Chaining) as encryption mode.
+
+![_IDA Pro_ _encrypt_aes_ encryption](../Pictures/Lab_13/lab_13-03_7_ida_pro_11.png)
+
+We know the encrytpion mode used by the malware because it will select the mode "1", which will force the execution path over one piece of code that will execute the _small_encryption_ block before the _big_encryption_ function. We have to take in mind that the _small_encryption_ is just the _XOR_ operation executed before the encryption routine.
+
+![CBC mode](../Pictures/Lab_13/lab_13-03_7_1.png)
+
+![_IDA Pro_ _encrypt_aes_ CBC mode](../Pictures/Lab_13/lab_13-03_7_ida_pro_12.png)
+
+Finally, the malware will send this encrypted information over the socket by means of _WriteFile_.
+
+![_IDA Pro_ _encrypt_aes_ writing](../Pictures/Lab_13/lab_13-03_7_ida_pro_13.png)
+
+So the purpose of the malware is creating a reverse shell that will receive the commands encoded with the special _base64_ implementation and will send the gathered information encrypted using _AES 128_ _CBC_.
 
 **8. Create code to decrypt some of the content produced during dynamic analysis. What is this content?**
+
+The script done to decode the _AES_ encrypted data that the malware send to the C&C is the following (the decryted data was taking from the book).
+
+```
+from Crypto.Cipher import AES
+from Crypto.Util.Padding import pad
+import binascii
+
+decryption_key = b'ijklmnopqrstuvwx'
+encrypted_data = binascii.unhexlify('37f31f045120e0b586acb60f652089924faf98a4c87698a64dd5518fa5cb51c5cf86110dc535385c9cc5ab6678401ddf4a53f0110f576d4fb7c9c8bf29792fc1ec60b223007b28fa4dc17b8193bbca9ebb27dd47b6be0b0f661095179ed7c48dee11099920493bdfdebe6eef6a12dbbda676b02213eea9382d2f560678cb2f91af64afa6d143f1f547f6c2c86f004939')
+
+cipher = AES.new(decryption_key, AES.MODE_CBC)
+decrypted_string = cipher.decrypt(pad(encrypted_data, 16))
+
+print("The decrypted string is: " + decrypted_string)
+```
+
+The execution will be as follows:
+
+```
+$ python Scripts/Others/Lab_13/lab13_03_aes_decryption.py 
+The decrypted string is: ?é?_?P?+Ք?;??s XP [Version 5.1.2600]
+(C) Copyright 1985-2001 Microsoft Corp.
+
+C:\Documents and Settings\user\Desktop\13_3_demo>F??
+                                                    P?iTח???!?v
+```
+
+We have not developed the _base64_ decryption since we have not obtained any data.
