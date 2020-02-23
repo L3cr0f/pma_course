@@ -198,8 +198,89 @@ Analyze the malware found in the file Lab15-03.exe. At first glance, this binary
 
 **1. How is the malicious code initially called?**
 
+To get how the malware executes the malicious code we need to know first where it is located. To do so, we enter in the text view of _IDA Pro_ (click space bar) and start digging into the code.
+
+After scrolling down a bunch of addresses, we find what a call to the functions _URLDownloadToFileA_ and _WinExec_.
+
+![_IDA Pro_ hidden functionality](../Pictures/Lab_15/lab_15-03_1_ida_pro_1.png)
+
+We also see anti-disassembly code that needs to be addressed.
+
+![_IDA Pro_ fixed code](../Pictures/Lab_15/lab_15-03_1_ida_pro_2.png)
+
+No we need to know how and when this chunk of code is called.
+
+Going backwards in the code, we see another anti-disassembly trick that needs to be fixed.
+
+![_IDA Pro_ anti-disassembly](../Pictures/Lab_15/lab_15-03_1_ida_pro_3.png)
+
+
+TODO -> Echar un ojo en 004014C4 -> SEH
+
 **2. What does the malicious code do?**
+
+The malicious code will download one file from internet and execute it by means of _WinExec_ as shown in the next picture:
+
+![_IDA Pro_ process execution by means of _WinExec_](../Pictures/Lab_15/lab_15-03_2_ida_pro_1.png)
 
 **3. What URL does the malware use?**
 
+To know that, we need to decode the URL stored in the malware. The decoding routine is called just before the malware calls _URLDownloadToFileA_. We have called this function _decode_string_.
+
+![_IDA Pro_ _decode_string_ calling](../Pictures/Lab_15/lab_15-03_3_ida_pro_1.png)
+
+This function, located at _0x00401534_, looks like this.
+
+![_IDA Pro_ _decode_string_ function](../Pictures/Lab_15/lab_15-03_3_ida_pro_2.png)
+
+As we can see, this function just does a _XOR_ encoding using the value _0xFF_ as key.
+
+To decode the _URL_ we have developed the following python script.
+
+```
+encrypted_url = bytearray([0x97, 0x8B, 0x8B, 0x8F, 0xC5, 0xD0, 0xD0, 0x88, 0x88, 0x88, 0xD1, 0x8F, 0x8D, 0x9E, 0x9C, 0x8B, 0x96, 0x9C, 0x9E, 0x93, 0x92, 0x9E, 0x93, 0x88, 0x9E, 0x8D, 0x9A, 0x9E, 0x91, 0x9E, 0x93, 0x86, 0x8C, 0x96, 0x8C, 0xD1, 0x9C, 0x90, 0x92, 0xD0, 0x8B, 0x8B, 0xD1, 0x97, 0x8B, 0x92, 0x93])
+decryption_key = 0xFF
+
+decrypted_url = ""
+
+for counter in range(len(encrypted_url)):
+	encrypted_char = encrypted_url[counter]
+	decrypted_url = decrypted_url + chr(decryption_key ^ encrypted_char)
+
+print("The decrypted URL is: " + decrypted_url)
+```
+
+This give us the following output:
+
+```
+$ python3 Scripts/Others/Lab_15/lab15_03_decrypt_strings.py 
+The decrypted URL is: http://www.practicalmalwareanalysis.com/tt.html
+```
+
 **4. What filename does the malware use?**
+
+To know that, we need to decode the filename stored in the malware. The decoding routine is called just before the malware calls _URLDownloadToFileA_.
+
+![_IDA Pro_ _decode_string_ calling](../Pictures/Lab_15/lab_15-03_3_ida_pro_1.png)
+
+This decoding routine is the same as the one used to decode the URL, so we simply modify the previously created script to decode the filename instead of the URL.
+
+```
+encrypted_filename = bytearray([0x8C, 0x8F, 0x90, 0x90, 0x93, 0x8C, 0x8D, 0x89, 0xD1, 0x9A, 0x87, 0x9A])
+decryption_key = 0xFF
+
+decrypted_filename = ""
+
+for counter in range(len(encrypted_filename)):
+	encrypted_char = encrypted_filename[counter]
+	decrypted_filename = decrypted_filename + chr(decryption_key ^ encrypted_char)
+
+print("The decrypted filename is: " + decrypted_filename)
+```
+
+This give us the following output:
+
+```
+$ python3 Scripts/Others/Lab_15/lab15_03_decrypt_strings.py 
+The decrypted filename is: spoolsrv.exe
+```
