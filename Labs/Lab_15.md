@@ -23,7 +23,7 @@ We have to notice that the _jump_ instructions, jumps to the _call_ instructions
 0040100E 74 01                                jz      short near ptr loc_401010+1	-> Jumps to the address of the call instruction plus 1
 
                       loc_401010:
-00401010 E8 8B 45 0C 8B                       call    near ptr 8B4C55A0h			-> The jump will go to loc_401011, not to 00401010
+00401010 E8 8B 45 0C 8B                       call    near ptr 8B4C55A0h		-> The jump will go to loc_401011, not to 00401010
 ```
 
 This means that the _jump_ instruction will go to the opcode _8B 45 0C 8B_, and not to _E8 8B 45 0C 8B_. This means, that the malware will execute other instruction than _call_, to be precise, it will execute:
@@ -40,7 +40,6 @@ We repeat all necessary times so as to fully fix the code.
 
 ![_IDA Pro_ fully fixed code](../Pictures/Lab_15/lab_15-01_1_ida_pro_4.png)
 
-
 **2. What rogue opcode is the disassembly tricked into disassembling?**
 
 As mentioned in the first exercise, the malware use the _call_ instruction opcode (_0xE8_) to trick the disassembler.
@@ -51,15 +50,25 @@ The malware use this technique a total of 5 times! Innitially, we thought there 
 
 **4. What command-line argument will cause the program to print “Good Job!”?**
 
-To print "Good Job!" we need to insert the letter "d" as argument.
+To print "Good Job!" we need to introduce the key "pdq" as argument as we can see in the disassembled code.
+
+
+![_IDA Pro_ analized code](../Pictures/Lab_15/lab_15-01_4_ida_pro_1.png)
+
+To verify this key, we execute the program as follows:
+
+![_IDA Pro_ "Good Job!" printed](../Pictures/Lab_15/lab_15-01_4_ida_pro_2.png)
 
 ## Lab 15-2
 
 Analyze the malware found in the file Lab15-02.exe. Correct all anti-disassembly countermeasures before analyzing the binary in order to answer the questions.
 
 **1. What URL is initially requested by the program?**
+
 **2. How is the User-Agent generated?**
+
 **3. What does the program look for in the page it initially requests?**
+
 **4. What does the program do with the information it extracts from the page?**
 
 ## Lab 15-3
@@ -67,6 +76,9 @@ Analyze the malware found in the file Lab15-02.exe. Correct all anti-disassembly
 Analyze the malware found in the file Lab15-03.exe. At first glance, this binary appears to be a legitimate tool, but it actually contains more functionality than advertised.
 
 **1. How is the malicious code initially called?**
+
 **2. What does the malicious code do?**
+
 **3. What URL does the malware use?**
+
 **4. What filename does the malware use?**
