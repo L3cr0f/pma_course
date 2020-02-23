@@ -52,7 +52,6 @@ The malware use this technique a total of 5 times! Innitially, we thought there 
 
 To print "Good Job!" we need to introduce the key "pdq" as argument as we can see in the disassembled code.
 
-
 ![_IDA Pro_ analized code](../Pictures/Lab_15/lab_15-01_4_ida_pro_1.png)
 
 To verify this key, we execute the program as follows:
@@ -65,11 +64,132 @@ Analyze the malware found in the file Lab15-02.exe. Correct all anti-disassembly
 
 **1. What URL is initially requested by the program?**
 
+If we take a look at the strings, we do not see any _URL_ or _IP_ address.
+
+```
+...
+not enough name
+internet unable
+Bamboo::
+```
+
+This possibly means that the _URL_ is obfuscated or disguised within the code.
+
+When we start _IDA Pro_ we can see that the binary cannot be showed by means of graphical view, meaning that some kind of anti-disassembly method has been applied.
+
+Firts, if we take a look to the _main_ function, we can see some callings to _WINAPI_ functions.
+
+![_IDA Pro_ _Internet_ functions](../Pictures/Lab_15/lab_15-02_1_ida_pro_1.png)
+
+However, as we move forward into the code, que starting to see some things that must be fixed to understand the code in a better way.
+
+If we scroll down the _IDA View_ panel we will find the following piece of data that draw our attention:
+
+![_IDA Pro_ code fixing 1](../Pictures/Lab_15/lab_15-02_1_ida_pro_2.png)
+
+As we can see, there are one _jmp_ instruction that has no sense. Also, the previous jump points out to the nonsensical _jmp_ plus 1 byte.
+
+```
+.text:0040115C 75 01                                jnz     short near ptr loc_40115E+1
+.text:0040115E
+.text:0040115E                      loc_40115E:
+.text:0040115E E9 6A 00 6A 00                       jmp     near ptr 0AA11CDh
+```
+
+So the expected opcode instruction would be "6A 00 6A 00" instead of "E9".
+
+To fix this code we click on "D" key to convert to data and then "C" on to convert the bytes we want to code. This will result in the following piece of code:
+
+![_IDA Pro_ code fixing 2](../Pictures/Lab_15/lab_15-02_1_ida_pro_3.png)
+
+We also see the following block of code being mislabeled.
+
+![_IDA Pro_ code fixing 3](../Pictures/Lab_15/lab_15-02_1_ida_pro_4.png)
+
+So, for the first highlighted piece of code, we follow the previous approach to fix it, resulting in:
+
+![_IDA Pro_ code fixing 4](../Pictures/Lab_15/lab_15-02_1_ida_pro_5.png)
+
+In the case of the second highlighted code, we must follow other approach, since the instruction:
+
+```
+.text:00401215 EB FF                                jmp     short near ptr loc_401215+1
+```
+
+Will jump to itself plus one. So we need to convert to data and then to code, but also stating that the sample took a jump here.
+
+![_IDA Pro_ code fixing 5](../Pictures/Lab_15/lab_15-02_1_ida_pro_6.png)
+
+After that, we see another disassembly technique that derives in the previously mentioned _jmp address+1_ technique:
+
+![_IDA Pro_ code fixing 6](../Pictures/Lab_15/lab_15-02_1_ida_pro_7.png)
+
+In this case, we have two consecutive conditional jumps that together form an unconditional jump. After fixing the code we will see the following:
+
+![_IDA Pro_ code fixing 7](../Pictures/Lab_15/lab_15-02_1_ida_pro_8.png)
+
+Then, another disassembly trick is shown us as follows:
+
+![_IDA Pro_ code fixing 8](../Pictures/Lab_15/lab_15-02_1_ida_pro_9.png)
+
+We have another jump in the middle instruction, as previously did, we are going to fix the code, referencing that previously this piece of code was executed:
+
+```
+mov     ax, 5EBh
+xor     eax, eax
+jz      short near ptr loc_4012E6+2
+```
+
+![_IDA Pro_ code fixing 9](../Pictures/Lab_15/lab_15-02_1_ida_pro_10.png)
+
+Let's stop here and see what _URL_ the malware uses, to do so, we need to go back where the function _InternetOpenUrlA_ is called.
+
+![_IDA Pro_ _InternetOpenUrlA_ call](../Pictures/Lab_15/lab_15-02_1_ida_pro_11.png)
+
+As we can see, the function _sub_401386_ is called before calling _InternetOpenUrlA_. If go to that function, we will see the following:
+
+![_IDA Pro_ _get_URL_ function 1](../Pictures/Lab_15/lab_15-02_1_ida_pro_12.png)
+
+![_IDA Pro_ _get_URL_ function 2](../Pictures/Lab_15/lab_15-02_1_ida_pro_13.png)
+
+As we can see, the function will copy the URL _http://www.practicalmalwareanalysis.com/bamboo.html_ to the return value, so we can rename this function to _get_URL_.
+
 **2. How is the User-Agent generated?**
+
+The _User-Agent_ is set up by the malware when it calls to the _InternetOpenA_ _WINAPI_ function.
+
+![_IDA Pro_ _InternetOpenA_ _User-Agent_ argument](../Pictures/Lab_15/lab_15-02_2_ida_pro_1.png)
+
+As we can see, the _User-Agent_ is introduced as argument by means of the variable _EBP-100h_, so if we look for this variable, we will find where the malware set up the _User-Agent_.
+
+If we go back in the sample, we see how at the beginning, the malware set up the _User-Agent_ by means of _gethostname_.
+
+![_IDA Pro_ _gethostname_ set _User-Agent_ variable](../Pictures/Lab_15/lab_15-02_2_ida_pro_2.png)
 
 **3. What does the program look for in the page it initially requests?**
 
+Once the malware has performed the _HTTP_ request, it will read the file by means of _InternetReadFile_ and then it will look for the string "Bamboo::" and then it will search for the first occurrence of "::".
+
+![_IDA Pro_ look for "Bamboo::"](../Pictures/Lab_15/lab_15-02_3_ida_pro_1.png)
+
 **4. What does the program do with the information it extracts from the page?**
+
+After extracting the interesting information, the malware will call the function _sub_40130F_, which will get the string "Accounts.Summary.xls.exe".
+
+![_IDA Pro_ get "Accounts.Summary.xls.exe"](../Pictures/Lab_15/lab_15-02_4_ida_pro_1.png)
+
+So we can rename this function to _get_backdoor_name_.
+
+Then, the malware will make another requests to the known _URL_ using the extracted information as header.
+
+![_IDA Pro_ second _HTTP_ request](../Pictures/Lab_15/lab_15-02_4_ida_pro_2.png)
+
+Then, with the retrieved information, it will dump it into the file "Accounts.Summary.xls.exe".
+
+![_IDA Pro_ write backdoor into disk](../Pictures/Lab_15/lab_15-02_4_ida_pro_3.png)
+
+
+TODO -> REVISAR EJERCICIOS 2 Y 4
 
 ## Lab 15-3
 
