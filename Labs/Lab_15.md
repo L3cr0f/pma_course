@@ -162,34 +162,35 @@ The _User-Agent_ is set up by the malware when it calls to the _InternetOpenA_ _
 
 As we can see, the _User-Agent_ is introduced as argument by means of the variable _EBP-100h_, so if we look for this variable, we will find where the malware set up the _User-Agent_.
 
-If we go back in the sample, we see how at the beginning, the malware set up the _User-Agent_ by means of _gethostname_.
+If we go back in the sample, we see how at the beginning, the malware set up the variable _EBP-100h_ by means of _gethostname_.
 
 ![_IDA Pro_ _gethostname_ set _User-Agent_ variable](../Pictures/Lab_15/lab_15-02_2_ida_pro_2.png)
 
+After that, this variable is modified by incrementing each letter and number in one value, for example _0x41_ (A), will be _0x42_ (B), but if the number is equal to letters "Z", "z" or "9", it will be converted in "A", "a" and "0", respectively.
+
+![_IDA Pro_ _User-Agent_ modification](../Pictures/Lab_15/lab_15-02_2_ida_pro_3.png)
+
 **3. What does the program look for in the page it initially requests?**
 
-Once the malware has performed the _HTTP_ request, it will read the file by means of _InternetReadFile_ and then it will look for the string "Bamboo::" and then it will search for the first occurrence of "::".
+Once the malware has performed the _HTTP_ request, it will read the file by means of _InternetReadFile_ and then it will look for the string "Bamboo::". After that, it will search again but this time for the first occurrence of "::" and replacing value of the search by a null value _0x0_, indicating the end of the string. This will result in a string between the strings "Bamboo::" and ":"
 
 ![_IDA Pro_ look for "Bamboo::"](../Pictures/Lab_15/lab_15-02_3_ida_pro_1.png)
 
 **4. What does the program do with the information it extracts from the page?**
 
-After extracting the interesting information, the malware will call the function _sub_40130F_, which will get the string "Accounts.Summary.xls.exe".
+After extracting the interesting information (will call it _extracted_info_), the malware will call the function _sub_40130F_, which will get the string "Accounts.Summary.xls.exe".
 
 ![_IDA Pro_ get "Accounts.Summary.xls.exe"](../Pictures/Lab_15/lab_15-02_4_ida_pro_1.png)
 
 So we can rename this function to _get_backdoor_name_.
 
-Then, the malware will make another requests to the known _URL_ using the extracted information as header.
+Then, the malware will make another requests to _extracted_info_ as URL.
 
 ![_IDA Pro_ second _HTTP_ request](../Pictures/Lab_15/lab_15-02_4_ida_pro_2.png)
 
 Then, with the retrieved information, it will dump it into the file "Accounts.Summary.xls.exe".
 
 ![_IDA Pro_ write backdoor into disk](../Pictures/Lab_15/lab_15-02_4_ida_pro_3.png)
-
-
-TODO -> REVISAR EJERCICIOS 2 Y 4
 
 ## Lab 15-3
 
