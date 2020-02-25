@@ -204,7 +204,7 @@ After scrolling down a bunch of addresses, we find what a call to the functions 
 
 ![_IDA Pro_ hidden functionality](../Pictures/Lab_15/lab_15-03_1_ida_pro_1.png)
 
-We also see anti-disassembly code that needs to be addressed.
+We also see anti-disassembly code that needs to be addressed. After fixing, we see that _Winexec_ will execute some command stored in the variable _unk_403040_.
 
 ![_IDA Pro_ fixed code](../Pictures/Lab_15/lab_15-03_1_ida_pro_2.png)
 
@@ -214,8 +214,21 @@ Going backwards in the code, we see another anti-disassembly trick that needs to
 
 ![_IDA Pro_ anti-disassembly](../Pictures/Lab_15/lab_15-03_1_ida_pro_3.png)
 
+Also, we need to fix another chunk of code that _IDA Pro_ couldn't recognize.
 
-TODO -> Echar un ojo en 004014C4 -> SEH
+![_IDA Pro_ failed to recognize](../Pictures/Lab_15/lab_15-03_1_ida_pro_4.png)
+
+After fixing all of that, we can see some interesting things about the code.
+
+![_IDA Pro_ fixed chunk of code](../Pictures/Lab_15/lab_15-03_1_ida_pro_5.png)
+
+As we can see, the malware will abuse _SEH_ so as to execute the malicious code, this code will be called by means of executing the invalid operation `number / 0`. Howerver, we still need to know how the malware calls this piece of code.
+
+To do so, we take in mind the starting address of the covert code, _0x0040148C_, and start analyzing the main code. After reading the first instructions, we see something interesting in the beginning of the _main_ function.
+
+![_IDA Pro_ _main_ covert code execution](../Pictures/Lab_15/lab_15-03_1_ida_pro_6.png)
+
+As we can see, the malware will calculate the or operation between _0x00400000_ and _0x0000148C_, which will result in _0x0040148C_, the starting address of the covert code, and then, it will overwrite the value of _[EBP + 4]_, which is the return address of the _main_ function. So when the _main_ function ends, the malware will execute the covert code, which will abuse the _SEH_ chain to covert the execution flow even more.
 
 **2. What does the malicious code do?**
 
