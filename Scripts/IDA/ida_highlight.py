@@ -12,7 +12,7 @@ for current in heads:
 print("Number of calls and sub functions: %d" % (len(funcCalls)))
 
 for current in funcCalls:
-	SetColor(current, CIC_ITEM, 0xb5b5b5)
+	SetColor(current, CIC_ITEM, 0x5b5b5b5b)
 
 
 #Color Anti-VM instructions red and print their location
