@@ -215,27 +215,27 @@ Then it will check the value _netsvcs_ of the key "SOFTWARE\Microsoft\Windows NT
 
 ![_IDA Pro_ _installSB_ _Svchost_ key checks](../Pictures/Lab_17/lab_17-02_7_ida_pro_14.png)
 
-After that, it will check if the value of _service_name_ exist in the _Svchost_ key and if so, it creates the key _Parameters_ under "SYSTEM\CurrentControlSet\Services\" in the registry. Then, it will call _RegQueryValueExA_ to get the values of _ServiceMainbak_ and  _ServiceDLL_ to check if the malware has already been installed. Also, it checks if the string _\_ox.dll_ appears in the registry value _ServiceDLL_.
+After that, it will check if the value of _service_name_ exist in the _Svchost_ key and if so, it creates the key _Parameters_ under "SYSTEM\CurrentControlSet\Services\" in the registry. Then, it will call _RegQueryValueExA_ to get the value of _ServiceMainbak_ to check if the malware has already been installed. Then it will check the value of _ServiceDll_ key also by means of _RegQueryValueExA_. The value obtained will be checked against the string _\_ox.dll_, to see if the malware has been already installed.
 
 ![_IDA Pro_ _installSB_ installation checks](../Pictures/Lab_17/lab_17-02_7_ida_pro_15.png)
 
-Then, it will look for a specified module in a specified process, _svchost.exe_. Also, it will check if the module exists within the previous process, something that its quite redundant.
+Then, if the malware has not been installed, it will look for the module retrieved from _ServiceDll_, _ntmssvc.dll_ by default, in a specified process, _svchost.exe_. Also, it will check if the module exists within the previous process, something that its quite redundant.
 
 ![_IDA Pro_ _installSB_ look for module in process](../Pictures/Lab_17/lab_17-02_7_ida_pro_16.png)
 
 Now, whether the previous check is successful or wrong, the program will execute two different paths.
 
-If the check is successful, first, the malware will get the path of itself, since the handle to the module is null. Then, it will copy the module located at "C:\Windows\System32\[MODULE]" to "C:\Windows\System32\[MODULE].obak", creating a backup of the original module.
+If the check is successful, first, the malware will get the path of itself, since the handle to the module is null. Then, it will copy the module located at "C:\Windows\System32\ntmssvc.dll" to "C:\Windows\System32\ntmssvc.dll.obak", creating a backup of the original module.
 
 ![_IDA Pro_ _installSB_ create backup](../Pictures/Lab_17/lab_17-02_7_ida_pro_17.png)
 
-After that, it will copy the malicious binary to "C:\Windows\System32\[MODULE]", replacing the previous module.
+After that, it will copy the malicious binary to "C:\Windows\System32\ntmssvc.dll", replacing the previous module.
 
 ![_IDA Pro_ _installSB_ copy malicious binary](../Pictures/Lab_17/lab_17-02_7_ida_pro_18.png)
 
-Also, the malicious file is copied to the path "C:\Windows\System32\dllcache\[MODULE]".
+Also, the malicious file is copied to the path "C:\Windows\System32\dllcache\ntmssvc.dll".
 
-After that, it will get the value of _ServiceMain_ of the key registry "SYSTEM\\CurrentControlSet\\Services\\Parameters" and will create another one with the value of such parameter called _ServiceMainbak_, creating a backup. Then, it will modify the original registry key value to point out to _ServiceMain_.
+After that, it will get the value of _ServiceMain_ of the key registry "SYSTEM\\CurrentControlSet\\Services\\Parameters" and will create another one with the value of such parameter (if exists) called _ServiceMainbak_, creating a backup. Then, it will modify the original registry key value to point out to _ServiceMain_.
 
 ![_IDA Pro_ _installSB_ backup of service value](../Pictures/Lab_17/lab_17-02_7_ida_pro_19.png)
 
@@ -251,9 +251,13 @@ Now, it will set the value of the parameter _ServiceDLL_ of the key "SYSTEM\Curr
 
 Then, it will do the same as the previous path in which creating a backup of _ServiceMain_ registry key parameter.
 
-TOOD -> INJECTION
+After that, it will call the function _inject_process_ seen in the _InstallRT_ process with the _PID_ of _svchost.exe_ obtained before and the _DLL_ _\_ox.dll_, which is the malware itself.
 
-Finally, both paths converge into 
+![_IDA Pro_ _installSB_ process injection](../Pictures/Lab_17/lab_17-02_7_ida_pro_23.png)
+
+Finally, if everything was correct, both paths converge into a function that will start the previously created service. Also, it will modify the file time of the _win.ini_ file and set the value _Completed_ to the key "SoftWare\MicroSoft\Internet Connection Wizard\" as seen in _InstallSA_.
+
+![_IDA Pro_ _installSB_ create service](../Pictures/Lab_17/lab_17-02_7_ida_pro_24.png)
 
 ## Lab 17-3
 
