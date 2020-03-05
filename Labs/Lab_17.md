@@ -265,10 +265,81 @@ Analyze the malware Lab17-03.exe inside VMware. This lab is similar to Lab12-02.
 
 **1. What happens when you run this malware in a virtual machine?**
 
+When we run it in _VMWare_, we can see how the malware does not create the file _practicalmalwareanalysis.log_ that we know it should create (this is where the _keylogger_ will drop the logged keystrokes), since its has the same functionality of _Lab12-02.exe_. So we can conclude that the malware does not execute in the virtual machine.
+
 **2. How could you get this malware to run and drop its keylogger?**
+
+First, we need to see where the malware checks if a it has been executed in a virtual machine. To do so, we load the binary in _IDA Pro_ and executes the script _ida_highlight.py_.
+
+As starting point, we decide to compare the main function of both functions and see what we find:
+
+![_IDA Pro_ binary differences](../Pictures/Lab_17/lab_17-03_2_ida_pro_1.png)
+
+The first function the malware calls is new and it is located at _0x00401A80_, let's dive in it to see what it does.
+
+This function seems to be the responsible for performing the _VMWare_ checking, as it seems at simple view. So we rename it to _check_virtual_machine_1_.
+
+![_IDA Pro_ _VMWare_ checking](../Pictures/Lab_17/lab_17-03_2_ida_pro_2.png)
+
+However, since the malware introduces more changes, we need to analyze them so as to verify there is no more virtual machine checks.
+
+The next called function, located at _0x004011C0_, checks the information of registry key value "SYSTEM\CurrentControlSet\Control\DeviceClasses" by means of _RegQueryInfoKeyA_ and then gets the subkeys of that key with _RegEnumKeyExA_. This information is iterated to look for the string value "vmware".
+
+![_IDA Pro_ _RegQueryInfoKeyA_ calling](../Pictures/Lab_17/lab_17-03_2_ida_pro_3.png)
+
+![_IDA Pro_ look for "vmware"](../Pictures/Lab_17/lab_17-03_2_ida_pro_4.png)
+
+This function is renamed to _check_virtual_machine_2_.
+
+Finally, after calling those functions, the malware will load the library _Iphlpapi.dll_ and get the address of _GetAdaptersInfo_. This function will be called later in the function located at _0x00401670_, which is the one responsible for loading and decoding the resource file that will be injected later or. The function _GetAdaptersInfo_ could be used to determine whether the host is a virtual machine or not, by retrieving the network adapters of the machine.
+
+The malware will call _GetAdaptersInfo_ twice, the first time it will do it with a buffer length of '0', to check if there are network adapters in the machine, if not, it will exit.
+
+![_IDA Pro_ check if network adapters](../Pictures/Lab_17/lab_17-03_2_ida_pro_5.png)
+
+The second time this function is called, is to determine if the machine has an ethernet adapter and if the _MAC_ address of such adapter has the _signature_ of _VMWare_.
+
+![_IDA Pro_ check ethernet network adapter](../Pictures/Lab_17/lab_17-03_2_ida_pro_6.png)
+
+![_IDA Pro_ check _IP_ address of network adapter](../Pictures/Lab_17/lab_17-03_2_ida_pro_7.png)
+
+The signatures of _VMWare_ are stored in an array at the beginning of the function (we have to re-labeled since _IDA Pro_ failed to do so).
+
+![_IDA Pro_ _VMWare_ signatures](../Pictures/Lab_17/lab_17-03_2_ida_pro_8.png)
+
+Some of the known _VMWare_ sigatures are:
+
+```
+00:50:56	VMWare	VMware vSphere, VMware Workstation, VMware ESX Server
+00:50:56:80:00:00 → 00:50:56:BF:FF:FF	VMWare	VMware vSphere managed by vCenter Server
+00:0C:29	VMWare	Standalone VMware vSphere, VMware Workstation, VMware Horizon
+00:05:69	VMWare	VMware ESX, VMware GSX Server
+00:1C:14	VMWare	VMWare
+```
+
+The last anti-virtual machine technique used by the malware can be found in the function that we have called _inject_process_ (_0x00401400_), where an unknown function (_0x00401130_) is called with some parameters.
+
+![_IDA Pro_ unknown function 1](../Pictures/Lab_17/lab_17-03_2_ida_pro_9.png)
+
+In this function, we can see how the malware lists the processes of the machine and calls another unknown function located at _0x00401000_ prior to compare the first argument.
+
+![_IDA Pro_ unknown function 2](../Pictures/Lab_17/lab_17-03_2_ida_pro_10.png)
+
+If we dig into that function, we see that it is some kind of _hashing_ routine that we will ned to crack in order to know what _0x0F30D12A5_ means.
+
+![_IDA Pro_ hashing function](../Pictures/Lab_17/lab_17-03_2_ida_pro_11.png)
+
+TODO
+
+So now that we have discovered all the anti-virtual machines mechanisms, we can try to avoid them. To do so, we can simply _NOP-out_ the calls to the first anti-vm routines and then, as long as our machine have an ethernet adapter with an _IP_ address, the malware will execute as normally.
 
 **3. Which anti-VM techniques does this malware use?**
 
+All of them where mentioned in the previous exercise.
+
 **4. What system changes could you make to permanently avoid the anti-VM techniques used by this malware?**
+
+First, we only could "SYSTEM\CurrentControlSet\Control\DeviceClasses"
+
 
 **5. How could you patch the binary in OllyDbg to force the anti-VM techniques to permanently fail?**
