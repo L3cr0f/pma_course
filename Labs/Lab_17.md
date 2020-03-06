@@ -474,7 +474,7 @@ If we take a look to _IDA Pro_, we see where the malware checks if taking one wa
 
 If we take a look to _Immunity_ we will see these instructions and the _opcodes_ that made them.
 
-![_Immunity_ jumping checks](../Pictures/Lab_17/lab_17-03_5_immuinity_1.png)
+![_Immunity_ jumping checks](../Pictures/Lab_17/lab_17-03_5_immunity_1.png)
 
 As we can see, the highlighted instruction is composed of two bytes:
 
@@ -492,11 +492,11 @@ Also, this instruction will give us the chance to always foce the malware to tak
 
 So, to edit the instructions, we right-click on the instruction and select "Binary -> Edit".
 
-![_Immunity_ edit instruction](../Pictures/Lab_17/lab_17-03_5_immuinity_2.png)
+![_Immunity_ edit instruction](../Pictures/Lab_17/lab_17-03_5_immunity_2.png)
 
 Then we should have something like this:
 
-![_Immunity_ modified code 1](../Pictures/Lab_17/lab_17-03_5_immuinity_3.png)
+![_Immunity_ modified code 1](../Pictures/Lab_17/lab_17-03_5_immunity_3.png)
 
 Then, to avoid the _MAC_ address check, we can do the following:
 
@@ -511,7 +511,7 @@ mov     [ebp+var_40], 0
 mov     [ebp+var_40], 1
 ```
 
-![_Immunity_ modified code 2](../Pictures/Lab_17/lab_17-03_5_immuinity_4.png)
+![_Immunity_ modified code 2](../Pictures/Lab_17/lab_17-03_5_immunity_4.png)
 
 Another aproach would be just modifying the instruction at _0x0040183D_ as follows:
 
@@ -522,10 +522,10 @@ Another aproach would be just modifying the instruction at _0x0040183D_ as follo
 			xor eax, eax
 ```
 
-![_Immunity_ modified code 3](../Pictures/Lab_17/lab_17-03_5_immuinity_5.png)
+![_Immunity_ modified code 3](../Pictures/Lab_17/lab_17-03_5_immunity_5.png)
 
 Finally, we have to modify the hash _0x0F30D12A5_ to a dummy value like _0xFEDA8976_.
 
-![_Immunity_ modified code 4](../Pictures/Lab_17/lab_17-03_5_immuinity_6.png)
+![_Immunity_ modified code 4](../Pictures/Lab_17/lab_17-03_5_immunity_6.png)
 
 Now, if we execute the sample, everything should work as expected.
