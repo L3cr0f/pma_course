@@ -325,13 +325,136 @@ In this function, we can see how the malware lists the processes of the machine 
 
 ![_IDA Pro_ unknown function 2](../Pictures/Lab_17/lab_17-03_2_ida_pro_10.png)
 
-If we dig into that function, we see that it is some kind of _hashing_ routine that we will ned to crack in order to know what _0x0F30D12A5_ means.
+If we dig into that function, we see that it is some kind of _hashing_ routine that we will need to crack in order to know what _0x0F30D12A5_ means.
 
 ![_IDA Pro_ hashing function](../Pictures/Lab_17/lab_17-03_2_ida_pro_11.png)
 
-TODO
+As we can see, the routine is formed by loop that iterates over the string the number of times specified in the argument, in this case 6. This means that the malware will only hash the first 6 characters of the process name.
 
-So now that we have discovered all the anti-virtual machines mechanisms, we can try to avoid them. To do so, we can simply _NOP-out_ the calls to the first anti-vm routines and then, as long as our machine have an ethernet adapter with an _IP_ address, the malware will execute as normally.
+If we look at the hashing routine, we will se the following instructions:
+
+```
+mov     ecx, [ebp+result]			-> ECX = RESULT (in the first iteration it will be 0)
+shl     ecx, 5						-> ECX = RESULT << 5
+mov     edx, [ebp+result]			-> EDX = RESULT
+shr     edx, 1Bh					-> EDX = RESULT >> 0x1B
+or      ecx, edx					-> ECX = ECX | EDX = (RESULT << 5) | (RESULT >> 0x1B)
+mov     eax, [ebp+processName]		-> EAX = PROCESS_NAME[]
+add     eax, [ebp+counter]			-> EAX = PROCESS_NAME[counter]
+movsx   edx, byte ptr [eax]			-> EDX = PROCESS_NAME[counter]
+add     ecx, edx					-> ECX = ECX + EDX = (RESULT << 5) | (RESULT >> 0x1B) + PROCESS_NAME[counter]
+mov     [ebp+result], ecx			-> RESULT = ECX = (RESULT << 5) | (RESULT >> 0x1B) + PROCESS_NAME[counter]
+```
+
+Now we can try to create the same _hashing_ function in a _Python_ script and try to crack the hash we already have using some wordlist of common _Windows_ processes, in our case we have dumped the process list of our _Windows XP_ machine via the _tasklist_ command.
+
+```
+System Idle Process
+System
+smss.exe
+csrss.exe
+winlogon.exe
+services.exe
+lsass.exe
+vmacthlp.exe
+svchost.exe
+svchost.exe
+svchost.exe
+svchost.exe
+svchost.exe
+explorer.exe
+spoolsv.exe
+VGAuthService.exe
+vmtoolsd.exe
+wmiprvse.exe
+wscntfy.exe
+alg.exe
+vmtoolsd.exe
+ctfmon.exe
+wuauclt.exe
+cmd.exe
+wuauclt.exe
+tasklist.exe
+```
+
+So the _Python_ script will look like the following:
+
+```
+import os
+import sys
+
+HASH_VALUE = 0x0F30D12A5
+
+def hash(process_name):
+	result = 0
+	counter = 0
+	while (counter < 6) and (counter < len(process_name)):
+		result = ((result << 5) | (result >> 0x1B)) + ord(process_name[counter])
+		counter = counter + 1
+
+	return result
+
+def check_hash(process_name):
+	return hash(process_name) == HASH_VALUE
+
+# Reads the file
+def read_file(file):
+	found = False
+	with open(file, "r") as wordlist:
+		process_name = wordlist.readline()
+		while process_name and not found:
+			found = check_hash(process_name)
+			if not found:
+				process_name = wordlist.readline()
+
+		if found:
+			print("Occurrence found! The decrypted hash value is: " + process_name)
+		else:
+			print("No occurrence found!")
+
+# Gets file from args
+def get_file_from_args():
+	if len(sys.argv) == 2:
+		filename = sys.argv[1]
+		if os.path.exists(filename):
+			return filename
+
+file = get_file_from_args()
+if file:
+	read_file(file)
+else:
+	print("Please provide a file to decrypt")
+```
+
+Now, if we execute the script as follows, it should gave us what we are waiting for:
+
+```
+$ python3 Scripts/Others/Lab_17/lab17_03_hash_cracking.py Scripts/Others/Lab_17/processes.txt 
+No occurrence found!
+```
+
+Mmmmm... The process the malware expected was not there. Well, since we think the malware are looking for some virtualization process, we are going to create a wordlist specially crafted based on this.
+
+```
+vboxservice.exe
+vboxtray.exe
+vmtoolsd.exe
+vmwaretray.exe
+vmwareuser
+VGAuthService.exe
+vmacthlp.exe
+```
+
+Let's try now!
+
+```
+$ python3 Scripts/Others/Lab_17/lab17_03_hash_cracking.py Scripts/Others/Lab_17/vm_processes.txt 
+Occurrence found! The decrypted hash value is: vmwaretray.exe
+```
+
+Great! This means that the malware looks for one process that starts with the word _vmware_.
+
+So now that we have discovered all the anti-virtual machines mechanisms, we can try to avoid them. To do so, we can simply force the binary to jump to the code we want to execute in the case of the first anti-vm routines, then, we can modify the _MAC_ address of our network adapter and, finally, remove the component _VMWareTray.exe_, which is part of _VMWareTools_ of the virtual machine (in our case we do not have this component). Doing so, the malware will execute as normally.
 
 **3. Which anti-VM techniques does this malware use?**
 
@@ -339,7 +462,70 @@ All of them where mentioned in the previous exercise.
 
 **4. What system changes could you make to permanently avoid the anti-VM techniques used by this malware?**
 
-First, we only could "SYSTEM\CurrentControlSet\Control\DeviceClasses"
-
+We could remove or modify the value "vmware" from "SYSTEM\CurrentControlSet\Control\DeviceClasses" registry key. Also, as previously said, modify the _MAC_ address of the network adapter and removing the _VMWareTools_ of the virtual machine. Also, we can use other virtualization software like _Virtual Box_, _Parallels_ or _QEMU_.
 
 **5. How could you patch the binary in OllyDbg to force the anti-VM techniques to permanently fail?**
+
+We load the binary in _Immunity_ so as to perform the patching process. First, we put a breakpoint on _0x00401990_, since it is where the _main_ function starts.
+
+If we take a look to _IDA Pro_, we see where the malware checks if taking one way or another.
+
+![_IDA Pro_ jumping checks](../Pictures/Lab_17/lab_17-03_5_ida_pro_1.png)
+
+If we take a look to _Immunity_ we will see these instructions and the _opcodes_ that made them.
+
+![_Immunity_ jumping checks](../Pictures/Lab_17/lab_17-03_5_immuinity_1.png)
+
+As we can see, the highlighted instruction is composed of two bytes:
+
+```
+85C0 == test eax, eax
+```
+
+The same as the following instruction:
+
+```
+31C0 == xor eax, eax
+```
+
+Also, this instruction will give us the chance to always foce the malware to take the path we want.
+
+So, to edit the instructions, we right-click on the instruction and select "Binary -> Edit".
+
+![_Immunity_ edit instruction](../Pictures/Lab_17/lab_17-03_5_immuinity_2.png)
+
+Then we should have something like this:
+
+![_Immunity_ modified code 1](../Pictures/Lab_17/lab_17-03_5_immuinity_3.png)
+
+Then, to avoid the _MAC_ address check, we can do the following:
+
+1. _NOP-out_ the function calls to _LoadLibraryA_ and _GetProcAddress_.
+
+2. Modify the instruction _0x00401732_ to load the number "1" instead of "0":
+
+```
+mov     [ebp+var_40], 0
+	||
+	\/
+mov     [ebp+var_40], 1
+```
+
+![_Immunity_ modified code 2](../Pictures/Lab_17/lab_17-03_5_immuinity_4.png)
+
+Another aproach would be just modifying the instruction at _0x0040183D_ as follows:
+
+```
+837DC000 == cmp [ebp+var_40], 0
+909031C0 == nop
+			nop
+			xor eax, eax
+```
+
+![_Immunity_ modified code 3](../Pictures/Lab_17/lab_17-03_5_immuinity_5.png)
+
+Finally, we have to modify the hash _0x0F30D12A5_ to a dummy value like _0xFEDA8976_.
+
+![_Immunity_ modified code 4](../Pictures/Lab_17/lab_17-03_5_immuinity_6.png)
+
+Now, if we execute the sample, everything should work as expected.
