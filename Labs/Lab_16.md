@@ -38,7 +38,15 @@ When an anti-debugging technique succeeds, the malware auto-removes itself.
 
 Since the malware checks several times if the process is being debugged, it is easier for us to change the queried values of the _PEB_.
 
-To do so, we set a breakpoint at _0x0040355A_, after the _PEB_ struct address was loaded in _EAX_. Then, we go to the _PEB_ struct address (stored in _EAX_) in the hexadecimal memory dump container and start modifying the values by means of _CTRL+E_ or _right-click -> Binary -> Edit_.
+To do so, we set a breakpoint at _0x0040355A_, after the _PEB_ struct address was loaded in _EAX_. Then, we go to the _PEB_ struct address (stored in _EAX_) in the hexadecimal memory dump container.
+
+We also could access to the _PEB_ struct by executing the following command:
+
+```
+dump fs:[30]
+```
+
+Now, we can start modifying the values by means of _CTRL+E_ or _right-click -> Binary -> Edit_.
 
 ![_IDA Pro_ _PEB_ in memory](../Pictures/Lab_17/lab_16-01_3_immunity_1.png)
 
@@ -68,13 +76,123 @@ Analyze the malware found in Lab16-02.exe using a debugger. The goal of this lab
 
 **1. What happens when you run Lab16-02.exe from the command line?**
 
+When we try to execute the malware from the command line, it happens the following:
+
+```
+C:\> Lab16-02.exe
+usage: Lab16-02.exe <4 character password>
+```
+
+It needs a password!
+
 **2. What happens when you run Lab16-02.exe and guess the command-line parameter?**
 
+If we introduce some "password" as parameter, the binary will do the following:
+
+```
+C:\> Lab16-02.exe abcd
+
+Incorrect password, Try again.
+``` 
+
 **3. What is the command-line password?**
+
+To run the sample, first we have to know the password. To do so, we first load the binary in _IDA Pro_.
+
+![_IDA Pro_ binary _main_ function](../Pictures/Lab_17/lab_16-02_3_ida_pro_1.png)
+
+As we can see, the binary can take three paths, if no argument is provided, it exits printing the sentence "usage: Lab16-02.exe <4 character password>". If some argument has included, it will create a new thread and print "Incorrect password, Try again.", if the argument does not match with the expected password, or "You entered the correct password!", if the argument matches.
+
+If we take a look where the binary compares the argument, it takes the value stored in _byte_408030_ as reference.
+
+![_IDA Pro_ password comparison](../Pictures/Lab_17/lab_16-02_3_ida_pro_2.png)
+
+So if we take a look to the value of such variable we will see the following:
+
+![_IDA Pro_ password value](../Pictures/Lab_17/lab_16-02_3_ida_pro_3.png)
+
+Mmmm... It seems that the value of the variable is not printable. May be the previously created thread have something to say what is the real password.
+
+![_IDA Pro_ password decoding 1](../Pictures/Lab_17/lab_16-02_3_ida_pro_4.png)
+
+![_IDA Pro_ password decoding 2](../Pictures/Lab_17/lab_16-02_3_ida_pro_5.png)
+
+It definitely modifies the variable of the password.
+
+Also, we see how this function checks the _BeingDebugged_ flag of the _PEB_ and modifies the password according to that.
+
+![_IDA Pro_ password decoding 3](../Pictures/Lab_17/lab_16-02_3_ida_pro_6.png)
+
+Taking all of this in mind, let's start debugging the sample with _Immunity Debugger_, don't forget to set one dummy string as argument of the binary (Debug -> Arguments).
+
+![_Immunity_ set parameter](../Pictures/Lab_17/lab_16-02_3_immunity_1.png)
+
+We set up one breakpoint at the comparison instruction (_0x0040123A_) and run the sample.
+
+If we do not use the _hidedebug_ plguing, the password we will get is: `bzqr`.
+
+![_Immunity_ password 1](../Pictures/Lab_17/lab_16-02_3_immunity_2.png)
+
+Notice that despite the fact that the string is "bzqrp@ss", the sample only compares the 4 first characters.
+
+Now, if we execute the following command to prevent the malware from knowing it is running in a debugger, we should see the rigth password the next time.
+
+```
+!hidedebug peb
+```
+
+Now, the new password is: `bzrr`.
+
+![_Immunity_ password 2](../Pictures/Lab_17/lab_16-02_3_immunity_3.png)
+
+Let's see if it is correct!
+
+```
+C:\> Lab16-02.exe bzrr
+
+Incorrect password, Try again.
+``` 
+
+Mmmm... It failed again, may be we missed something.
+
+If we go back to the decoding function, we see some global variable used to modify one of the bytes of the password:
+
+![_IDA Pro_ password decoding 4](../Pictures/Lab_17/lab_16-02_3_ida_pro_7.png)
+
+If we analyze this global variable, we see that it has cross-references to other functions, one in which it modifies the value of the variable.
+
+![_IDA Pro_ global variable cross-references](../Pictures/Lab_17/lab_16-02_3_ida_pro_8.png)
+
+This function, located at _0x00401020_ and renamed to _check_debugging_, calls _OutputDebugStringA_ and _GetLastError_ to check if the sample is being debugged.
+
+![_IDA Pro_ _OutputDebugStringA_](../Pictures/Lab_17/lab_16-02_3_ida_pro_9.png)
+
+This function is called by a _TLS_ (Thread Local Storage) _callback_ in which it checks if the sample is running in the context of _OllyDBG_ and if so, it exits (we overcome this situation by executing the sample with _Immunity_).
+
+![_IDA Pro_ _TLS callback_](../Pictures/Lab_17/lab_16-02_3_ida_pro_10.png)
+
+So to solve our problem we can simply _NOP-out_ the instruction `add     cl, 1` (_0x00401051_) and executing again the sample.
+
+Now, the password we have obtained is: `byrr`.
+
+![_Immunity_ password 3](../Pictures/Lab_17/lab_16-02_3_immunity_4.png)
+
+Let's try it...
+
+
+```
+C:\> Lab16-02.exe byrr
+
+You entered the correct password!
+```
+
+Great! We found it!
 
 **4. Load Lab16-02.exe into IDA Pro. Where in the main function is strncmp found?**
 
 **5. What happens when you load this malware into OllyDbg using the default settings?**
+
+It exits as explained in exercise 3.
 
 **6. What is unique about the PE structure of Lab16-02.exe?**
 
