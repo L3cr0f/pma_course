@@ -343,7 +343,7 @@ The filename will be _peo.exe_.
 
 We have discussed one of the anti-debugging techines in the previous exercise, however, it employes another two more.
 
-The first one can be seen at _0x00401584_, where the malware employs two calls to _GetTickCount_ and another call to an unknown function in the middle, this function has been renamed to _check_debugging_2_.
+The first one can be seen at _0x00401584_, where the malware employs two calls to _GetTickCount_, which returns the milliseconds that have elapsed since the system was started, and another call to an unknown function in the middle, this function has been renamed to _check_debugging_2_.
 
 ![_IDA Pro_ _GetTickCount_ calls](../Pictures/Lab_16/lab_16-03_4_ida_pro_1.png)
 
@@ -351,17 +351,46 @@ The function _check_debugging_2_ simply performs a division by zero like the ana
 
 ![_IDA Pro_ division by zero](../Pictures/Lab_16/lab_16-03_4_ida_pro_2.png)
 
+So when the sample is being debugged, the difference between the two _API_ calls to _GetTickCount_ will be greater than 1 millisecond due to the exception raised.
+
 Finally, the last anti-debugging trick the malware employs is located at function renamed to _decode_data_ (_0x00401300_). In this function takes place the decoding of some encoded data stored within the malware, prior to calling _gethostbyname_.
 
 ![_IDA Pro_ _decode_data_ calling](../Pictures/Lab_16/lab_16-03_4_ida_pro_3.png)
 
-In the _decode_data_ we can see how the function executes two times the instruction `rdtsc` and if the result points out that a debugger may be present, it calls the _auto_delete_ function.
+In the _decode_data_ we can see how the function executes two times the instruction `rdtsc`, which will return the count of the number of ticks since the last system reboot, and if the difference between the two executions of _rdtsc_ is greater than 500.000, it will call the _auto_delete_ function. If it is not the case, it will decode the decoded content.
 
 ![_IDA Pro_ _decode_data_ function](../Pictures/Lab_16/lab_16-03_4_ida_pro_4.png)
 
+Since the malware performs another division by zero, an exception will raise as in the previous cases, generating more ticks than normally.
 
 **5. For each technique, what does the malware do if it determines it is running in a debugger?**
 
+In the first case, it will not execute if the malware has not the correct name.
+
+In the second case, also the same, it won't execute.
+
+In the last case, in the _decode_data_ function, the malware will auto-remove itself.
+
 **6. Why are the anti-debugging techniques successful in this malware?**
 
+Explained in the previous exercises.
+
 **7. What domain name does this malware use?**
+
+The decoding function is as follows:
+
+![_IDA Pro_ _decode_data_ algorithm](../Pictures/Lab_16/lab_16-03_7_ida_pro_1.png)
+
+We are going to use _Immunity_ to try to decode the function, but first, don't forget to change the name of the binary to _qgr.exe_, since despite we are going to disable all anti-debugging tricks with the following command, the function _QueryPerformanceCounter_ is not patched.
+
+```
+!hidedebug All_debug
+```
+
+We also setup two breakpoints, one when the jump to the decoding procedure is taking in the _decode_data_ function at _0x0040137E_ address and the other one when the function exits at _0x004015DA_.
+
+Then, when the binary gets to the _jbe_ instruction, we modify the _Carrier Flag_ (_CF_) to 1 and run the sample until it returns from the function.
+
+![_Immunity_ domain name](../Pictures/Lab_16/lab_16-03_7_immunity_1.png)
+
+As we can see, the malware will use the domain name: _adg.malwareanalysisbook.com_.
