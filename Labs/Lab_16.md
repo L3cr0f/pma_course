@@ -16,15 +16,15 @@ Mmmm... Any anti-debugging technique has been detected, we have to check them ma
 
 The first anti-debugging technique we see is the one in which the malware checks the _BeingDebugged_ flag of the _PEB_. This is done by checking the second byte of the _PEB_ struct, which is accessed via instruction _fs:30h_.
 
-![_IDA Pro_ _BeingDebugged_ flag of _PEB_](../Pictures/Lab_17/lab_16-01_1_ida_pro_1.png)
+![_IDA Pro_ _BeingDebugged_ flag of _PEB_](../Pictures/Lab_16/lab_16-01_1_ida_pro_1.png)
 
 After that, the malware also checks the _ProcessHeap_ (_PEB_ + _0x18_) _ForceFlags_ (_ProcessHeap_ + _0x10_ -_Windows XP_-) value of the _PEB_, since this field is used to tell the kernel if the heap was created within a debugger.
 
-![_IDA Pro_ _ProcessHeap_ flag of _PEB_](../Pictures/Lab_17/lab_16-01_1_ida_pro_2.png)
+![_IDA Pro_ _ProcessHeap_ flag of _PEB_](../Pictures/Lab_16/lab_16-01_1_ida_pro_2.png)
 
 Then, the malware will check the field _0x68_ of the _PEB_, which points to the _NTGlobalFlag_. If this value of this flag is equal to _0x70_, the process will be running in a debugger.
 
-![_IDA Pro_ _NTGlobalFlag_ flag of _PEB_](../Pictures/Lab_17/lab_16-01_1_ida_pro_3.png)
+![_IDA Pro_ _NTGlobalFlag_ flag of _PEB_](../Pictures/Lab_16/lab_16-01_1_ida_pro_3.png)
 
 These techniques are used in many different locations within the code, so as to hindering the debugging process.
 
@@ -32,7 +32,7 @@ These techniques are used in many different locations within the code, so as to 
 
 When an anti-debugging technique succeeds, the malware auto-removes itself.
 
-![_IDA Pro_ auto-removing](../Pictures/Lab_17/lab_16-01_2_ida_pro_1.png)
+![_IDA Pro_ auto-removing](../Pictures/Lab_16/lab_16-01_2_ida_pro_1.png)
 
 **3. How can you get around these anti-debugging techniques?**
 
@@ -48,11 +48,11 @@ dump fs:[30]
 
 Now, we can start modifying the values by means of _CTRL+E_ or _right-click -> Binary -> Edit_.
 
-![_IDA Pro_ _PEB_ in memory](../Pictures/Lab_17/lab_16-01_3_immunity_1.png)
+![_IDA Pro_ _PEB_ in memory](../Pictures/Lab_16/lab_16-01_3_immunity_1.png)
 
 In the case of _ProcessHeap_, we go to the address _0x00140000_ and select the offset _+0x10_, which points to _ForceFlags_ value that has a value of _0x40000060_ in this case.
 
-![_IDA Pro_ _ProcessHeap_ in memory](../Pictures/Lab_17/lab_16-01_3_immunity_2.png)
+![_IDA Pro_ _ProcessHeap_ in memory](../Pictures/Lab_16/lab_16-01_3_immunity_2.png)
 
 So, we modify _BeingDebugged_ to _0x0_, _ForceFlags_ to _0x00000000_ and _NTGlobalFlag_ to any other value than _0x0070_, _0x0000_ in our case.
 
@@ -99,45 +99,45 @@ Incorrect password, Try again.
 
 To run the sample, first we have to know the password. To do so, we first load the binary in _IDA Pro_.
 
-![_IDA Pro_ binary _main_ function](../Pictures/Lab_17/lab_16-02_3_ida_pro_1.png)
+![_IDA Pro_ binary _main_ function](../Pictures/Lab_16/lab_16-02_3_ida_pro_1.png)
 
 As we can see, the binary can take three paths, if no argument is provided, it exits printing the sentence "usage: Lab16-02.exe <4 character password>". If some argument has included, it will create a new thread and print "Incorrect password, Try again.", if the argument does not match with the expected password, or "You entered the correct password!", if the argument matches.
 
 If we take a look where the binary compares the argument (_0x0040123A_), it takes the value stored in _byte_408030_ as reference.
 
-![_IDA Pro_ password comparison](../Pictures/Lab_17/lab_16-02_3_ida_pro_2.png)
+![_IDA Pro_ password comparison](../Pictures/Lab_16/lab_16-02_3_ida_pro_2.png)
 
 So if we take a look to the value of such variable we will see the following:
 
-![_IDA Pro_ password value](../Pictures/Lab_17/lab_16-02_3_ida_pro_3.png)
+![_IDA Pro_ password value](../Pictures/Lab_16/lab_16-02_3_ida_pro_3.png)
 
 Mmmm... It seems that the value of the variable is not printable. May be the previously created thread have something to say what is the real password.
 
 But first, we are going to convert these variables into a string of size 4 and rename it as password.
 
-![_IDA Pro_ password global array](../Pictures/Lab_17/lab_16-02_3_ida_pro_4.png)
+![_IDA Pro_ password global array](../Pictures/Lab_16/lab_16-02_3_ida_pro_4.png)
 
 Now, we can take a look to the function called by _CreateThread_.
 
-![_IDA Pro_ password decoding 1](../Pictures/Lab_17/lab_16-02_3_ida_pro_5.png)
+![_IDA Pro_ password decoding 1](../Pictures/Lab_16/lab_16-02_3_ida_pro_5.png)
 
-![_IDA Pro_ password decoding 2](../Pictures/Lab_17/lab_16-02_3_ida_pro_6.png)
+![_IDA Pro_ password decoding 2](../Pictures/Lab_16/lab_16-02_3_ida_pro_6.png)
 
 It definitely modifies the variable of the password.
 
 Also, we see how this function checks the _BeingDebugged_ flag of the _PEB_ and modifies the password according to that.
 
-![_IDA Pro_ password decoding 3](../Pictures/Lab_17/lab_16-02_3_ida_pro_7.png)
+![_IDA Pro_ password decoding 3](../Pictures/Lab_16/lab_16-02_3_ida_pro_7.png)
 
 Taking all of this in mind, let's start debugging the sample with _Immunity Debugger_, don't forget to set one dummy string as argument of the binary (Debug -> Arguments).
 
-![_Immunity_ set parameter](../Pictures/Lab_17/lab_16-02_3_immunity_1.png)
+![_Immunity_ set parameter](../Pictures/Lab_16/lab_16-02_3_immunity_1.png)
 
 We set up one breakpoint at the comparison instruction (_0x0040123A_) and run the sample.
 
 If we do not use the _hidedebug_ plguing, the password we will get is: `bzqr`.
 
-![_Immunity_ password 1](../Pictures/Lab_17/lab_16-02_3_immunity_2.png)
+![_Immunity_ password 1](../Pictures/Lab_16/lab_16-02_3_immunity_2.png)
 
 Notice that despite the fact that the string is "bzqrp@ss", the sample only compares the 4 first characters.
 
@@ -149,7 +149,7 @@ Now, if we execute the following command to prevent the malware from knowing it 
 
 Now, the new password is: `bzrr`.
 
-![_Immunity_ password 2](../Pictures/Lab_17/lab_16-02_3_immunity_3.png)
+![_Immunity_ password 2](../Pictures/Lab_16/lab_16-02_3_immunity_3.png)
 
 Let's see if it is correct!
 
@@ -163,25 +163,25 @@ Mmmm... It failed again, may be we missed something.
 
 If we go back to the decoding function, we see some global variable used to modify one of the bytes of the password:
 
-![_IDA Pro_ password decoding 4](../Pictures/Lab_17/lab_16-02_3_ida_pro_8.png)
+![_IDA Pro_ password decoding 4](../Pictures/Lab_16/lab_16-02_3_ida_pro_8.png)
 
 If we analyze this global variable, we see that it has cross-references to other functions, one in which it modifies the value of the variable.
 
-![_IDA Pro_ global variable cross-references](../Pictures/Lab_17/lab_16-02_3_ida_pro_9.png)
+![_IDA Pro_ global variable cross-references](../Pictures/Lab_16/lab_16-02_3_ida_pro_9.png)
 
 This function, located at _0x00401020_ and renamed to _check_debugging_, calls _OutputDebugStringA_ and _GetLastError_ to check if the sample is being debugged.
 
-![_IDA Pro_ _OutputDebugStringA_](../Pictures/Lab_17/lab_16-02_3_ida_pro_10.png)
+![_IDA Pro_ _OutputDebugStringA_](../Pictures/Lab_16/lab_16-02_3_ida_pro_10.png)
 
 This function is called by a _TLS_ (Thread Local Storage) _callback_ in which it checks if the sample is running in the context of _OllyDBG_ and if so, it exits (we overcome this situation by executing the sample with _Immunity_).
 
-![_IDA Pro_ _TLS callback_](../Pictures/Lab_17/lab_16-02_3_ida_pro_11.png)
+![_IDA Pro_ _TLS callback_](../Pictures/Lab_16/lab_16-02_3_ida_pro_11.png)
 
 So to solve our problem we can simply _NOP-out_ the instruction `add     cl, 1` (_0x00401051_) and executing again the sample.
 
 Now, the password we have obtained is: `byrr`.
 
-![_Immunity_ password 3](../Pictures/Lab_17/lab_16-02_3_immunity_4.png)
+![_Immunity_ password 3](../Pictures/Lab_16/lab_16-02_3_immunity_4.png)
 
 Let's try it...
 
@@ -205,13 +205,13 @@ It exits as explained in exercise 3.
 
 After opening the file into _PEView_, we see a section called _.tls_ with a header called _IMAGE_TLS_DIRECTORY_.
 
-![_PEView_ _.tls_ section](../Pictures/Lab_17/lab_16-02_6_peview_1.png)
+![_PEView_ _.tls_ section](../Pictures/Lab_16/lab_16-02_6_peview_1.png)
 
 **7. Where is the callback located? (Hint: Use CTRL-E in IDA Pro.)**
 
 If we go to _IDA Pro_ and click [CTRL+E] we will see all the entry points of the malware, including the _TLS_ callback described in exercise 3.
 
-![_IDA Pro_ _TLS callback_ entry point](../Pictures/Lab_17/lab_16-02_7_ida_pro_1.png)
+![_IDA Pro_ _TLS callback_ entry point](../Pictures/Lab_16/lab_16-02_7_ida_pro_1.png)
 
 As we can see, it is located at _0x00401060_.
 
@@ -219,7 +219,7 @@ As we can see, it is located at _0x00401060_.
 
 As commented in the exercise 3, if the sample finds it is being executed by _OllyDBG_, it will terminate it. This is done by means of _FindWindowA_ _WINAPI_ function.
 
-![_IDA Pro_ _TLS callback_](../Pictures/Lab_17/lab_16-02_3_ida_pro_11.png)
+![_IDA Pro_ _TLS callback_](../Pictures/Lab_16/lab_16-02_3_ida_pro_11.png)
 
 We can avoid this issue by using another debugger like _Immunity_ or _IDA Pro_. However, if we only have _OllyDBG_, we can use the plugin _PhantOm_ or patching the binary so as to check other random string value.
 
@@ -285,11 +285,11 @@ Mmmm... Interesting, the sample seems to perform some anti-debugging techniques 
 
 If we take a look at the beginning of the _main_ function, we will see two splitted strings.
 
-![_IDA Pro_ splitted strings](../Pictures/Lab_17/lab_16-03_3_ida_pro_1.png)
+![_IDA Pro_ splitted strings](../Pictures/Lab_16/lab_16-03_3_ida_pro_1.png)
 
 To see them better, we convert these variables into arrays.
 
-![_IDA Pro_ splitted strings to arrays](../Pictures/Lab_17/lab_16-03_3_ida_pro_2.png)
+![_IDA Pro_ splitted strings to arrays](../Pictures/Lab_16/lab_16-03_3_ida_pro_2.png)
 
 Now, we can see them in a better way, the strings that the binary innitialize are:
 
@@ -302,21 +302,21 @@ As we can see, the first one is completely unknown, but the second one seems to 
 
 The process name string is passed as argument in the next function, located at _0x004011E0_.
 
-![_IDA Pro_ _QueryPerformanceCounter_ function](../Pictures/Lab_17/lab_16-03_3_ida_pro_3.png)
+![_IDA Pro_ _QueryPerformanceCounter_ function](../Pictures/Lab_16/lab_16-03_3_ida_pro_3.png)
 
-![_IDA Pro_ process name modification](../Pictures/Lab_17/lab_16-03_3_ida_pro_4.png)
+![_IDA Pro_ process name modification](../Pictures/Lab_16/lab_16-03_3_ida_pro_4.png)
 
 This function calls two times the _WINAPI_ function _QueryPerformanceCounter_, doing other stuff meanwhile. Then, it checks the time between the two calls and if it is greater than 1200 milliseconds, it modifies the argument passed, which is the string "ocl.exe", in a way, and if not, it modifies in another way. So we have rename this function to _check_debugging_1_.
 
 This function is important, since it will determine the valid execution name of the sample.
 
-![_Immunity_ process name modification](../Pictures/Lab_17/lab_16-03_3_ida_pro_5.png)
+![_Immunity_ process name modification](../Pictures/Lab_16/lab_16-03_3_ida_pro_5.png)
 
 Let's start the sample in _Immunity_ and see what name the sample should have while debugging and while it is being executed in a regular way.
 
 So we set up several _breakpoints_ at _0x00401518_ (where the string comparison takes place) and _0x0040122D_ (in the middle of the two _QueryPerformanceCounter_ callings). Now, we run it and see what happens.
 
-![_IDA Pro_ process name modified while debugging](../Pictures/Lab_17/lab_16-03_3_immunity_1.png)
+![_IDA Pro_ process name modified while debugging](../Pictures/Lab_16/lab_16-03_3_immunity_1.png)
 
 Notice that a division by zero took place while we were debugging, this is done to stop execution and force the value between the two _QueryPerformanceCounter_ calls being much higher than 1200 milliseconds. After the exception, just press [SHIFT + F9] and the program will continue as normally.
 
@@ -331,11 +331,11 @@ mov     [ebp+debug_variable], 2
 mov     [ebp+debug_variable], 1
 ```
 
-![_Immunity_ modify isntruction](../Pictures/Lab_17/lab_16-03_3_immunity_2.png)
+![_Immunity_ modify isntruction](../Pictures/Lab_16/lab_16-03_3_immunity_2.png)
 
 Then, if we execute the sample we will see how it returns the value of the sample in a real environment.
 
-![_Immunity_ real process name](../Pictures/Lab_17/lab_16-03_3_immunity_3.png)
+![_Immunity_ real process name](../Pictures/Lab_16/lab_16-03_3_immunity_3.png)
 
 The filename will be _peo.exe_.
 
@@ -345,19 +345,19 @@ We have discussed one of the anti-debugging techines in the previous exercise, h
 
 The first one can be seen at _0x00401584_, where the malware employs two calls to _GetTickCount_ and another call to an unknown function in the middle, this function has been renamed to _check_debugging_2_.
 
-![_IDA Pro_ _GetTickCount_ calls](../Pictures/Lab_17/lab_16-03_4_ida_pro_1.png)
+![_IDA Pro_ _GetTickCount_ calls](../Pictures/Lab_16/lab_16-03_4_ida_pro_1.png)
 
 The function _check_debugging_2_ simply performs a division by zero like the analyzed in the previous exercise to stop execution during debugging.
 
-![_IDA Pro_ division by zero](../Pictures/Lab_17/lab_16-03_4_ida_pro_2.png)
+![_IDA Pro_ division by zero](../Pictures/Lab_16/lab_16-03_4_ida_pro_2.png)
 
 Finally, the last anti-debugging trick the malware employs is located at function renamed to _decode_data_ (_0x00401300_). In this function takes place the decoding of some encoded data stored within the malware, prior to calling _gethostbyname_.
 
-![_IDA Pro_ _decode_data_ calling](../Pictures/Lab_17/lab_16-03_4_ida_pro_3.png)
+![_IDA Pro_ _decode_data_ calling](../Pictures/Lab_16/lab_16-03_4_ida_pro_3.png)
 
 In the _decode_data_ we can see how the function executes two times the instruction `rdtsc` and if the result points out that a debugger may be present, it calls the _auto_delete_ function.
 
-![_IDA Pro_ _decode_data_ function](../Pictures/Lab_17/lab_16-03_4_ida_pro_4.png)
+![_IDA Pro_ _decode_data_ function](../Pictures/Lab_16/lab_16-03_4_ida_pro_4.png)
 
 
 **5. For each technique, what does the malware do if it determines it is running in a debugger?**
