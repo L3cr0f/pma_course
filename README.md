@@ -18,6 +18,7 @@ Notes about _IDA Pro_.
 [X]: cross-references
 [D]: change code to data
 [C]: change data to code
+[P]: create function
 [G]: jump to address
 [SPACE]: change IDA view
 Structures tab + [INSERT]: add new structure
