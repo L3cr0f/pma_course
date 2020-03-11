@@ -64,7 +64,7 @@ Great! The _base64_ alphabet, just what we were expecting! We convert this to a 
 
 ![_IDA Pro_ _base64_ alphabet](../Pictures/Lab_14/lab_14-01_1_ida_pro_6.png)
 
-Ok! But there is something more, let's take a look to the function located at _0x00401000_, where the _base64_ encoding letter is chosen (some variables have been renamed to clearify).
+Ok! But there is something more, let's take a look to the function located at _0x00401000_, where the _base64_ encoding letter is chosen (some variables have been renamed for clarity).
 
 ![_IDA Pro_ _base64_ encoding letter](../Pictures/Lab_14/lab_14-01_1_ida_pro_7.png)
 
