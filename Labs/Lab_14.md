@@ -44,7 +44,7 @@ The first thing the malware does is getting some information from the machine, t
 
 As we can see, the malware only gets the last 12 characters of the _GUID_ (notice that a the returned value could be something like this `{12340001-4980-1920-6788-123456789012}`).
 
-The information retrieved is concatenated in the following format: "[partial GUID]-[username]". For example, if we have a computer with the _GUID_ `{12340001-4980-1920-6788-123456789012}` and the username `jones`, the final string would be: `123456789012-jones`. This string is then passed as argument to the function _get_http_path_ (the value obtained in this function is then used as path of the _URL_ that the malware requests information) located at _0x004010BB_.
+The information retrieved is concatenated in the following format: "[partial GUID seperated by ':' every two digits]-[username]". For example, if we have a computer with the _GUID_ `{12340001-4980-1920-6788-123456789012}` and the username `jones`, the final string would be: `12:34:56:78:90:12-jones`. This string is then passed as argument to the function _get_http_path_ (the value obtained in this function is then used as path of the _URL_ that the malware requests information) located at _0x004010BB_.
 
 ![_IDA Pro_ _get_http_path_ calling](../Pictures/Lab_14/lab_14-01_1_ida_pro_2.png)
 
@@ -70,18 +70,11 @@ Ok! But there is something more, let's take a look to the function located at _0
 
 As we can see, this _base64_ implementation substitutes the padding character "=" with the letter "a".
 
-So now, we know what the function _get_http_path_ does, converts the string "[partial GUID]-[username]" to base64, so our example would be:
+So now, we know what the function _get_http_path_ does, converts the string "[partial GUID seperated by ':' every two digits]-[username]" to base64, so our example would be (notice the replacing of "="):
 
 ```
-$ echo -n 123456789012-jones | base64
-MTIzNDU2Nzg5MDEyLWpvbmVz
-```
-
-If our username would be different, for example "eaglemath", the _base64_ of the string "[partial GUID]-[username]" would be (notice the replacing of "="):
-
-```
-$ echo -n 123456789012-eaglemath | base64 | tr '=' 'a'
-MTIzNDU2Nzg5MDEyLWVhZ2xlbWF0aAaa
+$ echo -n 12:34:56:78:90:12-jones | base64 | tr '=' 'a'
+MTI6MzQ6NTY6Nzg6OTA6MTItam9uZXMa
 ```
 
 Now, we see that this value is being passed as argument to the next function called, _cnc_communicaton_ (_0x004011A3_).
@@ -95,7 +88,7 @@ This function will make a _HTTP_ request to the C&C _URL_ by means of _URLDownlo
 Based on our example, the _URL_ would be:
 
 ```
-http://www.practicalmalwareanalysis.com/MTIzNDU2Nzg5MDEyLWpvbmVz/z.png
+http://www.practicalmalwareanalysis.com/MTI6MzQ6NTY6Nzg6OTA6MTItam9uZXMa/a.png
 ```
 
 **3. Why might the information embedded in the networking beacon be of interest to the attacker?**
@@ -116,9 +109,36 @@ If the execution fails, it will sleep for one minute and then try it again (incl
 
 **6. What elements of the malware’s communication may be effectively detected using a network signature?**
 
+To create a good signature, we have to take in mind some aspects of the _HTTP_ request the malware executes:
+
+- The domain name: www.practicalmalwareanalysis.com.
+- _HTTP_ _GET_ request.
+- Own implementation of _base64_ encoding to get the _URL_ path.
+- The encoded _URL_ path has a value of "XX:XX:XX:XX:XX:XX-abcdef", being 'X' an hexadecimal value and "abcdef" an _ASCII_ string.
+- The downloaded file has the name of the last character of the path, which is the _base64_ encoded strin, and the _PNG_ extension, although it is not a _PNG_ image, but this is irrelevant to create the network signature.
+
 **7. What mistakes might analysts make in trying to develop a signature for this malware?**
 
+The analysts could think that the path and the filename of the _URL_ are predictable, due to most cases the filename would be "a.PNG", since the letter "a" si the padding character of the _base64_ implementation.
+
 **8. What set of signatures would detect this malware (and future variants)?**
+
+The first thing we should do to create our own signature is creating a regular expression that matches the _URL_ that the malware requests. Also, to test it, we use the online webpage REGEX101 (https://regex101.com).
+
+After taking the points mentioned in exercise 6 in mind, we can create the regular expression we are looking for:
+
+```
+practicalmalwareanalysis\.com\/(?:[A-Za-z0-9+\/]{4})*(?:[A-Za-z0-9+\/]{2}aa|[A-Za-z0-9+\/]{3}a)?\/\w\.png
+```
+
+Also, if we include the domain, the resultant _Snort_ rule would be:
+
+```
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"PM14.1.2"; urilen:>32; uricontent:".png"; pcre:"practicalmalwareanalysis\.com\/(?:[A-Za-z0-9+\/]{4})*(?:[A-Za-z0-9+\/]{2}aa|[A-Za-z0-9+\/]{3}a)?\/.\.png"; sid:20001412; rev:1;)
+```
+
+This regular expression will catch every _HTTP_ request that the malware performs. However, it will catch some false possitives like a request in which the name of the file would be "\*.png". Nevertheless, the chance of getting a false possitive like this is quite low.
+
 
 ## Lab 14-2
 
@@ -126,7 +146,17 @@ Analyze the malware found in file Lab14-02.exe. This malware has been configured
 
 **1. What are the advantages or disadvantages of coding malware to use direct IP addresses?**
 
+- Advantages:
+	- The IP has not to be renewed as domain names.
+	- The IP addresses are trickier to analyze during dynamic malware analysis.
+
+- Disadvantages:
+	- The atacker could not redirect the traffic of the malware in case it need, so if it lost control over the server, the piece of malware become useless.
+	- Using an _IP_ address for _HTTP_ traffic can be flagged as malicious, since it is not common among users.
+
 **2. Which networking libraries does this malware use? What are the advantages or disadvantages of using these libraries?**
+
+
 
 **3. What is the source of the URL that the malware uses for beaconing? What advantages does this source offer?**
 
