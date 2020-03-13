@@ -156,9 +156,121 @@ Analyze the malware found in file Lab14-02.exe. This malware has been configured
 
 **2. Which networking libraries does this malware use? What are the advantages or disadvantages of using these libraries?**
 
+To check the libraries the malware employs we use the python script "get_file_imports.py".
 
+```
+C:\> python get_file_imports.py Lab14-02.exe
+
+======================
+KERNEL32.dll
+======================
+DisconnectNamedPipe
+TerminateProcess
+WaitForMultipleObjects
+...
+GetModuleFileNameA
+GetModuleHandleA
+GetStartupInfoA
+======================
+USER32.dll
+======================
+LoadStringA
+======================
+SHELL32.dll
+======================
+SHChangeNotify
+ShellExecuteExA
+======================
+WININET.dll
+======================
+InternetCloseHandle
+InternetOpenUrlA
+InternetOpenA
+InternetReadFile
+======================
+MSVCRT.dll
+======================
+exit
+__p__commode
+_controlfp
+...
+_initterm
+__setusermatherr
+__p__fmode
+```
+
+As we can see, the malware uses the library _WININET.dll_, which is included in _WINAPI_. The usage of such library are highly monitored since it is the main method the malware binaries use to communicate with their _C&Cs_.
 
 **3. What is the source of the URL that the malware uses for beaconing? What advantages does this source offer?**
+
+To get the _URL_ that the malware uses, we need to understand the execution flow of it.
+
+First of all, the malware calls the function _LoadStringA_ with the parameter _hInstance_ pointing to the argument of the same name and the _ID_ parameter to 1. If we take a look to the previous function, called _start_, we will see that this argument has the value of a handle to itself, since the function _GetModuleHandleA_ is called with the argument _lpModuleName_ set to _NULL_.
+
+![_IDA Pro_ _lpModuleName_](../Pictures/Lab_14/lab_14-02_3_ida_pro_1.png)
+
+![_IDA Pro_ _LoadStringA_](../Pictures/Lab_14/lab_14-02_3_ida_pro_2.png)
+
+After that, the malware will have loaded the resource string with _ID_ 1, which is the following string extracted with _Resource Hacker_:
+
+```
+STRINGTABLE
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+{
+  1, 	"http://127.0.0.1/tenfour.html"
+}
+```
+
+![_Resource Hacker_ string resource](../Pictures/Lab_14/lab_14-02_3_resource_hacker_1.png)
+
+We have obtained an _URL_ composed by an _IP_ address! However, we need to dig deeper to see if the malware uses something more.
+
+Then, the malware creates two events, reserve some memory with _malloc_ and copies the _URL_ into the reserved buffer at offset _0x14_ (notice the pointer to the buffer is stored in _EBX_ register).
+
+![_IDA Pro_ _malloc_ and _memcpy_](../Pictures/Lab_14/lab_14-02_3_ida_pro_3.png)
+
+So the buffer has this aspect at this momment (the remining bytes of the buffer have been ommited):
+
+```
+| 0x0 | 0x0 | 0x0 | 0x0 | 0x0 | 0x0 | 0x0 | 0x0 | 0x0 | 0x0 | 0x0 | 0x0 | 0x0 | 0x0 | 0x0 | 0x0 | 0x0 | 0x0 | 0x0 | 0x0 | 'h' | 't' | 't' | 'p' | ':' | '/' | '/' | '1' | '2' | '7' | '.' | '0' | '.' | '0' | '.' | 1' | '/' | 't' | 'e' | 'n' | 'f' | o' | 'u' | 'r' | '.' | 'h' | 't' | 'm' | 'l' | 0x0 | ... |
+```
+
+The next thing the sample does is creating two pipes, which read handle of the first pipe and write handle of the second pipe are stored in the buffer:
+
+![_IDA Pro_ _CreatePipe_](../Pictures/Lab_14/lab_14-02_3_ida_pro_4.png)
+
+The buffer will look like (_RH_1_ means read handle of the first pipe and _WH_2_ means write handle of the second pipe):
+
+```
+| RH_1 | RH_1 | RH_1 |RH_1 | WH_2 | WH_2 | WH_2 | WH_2 | 0x0 | 0x0 | 0x0 | 0x0 | 0x0 | 0x0 | 0x0 | 0x0 | 0x0 | 0x0 | 0x0 | 0x0 | 'h' | 't' | 't' | 'p' | ':' | '/' | '/' | '1' | '2' | '7' | '.' | '0' | '.' | '0' | '.' | 1' | '/' | 't' | 'e' | 'n' | 'f' | o' | 'u' | 'r' | '.' | 'h' | 't' | 'm' | 'l' | 0x0 | ... |
+```
+
+After that, the binary duplicates the write handle of the first pipe and stores this new handle in the _hStdError_ field of the _StartupInfo_ struct. Also, the read handle of second pipe is stored in the field _hStdOutput_ of the _StartupInfo_ struct.
+
+![_IDA Pro_ _DuplicateHandle_](../Pictures/Lab_14/lab_14-02_3_ida_pro_5.png)
+
+Then, it creates a new process of _CMD_ with the _lpStartupInfo_ argument set to the previously commented _StartupInfo_ struct, which has the _hStdOutput_ and _hStdError_ pointing to the handles of the previous pipes.
+
+![_IDA Pro_ _CreateProcess_](../Pictures/Lab_14/lab_14-02_3_ida_pro_6.png)
+
+Now, if the process is created successfully, it will store the handle to such process into the buffer at offset _0x8_. Also, the pointer to such buffer will be included as _lpParameter_ argument of the _CreateThread_ function, which will execute the first function that connects to the C&C. Finally, once the thread has been created, its handle will be stored into the buffer.
+
+![_IDA Pro_ _CreateThread_](../Pictures/Lab_14/lab_14-02_3_ida_pro_7.png)
+
+At this momment, the buffer will look like (_PH_ means process handle and _TH_1_ means first thread handle):
+
+```
+| RH_1 | RH_1 | RH_1 |RH_1 | WH_2 | WH_2 | WH_2 | WH_2 | PH | PH | PH | PH | TH_1 | TH_1 | TH_1 | TH_1 | 0x0 | 0x0 | 0x0 | 0x0 | 'h' | 't' | 't' | 'p' | ':' | '/' | '/' | '1' | '2' | '7' | '.' | '0' | '.' | '0' | '.' | 1' | '/' | 't' | 'e' | 'n' | 'f' | o' | 'u' | 'r' | '.' | 'h' | 't' | 'm' | 'l' | 0x0 | ... |
+```
+
+Let's take a look into _connect_to_cnc_1_ (_0x004014C0_). The first thing it does is copying the buffer (which the argument _lpParameter_ is pointing to) into _EBX_.
+
+
+Now, the buffer will look like (_TH_2_ means second thread handle):
+
+```
+| RH_1 | RH_1 | RH_1 |RH_1 | WH_2 | WH_2 | WH_2 | WH_2 | PH | PH | PH | PH | TH_1 | TH_1 | TH_1 | TH_1 | TH_2 | TH_2 | TH_2 | TH_2 | 'h' | 't' | 't' | 'p' | ':' | '/' | '/' | '1' | '2' | '7' | '.' | '0' | '.' | '0' | '.' | 1' | '/' | 't' | 'e' | 'n' | 'f' | o' | 'u' | 'r' | '.' | 'h' | 't' | 'm' | 'l' | 0x0 | ... |
+```
 
 **4. Which aspect of the HTTP protocol does the malware leverage to achieve its objectives?**
 
