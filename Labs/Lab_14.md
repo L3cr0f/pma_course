@@ -255,7 +255,7 @@ Then, it creates a new process of _CMD_ with the _lpStartupInfo_ argument set to
 
 Now, if the process is created successfully, it will store the handle to such process into the buffer at offset _0x8_. Also, the pointer to such buffer will be included as _lpParameter_ argument of the _CreateThread_ function, which will execute the first function that connects to the C&C. Finally, once the thread has been created, its handle will be stored into the buffer.
 
-![_IDA Pro_ _CreateThread_](../Pictures/Lab_14/lab_14-02_3_ida_pro_7.png)
+![_IDA Pro_ _CreateThread_ 1](../Pictures/Lab_14/lab_14-02_3_ida_pro_7.png)
 
 At this momment, the buffer will look like (_PH_ means process handle and _TH_1_ means first thread handle):
 
@@ -263,14 +263,74 @@ At this momment, the buffer will look like (_PH_ means process handle and _TH_1_
 | RH_1 | RH_1 | RH_1 |RH_1 | WH_2 | WH_2 | WH_2 | WH_2 | PH | PH | PH | PH | TH_1 | TH_1 | TH_1 | TH_1 | 0x0 | 0x0 | 0x0 | 0x0 | 'h' | 't' | 't' | 'p' | ':' | '/' | '/' | '1' | '2' | '7' | '.' | '0' | '.' | '0' | '.' | 1' | '/' | 't' | 'e' | 'n' | 'f' | o' | 'u' | 'r' | '.' | 'h' | 't' | 'm' | 'l' | 0x0 | ... |
 ```
 
-Let's take a look into _connect_to_cnc_1_ (_0x004014C0_). The first thing it does is copying the buffer (which the argument _lpParameter_ is pointing to) into _EBX_.
+Let's take a look into _connect_to_cnc_1_ (_0x004014C0_). The first thing it does is copying the buffer (which the argument _lpParameter_ is pointing to) to new buffer (created by means of _malloc_), which pointer will be stored by _EBX_.
 
+![_IDA Pro_ _connect_to_cnc_1_ _malloc_ and _memcpy_](../Pictures/Lab_14/lab_14-02_3_ida_pro_8.png)
 
-Now, the buffer will look like (_TH_2_ means second thread handle):
+Then it will call _PeekNamedPipe_ to copy the data of the read handle of the first pipe into _ESI_, which points to a buffer that will be read by means of _ReadFile_.
+
+![_IDA Pro_ _connect_to_cnc_1_ _PeekNamedPipe_](../Pictures/Lab_14/lab_14-02_3_ida_pro_9.png)
+
+![_IDA Pro_ _connect_to_cnc_1_ _ReadFile_](../Pictures/Lab_14/lab_14-02_3_ida_pro_10.png)
+
+At this point, it will call a function located at _0x00401000_, which seems to be some encoding routine, since it requires two arguments (one of those is the read data and the other an empty buffer, which seem to be the data to encode and the result) and it is called just before of the function where the _HTTP_ request is done. So we have called this unknown function, _encode_data_.
+
+![_IDA Pro_ _connect_to_cnc_1_ _encode_data_ calling](../Pictures/Lab_14/lab_14-02_3_ida_pro_11.png)
+
+If we dig into this function, we will see some interesting things...
+
+![_IDA Pro_ _encode_data_](../Pictures/Lab_14/lab_14-02_3_ida_pro_12.png)
+
+The variable _byte_403010_ is called several times, let's see what contains.
+
+![_IDA Pro_ _byte_403010_](../Pictures/Lab_14/lab_14-02_3_ida_pro_13.png)
+
+It seems to be a custom _base64_ alphabet! Let's fix the code so as to see the code better.
+
+```
+WXYZlabcd3fghijko12e456789ABCDEFGHIJKL+/MNOPQRSTUVmn0pqrstuvwxyz
+```
+
+As we can see, the alphabet is quite different from a standard one, but it really seems to be a _base64_ alphabet. Also, the code of the function _encode_data_ seems to be a different _base64_ implementation comparing with the previously seen.
+
+If we continue analyzing the code, we get to the function _cnc_communicaton_initial_, which is located at _0x00401750_, and, as we can see, it takes two arguments, the known _URL_ and the encoded buffer.
+
+![_IDA Pro_ _connect_to_cnc_1_ _cnc_communicaton_initial_ calling](../Pictures/Lab_14/lab_14-02_3_ida_pro_14.png)
+
+The function _cnc_communicaton_initial_ will use the encoded buffer as _User-Agent_ plus the string "(!<" at the begining when _InternetOpenA_ is called. This seems to be done to confuse the analysts when they see the _User-Agent_, since they will discard _base64_ as encoding routine.
+
+![_IDA Pro_ _cnc_communicaton_initial_ begining of the _User-Agent_](../Pictures/Lab_14/lab_14-02_3_ida_pro_15.png)
+
+![_IDA Pro_ _cnc_communicaton_initial_ _InternetOpenA_](../Pictures/Lab_14/lab_14-02_3_ida_pro_16.png)
+
+Then, it will call _InternetOpenUrlA_ using the known _URL_.
+
+![_IDA Pro_ _cnc_communicaton_initial_ _InternetOpenUrlA_](../Pictures/Lab_14/lab_14-02_3_ida_pro_17.png)
+
+After that it return to _connect_to_cnc_1_, which executes this process again and again.
+
+So now, let's take a look to what the malware does after create the first thread.
+
+![_IDA Pro_ _CreateThread_ 2](../Pictures/Lab_14/lab_14-02_3_ida_pro_18.png)
+
+It creates another thread! However, in this case calls another function located at _0x004015C0_, which also seems to perform some _HTTP_ requests, hence the name _connect_to_cnc_2_. Also, it includes the buffer where the _URL_ is stored as a parameter of the thread. After creating the thread, this buffer is modified, which will look like (_TH_2_ means second thread handle):
 
 ```
 | RH_1 | RH_1 | RH_1 |RH_1 | WH_2 | WH_2 | WH_2 | WH_2 | PH | PH | PH | PH | TH_1 | TH_1 | TH_1 | TH_1 | TH_2 | TH_2 | TH_2 | TH_2 | 'h' | 't' | 't' | 'p' | ':' | '/' | '/' | '1' | '2' | '7' | '.' | '0' | '.' | '0' | '.' | 1' | '/' | 't' | 'e' | 'n' | 'f' | o' | 'u' | 'r' | '.' | 'h' | 't' | 'm' | 'l' | 0x0 | ... |
 ```
+
+Let's analyze the function _connect_to_cnc_2_. The first thing it does is copying the buffer contained in the _lpThreadParameter_ argument into a new buffer and then it will call to a function located at _0x00401800_ that we have called _cnc_communicaton_read_file_.
+
+![_IDA Pro_ _connect_to_cnc_2_ _cnc_communicaton_read_file_ calling](../Pictures/Lab_14/lab_14-02_3_ida_pro_19.png)
+
+This new function, _cnc_communicaton_read_file_, will perform an _HTTP_ request to the known _URL_ using the _User-Agent_ "Internet Surf". Then, the result of such request will be returned by the function.
+
+![_IDA Pro_ _cnc_communicaton_read_file_](../Pictures/Lab_14/lab_14-02_3_ida_pro_20.png)
+
+Then the malware will analyze the buffer of the file obtained from the _C&C_ in the _connect_to_cnc_2_ function.
+
+![_IDA Pro_ _connect_to_cnc_2_ file analysis](../Pictures/Lab_14/lab_14-02_3_ida_pro_21.png)
+
 
 **4. Which aspect of the HTTP protocol does the malware leverage to achieve its objectives?**
 
