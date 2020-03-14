@@ -201,6 +201,10 @@ __p__fmode
 
 As we can see, the malware uses the library _WININET.dll_, which is included in _WINAPI_. The usage of such library are highly monitored since it is the main method the malware binaries use to communicate with their _C&Cs_.
 
+Also, the _User-Agent_ must be hard-coded to be provided, and optional headers need to be hard-coded if desired.
+
+One advantage of the such library over the _Winsock API_, for example, is that some elements, such as cookies and caching headers, are provided by the operating system.
+
 **3. What is the source of the URL that the malware uses for beaconing? What advantages does this source offer?**
 
 To get the _URL_ that the malware uses, we need to understand the execution flow of it.
@@ -223,7 +227,13 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 
 ![_Resource Hacker_ string resource](../Pictures/Lab_14/lab_14-02_3_resource_hacker_1.png)
 
-We have obtained an _URL_ composed by an _IP_ address! However, we need to dig deeper to see if the malware uses something more.
+We have obtained an _URL_ composed by an _IP_ address!
+
+The usage of a resource string to store the _URL_ or _IP_ address of the _C&C_ is useful to hide it, since some beginner analysts could failed to locate it.
+
+**4. Which aspect of the HTTP protocol does the malware leverage to achieve its objectives?**
+
+Once we have found the _C&C_ _URL_, we need to dig deeper to see how it uses _HTTP_ communication.
 
 Then, the malware creates two events, reserve some memory with _malloc_ and copies the _URL_ into the reserved buffer at offset _0x14_ (notice the pointer to the buffer is stored in _EBX_ register).
 
@@ -309,6 +319,10 @@ Then, it will call _InternetOpenUrlA_ using the known _URL_.
 
 After that it return to _connect_to_cnc_1_, which executes this process again and again.
 
+**5. What kind of information is communicated in the malware’s initial beacon?**
+
+To understand what the malware communicates, we need to continue analyzing the sample, since at this moment we only know it takes the data from the created pipe.
+
 So now, let's take a look to what the malware does after create the first thread.
 
 ![_IDA Pro_ _CreateThread_ 2](../Pictures/Lab_14/lab_14-02_3_ida_pro_18.png)
@@ -327,22 +341,35 @@ This new function, _cnc_communicaton_read_file_, will perform an _HTTP_ request 
 
 ![_IDA Pro_ _cnc_communicaton_read_file_](../Pictures/Lab_14/lab_14-02_3_ida_pro_20.png)
 
-Then the malware will analyze the buffer of the file obtained from the _C&C_ in the _connect_to_cnc_2_ function.
+Then the malware will analyze the buffer obtained from the _C&C_ in the _connect_to_cnc_2_ function to check if this one is the same as the one received in the previous request.
 
-![_IDA Pro_ _connect_to_cnc_2_ file analysis](../Pictures/Lab_14/lab_14-02_3_ida_pro_21.png)
+![_IDA Pro_ _connect_to_cnc_2_ buffer check](../Pictures/Lab_14/lab_14-02_3_ida_pro_21.png)
 
+If it is not the same, it will compare the received buffer with the string "exit", and if it is true, it will exit. Also, it will copy the received buffer into the one called _previous_request_.
 
-**4. Which aspect of the HTTP protocol does the malware leverage to achieve its objectives?**
+![_IDA Pro_ _connect_to_cnc_2_ buffer copy and command check](../Pictures/Lab_14/lab_14-02_3_ida_pro_22.png)
 
-**5. What kind of information is communicated in the malware’s initial beacon?**
+If the received buffer is different from "exit", it will append to it the string "\n" and then write it to the write handle of the second pipe, which indeed it is copying to the _CMD_ process previously commented.
+
+![_IDA Pro_ _connect_to_cnc_2_ write file](../Pictures/Lab_14/lab_14-02_3_ida_pro_23.png)
+
+Then, it will repeat this process again and again.
 
 **6. What are some disadvantages in the design of this malware’s communication channels?**
 
+The main problem about the communication channel design is that the incoming commands are not encoded, which may result quite suspicious for a defender.
+
 **7. Is the malware’s encoding scheme standard?**
+
+As explained in the exercise 4, the _base64_ implementation uses a different alphabet.
 
 **8. How is communication terminated?**
 
+The communication is terminated by means of the "exit" command, as explained in the exercise 5.
+
 **9. What is the purpose of this malware, and what role might it play in the attacker’s arsenal?**
+
+The whole program is simply a reverse shell to the command and control _URL_ _http://127.0.0.1/tenfour.html_.
 
 ## Lab 14-3
 
