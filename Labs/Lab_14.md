@@ -237,7 +237,7 @@ Once we have found the _C&C_ _URL_, we need to dig deeper to see how it uses _HT
 
 Then, the malware creates two events, reserve some memory with _malloc_ and copies the _URL_ into the reserved buffer at offset _0x14_ (notice the pointer to the buffer is stored in _EBX_ register).
 
-![_IDA Pro_ _malloc_ and _memcpy_](../Pictures/Lab_14/lab_14-02_3_ida_pro_3.png)
+![_IDA Pro_ _malloc_ and _memcpy_](../Pictures/Lab_14/lab_14-02_4_ida_pro_1.png)
 
 So the buffer has this aspect at this momment (the remining bytes of the buffer have been ommited):
 
@@ -247,7 +247,7 @@ So the buffer has this aspect at this momment (the remining bytes of the buffer 
 
 The next thing the sample does is creating two pipes, which read handle of the first pipe and write handle of the second pipe are stored in the buffer:
 
-![_IDA Pro_ _CreatePipe_](../Pictures/Lab_14/lab_14-02_3_ida_pro_4.png)
+![_IDA Pro_ _CreatePipe_](../Pictures/Lab_14/lab_14-02_4_ida_pro_2.png)
 
 The buffer will look like (_RH_1_ means read handle of the first pipe and _WH_2_ means write handle of the second pipe):
 
@@ -257,15 +257,15 @@ The buffer will look like (_RH_1_ means read handle of the first pipe and _WH_2_
 
 After that, the binary duplicates the write handle of the first pipe and stores this new handle in the _hStdError_ field of the _StartupInfo_ struct. Also, the read handle of second pipe is stored in the field _hStdOutput_ of the _StartupInfo_ struct.
 
-![_IDA Pro_ _DuplicateHandle_](../Pictures/Lab_14/lab_14-02_3_ida_pro_5.png)
+![_IDA Pro_ _DuplicateHandle_](../Pictures/Lab_14/lab_14-02_4_ida_pro_3.png)
 
 Then, it creates a new process of _CMD_ with the _lpStartupInfo_ argument set to the previously commented _StartupInfo_ struct, which has the _hStdOutput_ and _hStdError_ pointing to the handles of the previous pipes.
 
-![_IDA Pro_ _CreateProcess_](../Pictures/Lab_14/lab_14-02_3_ida_pro_6.png)
+![_IDA Pro_ _CreateProcess_](../Pictures/Lab_14/lab_14-02_4_ida_pro_4.png)
 
 Now, if the process is created successfully, it will store the handle to such process into the buffer at offset _0x8_. Also, the pointer to such buffer will be included as _lpParameter_ argument of the _CreateThread_ function, which will execute the first function that connects to the C&C. Finally, once the thread has been created, its handle will be stored into the buffer.
 
-![_IDA Pro_ _CreateThread_ 1](../Pictures/Lab_14/lab_14-02_3_ida_pro_7.png)
+![_IDA Pro_ _CreateThread_ 1](../Pictures/Lab_14/lab_14-02_4_ida_pro_5.png)
 
 At this momment, the buffer will look like (_PH_ means process handle and _TH_1_ means first thread handle):
 
@@ -275,25 +275,25 @@ At this momment, the buffer will look like (_PH_ means process handle and _TH_1_
 
 Let's take a look into _connect_to_cnc_1_ (_0x004014C0_). The first thing it does is copying the buffer (which the argument _lpParameter_ is pointing to) to new buffer (created by means of _malloc_), which pointer will be stored by _EBX_.
 
-![_IDA Pro_ _connect_to_cnc_1_ _malloc_ and _memcpy_](../Pictures/Lab_14/lab_14-02_3_ida_pro_8.png)
+![_IDA Pro_ _connect_to_cnc_1_ _malloc_ and _memcpy_](../Pictures/Lab_14/lab_14-02_4_ida_pro_6.png)
 
 Then it will call _PeekNamedPipe_ to copy the data of the read handle of the first pipe into _ESI_, which points to a buffer that will be read by means of _ReadFile_.
 
-![_IDA Pro_ _connect_to_cnc_1_ _PeekNamedPipe_](../Pictures/Lab_14/lab_14-02_3_ida_pro_9.png)
+![_IDA Pro_ _connect_to_cnc_1_ _PeekNamedPipe_](../Pictures/Lab_14/lab_14-02_4_ida_pro_7.png)
 
-![_IDA Pro_ _connect_to_cnc_1_ _ReadFile_](../Pictures/Lab_14/lab_14-02_3_ida_pro_10.png)
+![_IDA Pro_ _connect_to_cnc_1_ _ReadFile_](../Pictures/Lab_14/lab_14-02_4_ida_pro_8.png)
 
 At this point, it will call a function located at _0x00401000_, which seems to be some encoding routine, since it requires two arguments (one of those is the read data and the other an empty buffer, which seem to be the data to encode and the result) and it is called just before of the function where the _HTTP_ request is done. So we have called this unknown function, _encode_data_.
 
-![_IDA Pro_ _connect_to_cnc_1_ _encode_data_ calling](../Pictures/Lab_14/lab_14-02_3_ida_pro_11.png)
+![_IDA Pro_ _connect_to_cnc_1_ _encode_data_ calling](../Pictures/Lab_14/lab_14-02_4_ida_pro_9.png)
 
 If we dig into this function, we will see some interesting things...
 
-![_IDA Pro_ _encode_data_](../Pictures/Lab_14/lab_14-02_3_ida_pro_12.png)
+![_IDA Pro_ _encode_data_](../Pictures/Lab_14/lab_14-02_4_ida_pro_10.png)
 
 The variable _byte_403010_ is called several times, let's see what contains.
 
-![_IDA Pro_ _byte_403010_](../Pictures/Lab_14/lab_14-02_3_ida_pro_13.png)
+![_IDA Pro_ _byte_403010_](../Pictures/Lab_14/lab_14-02_4_ida_pro_11.png)
 
 It seems to be a custom _base64_ alphabet! Let's fix the code so as to see the code better.
 
@@ -305,17 +305,17 @@ As we can see, the alphabet is quite different from a standard one, but it reall
 
 If we continue analyzing the code, we get to the function _cnc_communicaton_initial_, which is located at _0x00401750_, and, as we can see, it takes two arguments, the known _URL_ and the encoded buffer.
 
-![_IDA Pro_ _connect_to_cnc_1_ _cnc_communicaton_initial_ calling](../Pictures/Lab_14/lab_14-02_3_ida_pro_14.png)
+![_IDA Pro_ _connect_to_cnc_1_ _cnc_communicaton_initial_ calling](../Pictures/Lab_14/lab_14-02_4_ida_pro_12.png)
 
 The function _cnc_communicaton_initial_ will use the encoded buffer as _User-Agent_ plus the string "(!<" at the begining when _InternetOpenA_ is called. This seems to be done to confuse the analysts when they see the _User-Agent_, since they will discard _base64_ as encoding routine.
 
-![_IDA Pro_ _cnc_communicaton_initial_ begining of the _User-Agent_](../Pictures/Lab_14/lab_14-02_3_ida_pro_15.png)
+![_IDA Pro_ _cnc_communicaton_initial_ begining of the _User-Agent_](../Pictures/Lab_14/lab_14-02_4_ida_pro_13.png)
 
-![_IDA Pro_ _cnc_communicaton_initial_ _InternetOpenA_](../Pictures/Lab_14/lab_14-02_3_ida_pro_16.png)
+![_IDA Pro_ _cnc_communicaton_initial_ _InternetOpenA_](../Pictures/Lab_14/lab_14-02_4_ida_pro_14.png)
 
 Then, it will call _InternetOpenUrlA_ using the known _URL_.
 
-![_IDA Pro_ _cnc_communicaton_initial_ _InternetOpenUrlA_](../Pictures/Lab_14/lab_14-02_3_ida_pro_17.png)
+![_IDA Pro_ _cnc_communicaton_initial_ _InternetOpenUrlA_](../Pictures/Lab_14/lab_14-02_4_ida_pro_15.png)
 
 After that it return to _connect_to_cnc_1_, which executes this process again and again.
 
@@ -325,7 +325,7 @@ To understand what the malware communicates, we need to continue analyzing the s
 
 So now, let's take a look to what the malware does after create the first thread.
 
-![_IDA Pro_ _CreateThread_ 2](../Pictures/Lab_14/lab_14-02_3_ida_pro_18.png)
+![_IDA Pro_ _CreateThread_ 2](../Pictures/Lab_14/lab_14-02_5_ida_pro_1.png)
 
 It creates another thread! However, in this case calls another function located at _0x004015C0_, which also seems to perform some _HTTP_ requests, hence the name _connect_to_cnc_2_. Also, it includes the buffer where the _URL_ is stored as a parameter of the thread. After creating the thread, this buffer is modified, which will look like (_TH_2_ means second thread handle):
 
@@ -335,23 +335,23 @@ It creates another thread! However, in this case calls another function located 
 
 Let's analyze the function _connect_to_cnc_2_. The first thing it does is copying the buffer contained in the _lpThreadParameter_ argument into a new buffer and then it will call to a function located at _0x00401800_ that we have called _cnc_communicaton_read_file_.
 
-![_IDA Pro_ _connect_to_cnc_2_ _cnc_communicaton_read_file_ calling](../Pictures/Lab_14/lab_14-02_3_ida_pro_19.png)
+![_IDA Pro_ _connect_to_cnc_2_ _cnc_communicaton_read_file_ calling](../Pictures/Lab_14/lab_14-02_5_ida_pro_2.png)
 
 This new function, _cnc_communicaton_read_file_, will perform an _HTTP_ request to the known _URL_ using the _User-Agent_ "Internet Surf". Then, the result of such request will be returned by the function.
 
-![_IDA Pro_ _cnc_communicaton_read_file_](../Pictures/Lab_14/lab_14-02_3_ida_pro_20.png)
+![_IDA Pro_ _cnc_communicaton_read_file_](../Pictures/Lab_14/lab_14-02_5_ida_pro_3.png)
 
 Then the malware will analyze the buffer obtained from the _C&C_ in the _connect_to_cnc_2_ function to check if this one is the same as the one received in the previous request.
 
-![_IDA Pro_ _connect_to_cnc_2_ buffer check](../Pictures/Lab_14/lab_14-02_3_ida_pro_21.png)
+![_IDA Pro_ _connect_to_cnc_2_ buffer check](../Pictures/Lab_14/lab_14-02_5_ida_pro_4.png)
 
 If it is not the same, it will compare the received buffer with the string "exit", and if it is true, it will exit. Also, it will copy the received buffer into the one called _previous_request_.
 
-![_IDA Pro_ _connect_to_cnc_2_ buffer copy and command check](../Pictures/Lab_14/lab_14-02_3_ida_pro_22.png)
+![_IDA Pro_ _connect_to_cnc_2_ buffer copy and command check](../Pictures/Lab_14/lab_14-02_5_ida_pro_5.png)
 
 If the received buffer is different from "exit", it will append to it the string "\n" and then write it to the write handle of the second pipe, which indeed it is copying to the _CMD_ process previously commented.
 
-![_IDA Pro_ _connect_to_cnc_2_ write file](../Pictures/Lab_14/lab_14-02_3_ida_pro_23.png)
+![_IDA Pro_ _connect_to_cnc_2_ write file](../Pictures/Lab_14/lab_14-02_5_ida_pro_6.png)
 
 Then, it will repeat this process again and again.
 
@@ -377,9 +377,85 @@ This lab builds on Lab 14-1. Imagine that this malware is an attempt by the atta
 
 **1. What hard-coded elements are used in the initial beacon? What elements, if any, would make a good signature?**
 
+To find out this information we need to understand what the malware does, so let's analyze it!
+
+The first call that the sample does is to use the function located at _0x00401457_.
+
+This function will look for a file called and located at "C:\\\\autobat.exe".
+
+![_IDA Pro_ get file handle of _autobat.exe._](../Pictures/Lab_14/lab_14-03_1_ida_pro_1.png)
+
+The sample expects that this file exists, if not, the _INVALID_HANDLE_VALUE_ is given, which will cause a call to function that we have renamed to _write_to_file_ (_0x00401372_). This function takes one argument, in this case an _URL_, probably the one used by the malware as _C&C_.
+
+```
+http://www.practicalmalwareanalysis.com/start.htm
+```
+
+![_IDA Pro_ _write_to_file_ calling](../Pictures/Lab_14/lab_14-03_1_ida_pro_2.png)
+
+This new function, will take the argument, the _URL_, and write it into the file that the sample was expecting, "C:\\\\autobat.exe".
+
+![_IDA Pro_ _write_to_file_ execution flow](../Pictures/Lab_14/lab_14-03_1_ida_pro_3.png)
+
+So this function simply initializes the configuration file that the sample expects. Then, it will call it again by means of a recursive call. So now, the malware will find the configuration file and read it properly.
+
+![_IDA Pro_ read file _autobat.exe._](../Pictures/Lab_14/lab_14-03_1_ida_pro_4.png)
+
+Because all of that, we have called this function, _get_url_from_file_.
+
+After that, another function (_0x004011F3_) that receives two arguments, one empty buffer and the obtained _URL_ is called. This function seems to perform some _HTTP_ actions, so we rename it to _cnc_communication_.
+
+The first thing we see that attract our attention is the hard-coded _User-Agent_ and _Headers_ used by the sample.
+
+```
+User-Agent: Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.1; .NET CLR 3.0.4506.2152; .NET CLR 3.5.30729)
+Accept: */*
+Accept-Language: en-US
+UA-CPU: x86
+Accept-Encoding: gzip, deflate
+```
+
+It also performs an _HTTP_ request against the known _URL_.
+
+![_IDA Pro_ _cnc_communication_ _User-Agent_ and _Headers_](../Pictures/Lab_14/lab_14-03_1_ida_pro_5.png)
+
+At this moment, the unique web-based IOC would be the domain name that appears in the _URL_.
+
 **2. What elements of the initial beacon may not be conducive to a longlasting signature?**
 
+Since the malware uses common elements used by other applications like the headers and the _User-Agent_, these elements wouldn't be adequate to create robust signatures.
+
 **3. How does the malware obtain commands? What example from the chapter used a similar methodology? What are the advantages of this technique?**
+
+We are going to continue in the function _cnc_communication_ (_0x004011F3_), after making the initial request, the binary read the response by means of _InternetReadFile_.
+
+![_IDA Pro_ _cnc_communication_ _InternetReadFile_](../Pictures/Lab_14/lab_14-03_3_ida_pro_1.png)
+
+Then it will get the position of the substring `<no` in the response (notice this position is a pointer).
+
+![_IDA Pro_ _cnc_communication_ `<no` substring](../Pictures/Lab_14/lab_14-03_3_ida_pro_2.png)
+
+After that, another function will be called, the one we have renamed to _get_command_from_response_ (_0x00401000_), since it gets three arguments, the empty buffer, possibly the final command line, the _URL_ and the possition of the substring in the response buffer.
+
+![_IDA Pro_ _get_command_from_response_ calling](../Pictures/Lab_14/lab_14-03_3_ida_pro_3.png)
+
+Once into the function, the substring position pointer is incremented in one and the value plus 8 is compared with the character ">", so at this point we know that the binary is looking for the following (the "x" are unknown elements):
+
+```
+| < | n | o | x | x | x | x | x | x | > |
+```
+
+![_IDA Pro_ _get_command_from_response_ initial check](../Pictures/Lab_14/lab_14-03_3_ida_pro_4.png)
+
+The whole string is revelead in the following loop:
+
+![_IDA Pro_ _get_command_from_response_ loop](../Pictures/Lab_14/lab_14-03_3_ida_pro_5.png)
+
+```
+| < | n | o | s | c | r | i | p | t | > |
+```
+
+The sample is looking for the string `<noscript>`!
 
 **4. When the malware receives input, what checks are performed on the input to determine whether it is a valid command? How does the attacker hide the list of commands the malware is searching for?**
 
