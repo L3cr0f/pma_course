@@ -134,10 +134,10 @@ practicalmalwareanalysis\.com\/(?:[A-Za-z0-9+\/]{4})*(?:[A-Za-z0-9+\/]{2}aa|[A-Z
 Also, if we include the domain, the resultant _Snort_ rule would be:
 
 ```
-alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"PM14.1.2"; urilen:>32; uricontent:".png"; pcre:"practicalmalwareanalysis\.com\/(?:[A-Za-z0-9+\/]{4})*(?:[A-Za-z0-9+\/]{2}aa|[A-Za-z0-9+\/]{3}a)?\/.\.png"; sid:20001412; rev:1;)
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"PM14.2"; urilen:>32; uricontent:".png"; pcre:"(?:[A-Za-z0-9+\/]{4})*(?:[A-Za-z0-9+\/]{2}aa|[A-Za-z0-9+\/]{3}a)?\/.\.png"; sid:20001412; rev:1;)
 ```
 
-This regular expression will catch every _HTTP_ request that the malware performs. However, it will catch some false possitives like a request in which the name of the file would be "\*.png". Nevertheless, the chance of getting a false possitive like this is quite low.
+This regular expression will catch every _HTTP_ request that the malware performs. However, it will catch some false possitives like a request in which the name of the file would be "\*.png". Nevertheless, the chance of getting a false possitive like this is quite low, even more if we also match the domain name "practicalmalwareanalysis.com".
 
 
 ## Lab 14-2
@@ -415,11 +415,15 @@ UA-CPU: x86
 Accept-Encoding: gzip, deflate
 ```
 
+But, we have to take in mind that the _WINAPI_ function _InternetOpenA_ will add the _User-Agent_ field into the request, so this sample will perform a particular request composed by two _User-Agent_ fields:
+
+```
+User-Agent: User-Agent: Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.1; .NET CLR 3.0.4506.2152; .NET CLR 3.5.30729)
+```
+
 It also performs an _HTTP_ request against the known _URL_.
 
 ![_IDA Pro_ _cnc_communication_ _User-Agent_ and _Headers_](../Pictures/Lab_14/lab_14-03_1_ida_pro_5.png)
-
-At this moment, the unique web-based IOC would be the domain name that appears in the _URL_.
 
 **2. What elements of the initial beacon may not be conducive to a longlasting signature?**
 
@@ -570,23 +574,26 @@ As we can see, the first thing the sample does is splitting the command line rec
 This will get us the initial letter of the commands that the sample expects:
 
 ```
-0 + 0x64 = 0x64 = d
-1 + 0x64 = 0x65 = e
-2 + 0x64 = 0x66 = f
-3 + 0x64 = 0x67 = g
+Case 100 = 0 + 0x64 = 0x64 = d
+Case 110 = 10 + 0x64 = 0x6E = n
+Case 114 = 14 + 0x64 = 0x72 = r
+Case 115 = 15 + 0x64 = 0x73 = s
 ```
+
+![_IDA Pro_ _tasks_management_ _switch case_](../Pictures/Lab_14/lab_14-03_6_ida_pro_2.png)
+
 
 The purpose of such commands is the following:
 
-- d:
+- d (download)
 
 Executes the function at _0x00401565_ taking the command argument as argument of the function.
 
 In the function we can see how the binary first calls a function (_0x00401147_) that seems to decode the argument received, this function is called _decode_arg_ (this function is analyzed in exercise 5). This decoded argument is then used in a _HTTP_ request using _URLDownloadToCacheFileA_. Then the sample will execute the received data by means of _CreateProcessA_. So we rename this function to _download_and_execute_.
 
-![_IDA Pro_ _download_and_execute_](../Pictures/Lab_14/lab_14-03_6_ida_pro_2.png)
+![_IDA Pro_ _download_and_execute_](../Pictures/Lab_14/lab_14-03_6_ida_pro_3.png)
 
-Since the argument is used as _URL_ when calling _URLDownloadToCacheFileA_, the encoded value of such argument will be "08202016370000" or "082020161937000000":
+Since the argument is used as _URL_ when calling _URLDownloadToCacheFileA_, the encoded value of such argument will start with "08202016370000" or "082020161937000000", since the correspond to:
 
 ```
 $ python3 Scripts/Others/Lab_14/lab14_03_decode_argument.py 08202016370000
@@ -595,12 +602,52 @@ $ python3 Scripts/Others/Lab_14/lab14_03_decode_argument.py 0820201619370000
 The decoded argument is: https://
 ```
 
-- e
-- f
-- g
+We need to take this in mind when we create the required signatures.
+
+So the function located at _0x00401565_ has been renamed to _download_and_execute_.
+
+- n (exit)
+
+In this case, it simply modifies to _true_ one boolean variable, which is then returned.
+
+![_IDA Pro_ _tasks_management_ modify variable](../Pictures/Lab_14/lab_14-03_6_ida_pro_4.png)
+
+If we track this returned value, we can see how this value is used to check whether the sample must terminate or not.
+
+![_IDA Pro_ _exit_ variable](../Pictures/Lab_14/lab_14-03_6_ida_pro_5.png)
+
+- s (sleep)
+
+This command will execute the function located at _0x00401613_ with the command argument as its argument. This function will sleep for 20 seconds if any argument is provided or 'n' seconds, meaning 'n' the number provided by the argument. So this function has been renamed to _sleep_.
+
+![_IDA Pro_ _sleep_](../Pictures/Lab_14/lab_14-03_6_ida_pro_6.png)
+
+- r (reload configuration)
+
+The last command will call to the function at _0x00401651_, which will decode the argument of the command provided and write it to the configuration file at "C:\\\\autobat.exe". We have rename this function to _change_config_.
+
+![_IDA Pro_ _change_config_](../Pictures/Lab_14/lab_14-03_6_ida_pro_7.png)
 
 **7. What is the purpose of this malware?**
 
+The main purpose of the malware is downloading and executing a binary from Internet, specified in the commands that the sample would receive
+.
+
 **8. This chapter introduced the idea of targeting different areas of code with independent signatures (where possible) in order to add resiliency to network indicators. What are some distinct areas of code or configuration data that can be targeted by network signatures?**
 
+We can elaborate network signatures for the initial _HTTP_ request that the sample performs and for the response of such requests, since the commands of the response could spotted.
+
 **9. What set of signatures should be used for this malware?**
+
+
+Request rule:
+
+```
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"PM14.3.1"; content:"User-Agent: User-Agent: Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.1; .NET CLR 3.0.4506.2152; .NET CLR 3.5.30729)"; content:"Accept: */*";  content:"Accept-Language: en-US; content:"UA-CPU: x86";  content:"Accept-Encoding: gzip, deflate"; sid:20001413; rev:1;)
+```
+
+Response rule:
+
+```
+alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"PM14.3.2"; content:"<noscript>"; content: "http://"; content: "https://"; content:"96'"; sid:20001414; rev:1;)
+```
