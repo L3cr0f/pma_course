@@ -502,28 +502,28 @@ The function located at _0x00401147_ is the responsible for decoding the command
 The main decoding routine needs to be fixed first, and convert the variable called arg_char to an array of two elements, then it will be as follows (the _alphabet_ variable contains the value "/abcdefghijklmnopqrstuvwxyz0123456789:."):
 
 ```
-mov     ecx, [ebp+var_argument]			-> ECX = ARG[i]
-mov     dl, [ecx]						-> DL = ARG[i] == EDX = ARG[i] AND 0xFF
-mov     [ebp+arg_char], dl				-> ARG_CHAR = DL = ARG[1] AND 0xFF
-mov     eax, [ebp+var_argument]			-> EAX = ARG[i]
-mov     cl, [eax+1]						-> CL = ARG[i + 1] == ECX = ARG[i + 1] AND 0xFF
-mov     [ebp+arg_char+1], cl			-> ARG_CHAR = CL = ARG[i + 1] AND 0xFF
-lea     edx, [ebp+arg_char]				-> EDX = ARG_CHAR = ARG[1] AND 0xFF
-push    edx								-> Pass argument to the function
-call    _atoi							-> Converts char at EDX to an integer
+mov     ecx, [ebp+var_argument]		-> ECX = ARG[i]
+mov     dl, [ecx]			-> DL = ARG[i] == EDX = ARG[i] AND 0xFF
+mov     [ebp+arg_char], dl		-> ARG_CHAR = DL = ARG[1] AND 0xFF
+mov     eax, [ebp+var_argument]		-> EAX = ARG[i]
+mov     cl, [eax+1]			-> CL = ARG[i + 1] == ECX = ARG[i + 1] AND 0xFF
+mov     [ebp+arg_char+1], cl		-> ARG_CHAR = CL = ARG[i + 1] AND 0xFF
+lea     edx, [ebp+arg_char]		-> EDX = ARG_CHAR = ARG[1] AND 0xFF
+push    edx				-> Pass argument to the function
+call    _atoi				-> Converts char at EDX to an integer
 add     esp, 4
-mov     [ebp+char_to_int], eax			-> CHAR_TO_INT = EAX (return value of _atoi)
-mov     eax, [ebp+decoded_argument]		-> EAX = DEC_ARG[0]
-add     eax, [ebp+counter]				-> EAX = DEC_ARG[counter]
-mov     ecx, [ebp+char_to_int]			-> ECX = CHAR_TO_INT
+mov     [ebp+char_to_int], eax		-> CHAR_TO_INT = EAX (return value of _atoi)
+mov     eax, [ebp+decoded_argument]	-> EAX = DEC_ARG[0]
+add     eax, [ebp+counter]		-> EAX = DEC_ARG[counter]
+mov     ecx, [ebp+char_to_int]		-> ECX = CHAR_TO_INT
 mov     dl, byte ptr ds:alphabet[ecx]	-> DL = alphabet[CHAR_TO_INT]
-mov     [eax], dl						-> DEC_ARG[counter] = DL = alphabet[CHAR_TO_INT]
-mov     eax, [ebp+var_argument]			-> EAX = ARG[i]
-add     eax, 2							-> EAX = EAX + 2 = ARG[i + 2]
-mov     [ebp+var_argument], eax			-> ARG[i + 2]
-mov     ecx, [ebp+counter]				-> ECX = counter
-add     ecx, 1							-> ECX = ECX + 1 = counter + 1
-mov     [ebp+counter], ecx				-> counter = counter + 1
+mov     [eax], dl			-> DEC_ARG[counter] = DL = alphabet[CHAR_TO_INT]
+mov     eax, [ebp+var_argument]		-> EAX = ARG[i]
+add     eax, 2				-> EAX = EAX + 2 = ARG[i + 2]
+mov     [ebp+var_argument], eax		-> ARG[i + 2]
+mov     ecx, [ebp+counter]		-> ECX = counter
+add     ecx, 1				-> ECX = ECX + 1 = counter + 1
+mov     [ebp+counter], ecx		-> counter = counter + 1
 ```
 
 Now, we can develope a _python_ script that performs this decoding process:
