@@ -442,7 +442,7 @@ After that, another function will be called, the one we have renamed to _get_com
 Once into the function, the substring position pointer is incremented in one and the value plus 8 is compared with the character ">", so at this point we know that the binary is looking for the following (the "x" are unknown elements):
 
 ```
-| < | n | o | x | x | x | x | x | x | > |
+| < | n | o | x | x | x | x | x | x | > | x | ... |
 ```
 
 ![_IDA Pro_ _get_command_from_response_ initial check](../Pictures/Lab_14/lab_14-03_3_ida_pro_4.png)
@@ -452,16 +452,152 @@ The whole string is revelead in the following loop:
 ![_IDA Pro_ _get_command_from_response_ loop](../Pictures/Lab_14/lab_14-03_3_ida_pro_5.png)
 
 ```
-| < | n | o | s | c | r | i | p | t | > |
+| < | n | o | s | c | r | i | p | t | > | x | ... |
 ```
 
 The sample is looking for the string `<noscript>`!
 
+After that, the sample will look for the _URL_ "http://www.practicalmalwareanalysis.com" into the content after `<noscript>`.
+
+```
+| < | n | o | s | c | r | i | p | t | > | x | ... | x | h | t | t | p | : | / | / | w | w | w | . | p | r | a | c | t | i | c | a | l | m | a | l | w | a | r | e | a | n | a | l | y | s | i | s | . | c | o | m | x | ... |
+```
+
+![_IDA Pro_ _get_command_from_response_ look for _URL_](../Pictures/Lab_14/lab_14-03_3_ida_pro_6.png)
+
+Then, it will look for the string `96'` after the known _URL_.
+
+```
+| < | n | o | s | c | r | i | p | t | > | x | ... | x | h | t | t | p | : | / | / | w | w | w | . | p | r | a | c | t | i | c | a | l | m | a | l | w | a | r | e | a | n | a | l | y | s | i | s | . | c | o | m | x | ... | x | 9 | 6 | ' | x | ... |
+```
+
+![_IDA Pro_ _get_command_from_response_ look for `96'`](../Pictures/Lab_14/lab_14-03_3_ida_pro_7.png)
+
+Then, it will cut the string response by modifying the value "9" with _0x0_, resulting the string in:
+
+```
+| < | n | o | s | c | r | i | p | t | > | x | ... | x | h | t | t | p | : | / | / | w | w | w | . | p | r | a | c | t | i | c | a | l | m | a | l | w | a | r | e | a | n | a | l | y | s | i | s | . | c | o | m | x | ... | x | 0x0 | 6 | ' | x | ... |
+```
+
+So now, notice that the _command_ variable points after the substring ".com" in the previous buffer, so the function will return the value of _COMMAND_VALUE_:
+
+```
+http://www.practicalmalwareanalysis.com + COMMAND_VALUE + 0x0 + 6'
+```
+
+![_IDA Pro_ _get_command_from_response_ return command value](../Pictures/Lab_14/lab_14-03_3_ida_pro_8.png)
+
+After that, this obtained command will be included in a function call in the _WinMain_ that we have renamed to _tasks_management_ (_0x00401684_).
+
+![_IDA Pro_ _tasks_management_ calling](../Pictures/Lab_14/lab_14-03_3_ida_pro_9.png)
+
 **4. When the malware receives input, what checks are performed on the input to determine whether it is a valid command? How does the attacker hide the list of commands the malware is searching for?**
+
+Explained in exercise 3.
 
 **5. What type of encoding is used for command arguments? How is it different from Base64, and what advantages or disadvantages does it offer?**
 
+The function located at _0x00401147_ is the responsible for decoding the command arguments, because of that, we have renamed to _decode_arg_.
+
+The main decoding routine needs to be fixed first, and convert the variable called arg_char to an array of two elements, then it will be as follows (the _alphabet_ variable contains the value "/abcdefghijklmnopqrstuvwxyz0123456789:."):
+
+```
+mov     ecx, [ebp+var_argument]			-> ECX = ARG[i]
+mov     dl, [ecx]						-> DL = ARG[i] == EDX = ARG[i] AND 0xFF
+mov     [ebp+arg_char], dl				-> ARG_CHAR = DL = ARG[1] AND 0xFF
+mov     eax, [ebp+var_argument]			-> EAX = ARG[i]
+mov     cl, [eax+1]						-> CL = ARG[i + 1] == ECX = ARG[i + 1] AND 0xFF
+mov     [ebp+arg_char+1], cl			-> ARG_CHAR = CL = ARG[i + 1] AND 0xFF
+lea     edx, [ebp+arg_char]				-> EDX = ARG_CHAR = ARG[1] AND 0xFF
+push    edx								-> Pass argument to the function
+call    _atoi							-> Converts char at EDX to an integer
+add     esp, 4
+mov     [ebp+char_to_int], eax			-> CHAR_TO_INT = EAX (return value of _atoi)
+mov     eax, [ebp+decoded_argument]		-> EAX = DEC_ARG[0]
+add     eax, [ebp+counter]				-> EAX = DEC_ARG[counter]
+mov     ecx, [ebp+char_to_int]			-> ECX = CHAR_TO_INT
+mov     dl, byte ptr ds:alphabet[ecx]	-> DL = alphabet[CHAR_TO_INT]
+mov     [eax], dl						-> DEC_ARG[counter] = DL = alphabet[CHAR_TO_INT]
+mov     eax, [ebp+var_argument]			-> EAX = ARG[i]
+add     eax, 2							-> EAX = EAX + 2 = ARG[i + 2]
+mov     [ebp+var_argument], eax			-> ARG[i + 2]
+mov     ecx, [ebp+counter]				-> ECX = counter
+add     ecx, 1							-> ECX = ECX + 1 = counter + 1
+mov     [ebp+counter], ecx				-> counter = counter + 1
+```
+
+Now, we can develope a _python_ script that performs this decoding process:
+
+```
+import sys
+
+alphabet = "/abcdefghijklmnopqrstuvwxyz0123456789:."
+
+def decode_argument(argument):
+	decoded_argument = ""
+
+	for i in range(0, len(argument), 2):
+		arg_char = chr(ord(argument[i]) & 0xFF) + chr(ord(argument[i + 1]) & 0xFF)
+		char_to_int = int(arg_char)
+		decoded_char = alphabet[char_to_int]
+		decoded_argument = decoded_argument + decoded_char
+
+	print("The decoded argument is: " + decoded_argument)
+
+if len(sys.argv) == 2:
+	decode_argument(sys.argv[1])
+else:
+	print("Please provide the argument to decode")
+```
+
+So if the sample received the argument "1313243108", the result would be:
+
+```
+$ python3 Scripts/Others/Lab_14/lab14_03_decode_argument.py 1313243108
+The decoded argument is: mmx4h
+```
+
+The main advantage of using this kind of decoding routine is that the analyst must analyze its algorithm in order to know how to decode an argument command, while in a _base64_ the algorithm is already known.
+
 **6. What commands are available to this malware?**
+
+We need to analyze the function _tasks_management_ (_0x00401684_) to get all the possible commands.
+
+As we can see, the first thing the sample does is splitting the command line received using the character "/" as reference. The variables obtained are used as the main command and the argument of such command. Then, it will get the first character of the main command and subtract _0x64_, this will produce a four size array of integers used by the _switch case_.
+
+![_IDA Pro_ _tasks_management_ command parsing](../Pictures/Lab_14/lab_14-03_6_ida_pro_1.png)
+
+This will get us the initial letter of the commands that the sample expects:
+
+```
+0 + 0x64 = 0x64 = d
+1 + 0x64 = 0x65 = e
+2 + 0x64 = 0x66 = f
+3 + 0x64 = 0x67 = g
+```
+
+The purpose of such commands is the following:
+
+- d:
+
+Executes the function at _0x00401565_ taking the command argument as argument of the function.
+
+In the function we can see how the binary first calls a function (_0x00401147_) that seems to decode the argument received, this function is called _decode_arg_ (this function is analyzed in exercise 5). This decoded argument is then used in a _HTTP_ request using _URLDownloadToCacheFileA_. Then the sample will execute the received data by means of _CreateProcessA_. So we rename this function to _download_and_execute_.
+
+![_IDA Pro_ _download_and_execute_](../Pictures/Lab_14/lab_14-03_6_ida_pro_2.png)
+
+Since the argument is used as _URL_ when calling _URLDownloadToCacheFileA_, the encoded value of such argument will be "08202016370000" or "082020161937000000":
+
+```
+$ python3 Scripts/Others/Lab_14/lab14_03_decode_argument.py 08202016370000
+The decoded argument is: http://
+$ python3 Scripts/Others/Lab_14/lab14_03_decode_argument.py 0820201619370000
+The decoded argument is: https://
+```
+
+- e
+- f
+- g
 
 **7. What is the purpose of this malware?**
 
