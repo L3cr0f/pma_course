@@ -371,6 +371,16 @@ The communication is terminated by means of the "exit" command, as explained in 
 
 The whole program is simply a reverse shell to the command and control _URL_ _http://127.0.0.1/tenfour.html_.
 
+**Network Signatures**
+
+```
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"PM14.3.1"; content:"User-Agent: Internet Surf"; sid:20001402; rev:1;)
+```
+
+```
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"PM14.3.1"; pcre:"/User-Agent:\x20\(!<(?:[A-Za-z0-9+\/]{4})*(?:[A-Za-z0-9+\/]{2}aa|[A-Za-z0-9+\/]{3}=)?/"; sid:20001402; rev:1;)
+```
+
 ## Lab 14-3
 
 This lab builds on Lab 14-1. Imagine that this malware is an attempt by the attacker to improve his techniques. Analyze the malware found in file Lab14-03.exe.
@@ -639,15 +649,35 @@ We can elaborate network signatures for the initial _HTTP_ request that the samp
 
 **9. What set of signatures should be used for this malware?**
 
-
-Request rule:
+- Request rule:
 
 ```
 alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"PM14.3.1"; content:"User-Agent: User-Agent: Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.1; .NET CLR 3.0.4506.2152; .NET CLR 3.5.30729)"; content:"Accept: */*";  content:"Accept-Language: en-US; content:"UA-CPU: x86";  content:"Accept-Encoding: gzip, deflate"; sid:20001413; rev:1;)
 ```
 
-Response rule:
+- Response rule:
 
 ```
-alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"PM14.3.2"; content:"<noscript>"; content: "http://"; content: "https://"; content:"96'"; sid:20001414; rev:1;)
+alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"PM14.3.2"; content:"<noscript>"; content: "http://"; distance: 0; within: 512; content:"96'"; distance: 4; within: 512; sid:20001414; rev:1;)
+```
+
+```
+alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"PM14.3.3"; content:"<noscript>"; content: "https://"; distance: 0; within: 512; content:"96'"; distance: 4; within: 512; sid:20001415; rev:1;)
+```
+
+We can also create a rule to identify two possible commands, since the commands "d" and "r" will receive an _URL_ that starts with the protocol (_HTTP_ and _HTTPS_ respectively):
+
+```
+alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"PM14.3.4 HTTP d and r commands"; content:"<noscript>"; content: "http://"; distance: 0; within: 512; content: "/08202016370000"; distance: 4; within: 512; content:"96'"; distance: 4; within: 512; pcre:"/\/[dr][^\/]*\/08202016370000/"; sid:20001416; rev:1;)
+```
+
+```
+alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"PM14.3.5 HTTPS d and r commands"; content:"<noscript>"; content: "http://"; distance: 0; within: 512; content: "/0820201619370000"; distance: 4; within: 512; content:"96'"; distance: 4; within: 512; pcre:"/\/[dr][^\/]*\/08202016370000/"; sid:20001417; rev:1;)
+```
+
+Finally, for the sleep command we will see something like this:
+
+
+```
+alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"PM14.3.4 sleep command"; content:"<noscript>"; content: "http://"; distance: 0; within: 512; content: "/08202016370000"; distance: 4; within: 512; content:"96'"; distance: 4; within: 512; pcre:"/\/s[^\/]*\/[0-9]+/"; sid:20001418; rev:1;)
 ```
