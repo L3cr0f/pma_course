@@ -207,15 +207,9 @@ First, we check what kind of packing algorithm the sample used:
 
 The packer seems to be _(Win)Upack 0.39_, let's analyze the sample deeper to unpack it.
 
-In this case, we will follow another approach. We will search where the function _LoadLibraryA_ is loaded (this function will be used by the unpacking procedure to restore the _IAT_) and add a breakpoint to it. We use this function for two reasons:
+In this case, we will follow another approach. We will search where the function _LoadLibraryA_ and _LoadLibraryW_ are loaded (these functions will be used by the unpacking procedure to restore the _IAT_) and add a breakpoint to it. We use this function because, usually, the number of calls to _LoadLibraryA_ and _LoadLibraryW_ is quite smaller that the one to _GetProcAddress_.
 
-- Together with _GetProcAddress_ is the only function that the packed sample loads.
-
-![_IDA Pro_ binary imports](../Pictures/Lab_18/lab_18-05_1_ida_pro_1.png)
-
-- Usually, the number of calls to _LoadLibraryA_ is quite smaller that the one to _GetProcAddress_.
-
-To locate the _LoadLibraryA_ function, we click in the modules panel (letter "E") and double click on the module name, this will led us to the code section of such library. Then, we press _CTRL+G_ (Enter expression to follow) and introduce "_LoadLibraryA_", this will take us to this function.
+To locate the _LoadLibraryA_ and _LoadLibraryW_ functions, we click in the modules panel (letter "E") and double click on the module name, this will led us to the code section of such library. Then, we press _CTRL+G_ (Enter expression to follow) and introduce "LoadLibraryA" and "LoadLibraryW", this will take us to these functions.
 
 ![_OllyDBG_ _OllyDump_ _LoadLibraryA_ function](../Pictures/Lab_18/lab_18-05_1_ollydbg_1.png)
 
@@ -230,33 +224,29 @@ WININET.DLL
 advapi32.dll
 kernel32.dll
 advapi32.dll
-Secur32.dll
-shell32.dll
-wsock32.dll
-ws2_32
-RASAPI32.dll
-sensapi.dll
-ntdll.dll
-SHELL32.dll
-USERENV.dll
-urlmon.dll
-WININET.dll
-C:\WINDOWS\System32\mswsock.dll
-DNSAPI.dll
-rasadhlp.dll
+comctl32.dll
 ```
 
 ![_OllyDBG_ _OllyDump_ _LoadLibraryA_ loads _ADVAPI32.DLL_](../Pictures/Lab_18/lab_18-05_1_ollydbg_2.png)
 
-Then, the sample continues running, so we need to execute the sample until it reaches the last call to _LoadLibraryA_ and then repeat the same procedure with _GetProcAddress_.
+Then, the sample continues running, so we need to execute the sample until it reaches the last call to _LoadLibraryA_ or _LoadLibraryW_ (in this case the second one) and then repeat the same procedure with _GetProcAddress_.
 
 ```
 ...
-WSASetServiceA
-...
-bind
-...
-getnameinfo
-...
-WSAGetOverlappedResult
+InternetOpenUrlA
+InternetOpenA
 ```
+
+We get to _InternetOpenA_ as the last function to be called using _GetProcAddress_. After that, we step over some instructions until we reach to the program _OEP_.
+
+![_OllyDBG_ _OEP_](../Pictures/Lab_18/lab_18-05_1_ollydbg_3.png)
+
+We dump the binary with _OllyDump_ and open it in _IDA Pro_ to analyze it.
+
+![_IDA Pro_ _start_ function](../Pictures/Lab_18/lab_18-05_1_ida_pro_1.png)
+
+![_IDA Pro_ imported functions](../Pictures/Lab_18/lab_18-05_1_ida_pro_2.png)
+
+Mmmm... It seems _IDA Pro_ failed to recognize some things, like the imported functions. However, we can repair by viewing the address of the called function in _OllyDBG_. However, in this case we only have to identify the binary, since we know we have previously analyzed.
+
+The binary is the one called _Lab07-01.exe_.
