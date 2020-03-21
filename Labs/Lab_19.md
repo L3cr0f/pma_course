@@ -45,6 +45,7 @@ seg000:0000021F ; --------------------------------------------------------------
 seg000:0000021F
 seg000:0000021F loc_21F:                                ; CODE XREF: seg000:00000206↑j
 seg000:0000021F                 call    sub_208
+seg000:00000224                 dec     ecx
 ```
 
 As we can see, first we have a block of _0x200_ bytes of _inc ecx_ instructions, something that is useless since at _0x00000200_ the binary executes a _xor ecx, ecx_ instruction. So we can conclude that this block of code is just a _NOP sled_ but without using the _0x90_ opcode.
@@ -56,16 +57,72 @@ Then, the binary adds the value _0x8D_ to _ECX_ and jumps to the instruction loc
 This function is a loop that will execute the following instructions:
 
 ```
+lodsb					-> AL = [SI] (ESI + 1)
 mov     dl, al			-> DL = AL
 sub     dl, 41h ; 'A'	-> DL = DL - 0x41
-shl     dl, 4			-> DL = DL >> 4
-lodsb					-> AL = SI
+shl     dl, 4			-> DL = DL << 4
+lodsb					-> AL = [SI] (ESI + 1)
 sub     al, 41h ; 'A'	-> AL = AL - 0x41
 add     al, dl			-> AL = AL + DL
-stosb					-> DL = AL
+stosb					-> [DI] = AL (EDI + 1)
 dec     ecx				-> ECX = ECX - 1 (Initial ECX value is 0x8D = 141)
 jnz     short loc_20C
 ```
+
+Before that, we have to take in mind that the following instructions are executed:
+
+```
+pop     esi			-> ESI = ESP = return address = 0x00000224
+push    esi
+mov     edi, esi	-> EDI = ESI = ESP = 0x00000224
+```
+
+So now that we know the value of _ESI_ and _EDI_ is _ESP_ and _ESP_ point to the data after the call instruction, we can see that this routine seems to decode the next part of the binary, composed by 141 bytes.
+
+So let's write a python decoder:
+
+```
+MAX_VALUE = 0xFF
+
+def decrypt_file():
+	decoded_bytes = bytearray()
+	key = 0x41
+	counter = 0x18D
+
+	with open("Scripts/Others/Lab_19/lab19-01.bin", "rb") as encoded_file:
+		encoded_file.seek(0x224)
+		encoded_byte = encoded_file.read(1)
+
+		while counter > 0:
+			value_1 = (((int.from_bytes(encoded_byte, byteorder="big") - key) & MAX_VALUE) << 4) & MAX_VALUE
+			encoded_byte = encoded_file.read(1)
+
+			value_2 = (int.from_bytes(encoded_byte, byteorder="big") - key) & MAX_VALUE
+			decoded_byte = (value_2 + value_1) & MAX_VALUE
+			decoded_bytes.append(decoded_byte)
+
+			counter = counter - 1
+			encoded_byte = encoded_file.read(1)
+
+	return decoded_bytes
+
+def save_decrypted_file(decoded_bytes):
+	decoded_file = open("Scripts/Others/Lab_19/lab19-01_stage_2.bin", "wb")
+	decoded_file.write(decoded_bytes)
+
+decoded_bytes = decrypt_file()
+save_decrypted_file(decoded_bytes)
+```
+
+We execute it...
+
+```
+python3 Scripts/Others/Lab_19/lab19_01_decode_next_stage.py
+```
+
+Great! We have decoding the second stage!
+
+![_IDA Pro_ main function](../Pictures/Lab_19/lab_19-01_1_ida_pro_2.png)
 
 **2. Which functions does the shellcode manually import?**
 
