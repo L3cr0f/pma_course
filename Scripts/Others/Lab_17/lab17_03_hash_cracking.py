@@ -19,11 +19,11 @@ def check_hash(process_name):
 def read_file(file):
 	found = False
 	with open(file, "r") as wordlist:
-		process_name = wordlist.readline()
+		process_name = wordlist.readline().rstrip('\n')
 		while process_name and not found:
 			found = check_hash(process_name)
 			if not found:
-				process_name = wordlist.readline()
+				process_name = wordlist.readline().rstrip('\n')
 
 		if found:
 			print("Occurrence found! The decrypted hash value is: " + process_name)
@@ -41,4 +41,4 @@ file = get_file_from_args()
 if file:
 	read_file(file)
 else:
-	print("Please provide a file to decrypt")
+	print("Please provide a wordlist")
