@@ -89,7 +89,7 @@ def decrypt_file():
 	key = 0x41
 	counter = 0x18D
 
-	with open("Scripts/Others/Lab_19/lab19-01.bin", "rb") as encoded_file:
+	with open("Scripts/Labs/Lab_19/lab19-01.bin", "rb") as encoded_file:
 		encoded_file.seek(0x224)
 		encoded_byte = encoded_file.read(1)
 
@@ -107,7 +107,7 @@ def decrypt_file():
 	return decoded_bytes
 
 def save_decrypted_file(decoded_bytes):
-	decoded_file = open("Scripts/Others/Lab_19/lab19-01_stage_2.bin", "wb")
+	decoded_file = open("Scripts/Labs/Lab_19/lab19-01_stage_2.bin", "wb")
 	decoded_file.write(decoded_bytes)
 
 decoded_bytes = decrypt_file()
@@ -117,7 +117,7 @@ save_decrypted_file(decoded_bytes)
 We execute it...
 
 ```
-python3 Scripts/Others/Lab_19/lab19_01_decode_next_stage.py
+python3 Scripts/Labs/Lab_19/lab19_01_decode_next_stage.py
 ```
 
 Great! We have decoding the second stage!
@@ -351,7 +351,7 @@ The complete list is composed by 953 exports!
 So now, we execute our script using this wordlist as follows:
 
 ```
-$ python3 Scripts/Others/Lab_19/lab19_01_hashing_function.py Scripts/Others/Lab_19/kernel32_exports.txt
+$ python3 Scripts/Labs/Lab_19/lab19_01_hashing_function.py Scripts/Labs/Lab_19/kernel32_exports.txt
 
 Occurrence found! The decrypted hash 0xec0e4e8e is: LoadLibraryA
 Occurrence found! The decrypted hash 0xb8e579c1 is: GetSystemDirectoryA
@@ -392,7 +392,7 @@ ZonesReInit
 In this case, the library has a total of 86 functions, let's see if now we get the last import:
 
 ```
-$ python3 Scripts/Others/Lab_19/lab19_01_hashing_function.py Scripts/Others/Lab_19/urlmon_exports.txt
+$ python3 Scripts/Labs/Lab_19/lab19_01_hashing_function.py Scripts/Labs/Lab_19/urlmon_exports.txt
 
 No occurrence found for hash 0xec0e4e8e!
 No occurrence found for hash 0xb8e579c1!
@@ -536,9 +536,53 @@ The file Lab19-02.exe contains a piece of shellcode that will be injected into a
 
 **1. What process is injected with the shellcode?**
 
+First, the malware will enable the _SeDebugPrivilege_ that will allow to inject the shellcode into some process at function _enable_privilege_ (_0x004010B0_).
+
+![_IDA Pro_ _enable_privilege_ calling](../Pictures/Lab_19/lab_19-02_1_ida_pro_2.png)
+
+Then, it will get the path of the default browser by means of the "\http\shell\open\command" registry key, in our case, _Internet Explorer_, in the function _get_browser_path_ (_0x00401000_).
+
+![_IDA Pro_ _get_browser_path_](../Pictures/Lab_19/lab_19-02_1_ida_pro_2.png)
+
+Once the sample has the path, it will spawn a new process in the routine called _create_process_ (_0x0401180_) using this path and then, it will inject some data into this process at _inject_process_ function (_0x00401230_).
+
+![_IDA Pro_ spawn and inject process](../Pictures/Lab_19/lab_19-02_1_ida_pro_3.png)
+
 **2. Where is the shellcode located?**
 
+We need to analyze the function _inject_process_ (_0x00401230_) to see where the shellcode is located.
+
+In the function we can see the classical process injection using _OpenProcess_, _VirtualAllocEx_, _WriteProcessMemory_ and _CreateRemoteThread_.
+
+![_IDA Pro_ process injection](../Pictures/Lab_19/lab_19-02_2_ida_pro_1.png)
+
+Now, to get the piece of shellcode we need analyze how the sample calls _WriteProcessMemory_.
+
+![_IDA Pro_ _WriteProcessMemory_ calling](../Pictures/Lab_19/lab_19-02_2_ida_pro_2.png)
+
+As we can see, the variable _lpBuffer_ is a pointer to a buffer that contains the shellcode. If we track this variable backwards, we can see how it is passed to the _inject_process_ function as argument in a variable called _unk_407030_ (_0x7030_). Also, we can see its size, 423 (_0x1A7_).
+
+![_IDA Pro_ _unk_407030_](../Pictures/Lab_19/lab_19-02_2_ida_pro_3.png)
+
+If we take a look to what it stores, we can see the shellcode, so we rename this variable as so.
+
+![_IDA Pro_ _shellcode_](../Pictures/Lab_19/lab_19-02_2_ida_pro_4.png)
+
+
 **3. How is the shellcode encoded?**
+
+First, before starting the analysis, we decide to extract the shellcode into a new binary file, we use script we have developed to do so located at `Scripts/General/extract_shellcode.py` to do so. We only need to know the offset where the shellcode is located (_0x7030_) and its size (423):
+
+```
+$ python3 Scripts/General/extract_shellcode.py Scripts/Labs/Lab_19/Lab19-02.exe 0x7030 423
+[+] Shellcode successfully extracted
+[+] Shellcode successfully saved in the file: Scripts/Labs/Lab_19/Lab19-02.bin
+```
+
+Great! We can now load it in _IDA Pro_ and see what it does.
+
+![_IDA Pro_ shellcode 1](../Pictures/Lab_19/lab_19-02_3_ida_pro_1.png)
+
 
 **4. Which functions does the shellcode manually import?**
 

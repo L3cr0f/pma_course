@@ -73,7 +73,7 @@ Analyze the malware found in the file Lab17-02.dll inside VMware. After answerin
 
 **1. What are the exports for this DLL?**
 
-To check the exports of this binary, we use the script _get_file_exports.py_ located in "Scripts/Others/General/".
+To check the exports of this binary, we use the script _get_file_exports.py_ located in "Scripts/Labs/General/".
 
 ```
 C:\> python get_file_exports.py Lab17-02.dll
@@ -429,7 +429,7 @@ else:
 Now, if we execute the script as follows, it should gave us what we are waiting for:
 
 ```
-$ python3 Scripts/Others/Lab_17/lab17_03_hash_cracking.py Scripts/Others/Lab_17/processes.txt 
+$ python3 Scripts/Labs/Lab_17/lab17_03_hash_cracking.py Scripts/Labs/Lab_17/processes.txt 
 No occurrence found!
 ```
 
@@ -448,7 +448,7 @@ vmacthlp.exe
 Let's try now!
 
 ```
-$ python3 Scripts/Others/Lab_17/lab17_03_hash_cracking.py Scripts/Others/Lab_17/vm_processes.txt 
+$ python3 Scripts/Labs/Lab_17/lab17_03_hash_cracking.py Scripts/Labs/Lab_17/vm_processes.txt 
 Occurrence found! The decrypted hash value is: vmwaretray.exe
 ```
 

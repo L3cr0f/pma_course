@@ -567,7 +567,7 @@ else:
 So if the sample received the argument "1313243108", the result would be:
 
 ```
-$ python3 Scripts/Others/Lab_14/lab14_03_decode_argument.py 1313243108
+$ python3 Scripts/Labs/Lab_14/lab14_03_decode_argument.py 1313243108
 The decoded argument is: mmx4h
 ```
 
@@ -606,9 +606,9 @@ In the function we can see how the binary first calls a function (_0x00401147_) 
 Since the argument is used as _URL_ when calling _URLDownloadToCacheFileA_, the encoded value of such argument will start with "08202016370000" or "082020161937000000", since the correspond to:
 
 ```
-$ python3 Scripts/Others/Lab_14/lab14_03_decode_argument.py 08202016370000
+$ python3 Scripts/Labs/Lab_14/lab14_03_decode_argument.py 08202016370000
 The decoded argument is: http://
-$ python3 Scripts/Others/Lab_14/lab14_03_decode_argument.py 0820201619370000
+$ python3 Scripts/Labs/Lab_14/lab14_03_decode_argument.py 0820201619370000
 The decoded argument is: https://
 ```
 

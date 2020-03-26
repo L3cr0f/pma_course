@@ -83,7 +83,7 @@ print("The decrypted string is: " + decrypted_string)
 This wil give us the following output:
 
 ```
-$ python3 Scripts/Others/Lab_13/lab13_01_decryption_resource_file.py
+$ python3 Scripts/Labs/Lab_13/lab13_01_decryption_resource_file.py
 
 The decrypted string is: www.practicalmalwareanalysis.com
 ```
@@ -589,7 +589,7 @@ ZERO[16] = 0;
 
 Now that we understand how the key creation process works, we need to replicate it in a python script.
 
-The python functions regarding the key generation can be found in the python script located at "Scripts/Others/Lab_13/lab13_02_decryption_file.py" (this also includes the whole decryption process that we will explain further).
+The python functions regarding the key generation can be found in the python script located at "Scripts/Labs/Lab_13/lab13_02_decryption_file.py" (this also includes the whole decryption process that we will explain further).
 
 Great, now we can analyze how the encryption routine works.
 
@@ -664,12 +664,12 @@ mov     [ebp+encrypted_buffer], edx		-> (Pointer to ENCRYPTED_BUFFER) = (Pointer
 
 At this moment, we should be able to create a script that reproduces the decryption process that the malware performs to the files.
 
-This file it is stored in the path "Scripts/Others/Lab_13/lab13_02_decryption_file.py".
+This file it is stored in the path "Scripts/Labs/Lab_13/lab13_02_decryption_file.py".
 
 We execute it as follows:
 
 ```
-$ python3 Scripts/Others/Lab_13/lab13_02_decryption_file.py Scripts/Others/Lab_13/temp0010e67e 
+$ python3 Scripts/Labs/Lab_13/lab13_02_decryption_file.py Scripts/Labs/Lab_13/temp0010e67e 
 ```
 
 And voilà!
@@ -930,7 +930,7 @@ print("The decrypted string is: " + decrypted_string)
 The execution will be as follows:
 
 ```
-$ python Scripts/Others/Lab_13/lab13_03_aes_decryption.py 
+$ python Scripts/Labs/Lab_13/lab13_03_aes_decryption.py 
 The decrypted string is: ?é?_?P?+Ք?;??s XP [Version 5.1.2600]
 (C) Copyright 1985-2001 Microsoft Corp.
 

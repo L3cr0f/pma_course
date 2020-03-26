@@ -296,7 +296,7 @@ print("The decrypted string is: " + decrypted_string)
 Let's execute it and see what we get:
 
 ```
-$ python3 Scripts/Others/Lab_09/lab09_02_decryption_hostname.py 
+$ python3 Scripts/Labs/Lab_09/lab09_02_decryption_hostname.py 
 
 The decrypted string is: www.practicalmalwareanalysis.com
 ```

@@ -216,7 +216,7 @@ print("The decrypted string is: " + decrypted_string)
 Now, when we execute the script will find the decrypted value.
 
 ```
-$ python3 Scripts/Others/Lab_11/lab11_02_decryption_config_file.py
+$ python3 Scripts/Labs/Lab_11/lab11_02_decryption_config_file.py
 
 The decrypted string is: billy@malwareanalysisbook.com
 ```

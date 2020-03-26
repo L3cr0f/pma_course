@@ -5,7 +5,7 @@ def decrypt_file():
 	key = 0x41
 	counter = 0x18D
 
-	with open("Scripts/Others/Lab_19/lab19-01.bin", "rb") as encoded_file:
+	with open("Scripts/Labs/Lab_19/lab19-01.bin", "rb") as encoded_file:
 		encoded_file.seek(0x224)
 		encoded_byte = encoded_file.read(1)
 
@@ -23,7 +23,7 @@ def decrypt_file():
 	return decoded_bytes
 
 def save_decrypted_file(decoded_bytes):
-	decoded_file = open("Scripts/Others/Lab_19/lab19-01_stage_2.bin", "wb")
+	decoded_file = open("Scripts/Labs/Lab_19/lab19-01_stage_2.bin", "wb")
 	decoded_file.write(decoded_bytes)
 
 decoded_bytes = decrypt_file()
