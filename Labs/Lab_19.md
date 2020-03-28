@@ -600,15 +600,15 @@ This call instruction executes the function at _0x02_:
 
 ```
 seg000:00000002 loc_2:                                  ; CODE XREF: seg000:loc_13↓p
-seg000:00000002                 pop     edi				-> Pointer to return address: 0x18
+seg000:00000002                 pop     edi		-> Pointer to return address: 0x18
 seg000:00000003                 push    small 18Fh
-seg000:00000007                 pop     cx				-> CX = 0x18F -> EXC = 0x18F = 399
-seg000:00000009                 mov     al, 0E7h		-> AL = 0xE7
+seg000:00000007                 pop     cx		-> CX = 0x18F -> EXC = 0x18F = 399
+seg000:00000009                 mov     al, 0E7h	-> AL = 0xE7
 seg000:0000000B
 seg000:0000000B loc_B:                                  ; CODE XREF: seg000:0000000E↓j
-seg000:0000000B                 xor     [edi], al		-> EDI[counter] = EDI[counter] ^ AL
-seg000:0000000D                 inc     edi				-> counter = counter + 1
-seg000:0000000E                 loopw   loc_B			-> ECX = ECX + 1 | jump to 0xB
+seg000:0000000B                 xor     [edi], al	-> EDI[counter] = EDI[counter] ^ AL
+seg000:0000000D                 inc     edi		-> counter = counter + 1
+seg000:0000000E                 loopw   loc_B		-> ECX = ECX + 1 | jump to 0xB
 seg000:00000011                 jmp     short loc_18	-> Jump to decoded code
 ```
 
@@ -670,7 +670,7 @@ seg000:0000016E                 call    loc_9B
 This call instruction will execute the following piece of code at _0x9B_:
 
 ```
-seg000:0000009B                 pop     esi			-> Pointer to return address at 0x173
+seg000:0000009B                 pop     esi		-> Pointer to return address at 0x173
 seg000:0000009C                 mov     ebx, esi	-> EBX = pointer to return address at 0x173
 seg000:0000009E                 mov     edi, esi	-> EDI = pointer to return address at 0x173
 seg000:000000A0                 call    sub_7A
@@ -776,7 +776,7 @@ seg000:000000CB loc_CB:                                 ; CODE XREF: seg000:0000
 seg000:000000CB                 lodsd
 seg000:000000CC                 push    eax
 seg000:000000CD                 push    edx
-seg000:000000CE                 call    sub_2E			; look for funtions
+seg000:000000CE                 call    sub_2E		; look for funtions
 seg000:000000D3                 stosd
 seg000:000000D4                 loop    loc_CB
 ```
@@ -827,8 +827,8 @@ As we can see, it uses a _sockaddr_ struct to pass the host information. This st
 
 ```
 struct sockaddr_in {
-        short   sin_family;			-> 2 bytes
-        u_short sin_port;			-> 2 bytes
+        short   sin_family;		-> 2 bytes
+        u_short sin_port;		-> 2 bytes
         struct  in_addr sin_addr;
         char    sin_zero[8];
 };
@@ -845,10 +845,10 @@ This can be decomposed as follows (take in mind endianness):
 ```
 0002	-> AF_INET
 3412	-> 13330
-C0		-> 192
-A8		-> 168
-C8		-> 200
-02		-> 2
+C0	-> 192
+A8	-> 168
+C8	-> 200
+02	-> 2
 
 ```
 
