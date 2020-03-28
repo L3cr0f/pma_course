@@ -1,7 +1,7 @@
 import os
 import sys
 
-hashes = [
+hashes_1 = [
 	0xEC0E4E8E,
 	0xB8E579C1,
 	0x78B5B983,
@@ -9,6 +9,20 @@ hashes = [
 	0xE8AFE98,
 	0x702F1A36
 ]
+
+hashes_2 = [
+	0xEC0E4E8E,
+	0x16B3FE72,
+	0x78B5B983,
+	0x7B8F17E6
+]
+
+hashes_3 = [
+	0x3BFCEDCB,
+	0xADF509D9,
+	0x60AAF9EC
+]
+
 
 MAX_VALUE = 0xFFFFFFFF
 INT_BITS = 32
@@ -31,7 +45,7 @@ def check_hash(function_name, hash_value):
 
 # Reads the file
 def read_file(file):
-	for hash_value in hashes:
+	for hash_value in hashes_1:
 		found = False
 		with open(file, "r") as wordlist:
 			function_name = wordlist.readline().rstrip('\n')
