@@ -941,8 +941,8 @@ If we want to decode so we can load it in _IDA Pro_ we have to decode it as foll
 
 ```
 %ue589%uec81...
-	||
-	\/
+  ||
+  \/
 89 e5 81 ec ...
 ```
 
@@ -994,7 +994,7 @@ Then, we can see how the shellcode executes a loop in which it will use the know
 ```
 seg000:0000018B                 mov     ecx, 0Eh
 seg000:00000190 loc_190:                                ; CODE XREF: seg000:0000019B↓j
-seg000:00000190                 lodsd					; EAX = ESI = value at address 0xD 
+seg000:00000190                 lodsd				; EAX = ESI = value at address 0xD 
 seg000:00000191                 push    eax
 seg000:00000192                 push    dword ptr [ebp-4]	; kernel32 DllBase
 seg000:00000195                 call    look_for_functions
