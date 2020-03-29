@@ -1072,6 +1072,8 @@ $ python3 Scripts/Labs/Lab_19/lab19_hashing_function.py Scripts/Labs/Lab_19/shel
 Occurrence found! The decrypted hash 0x1be1bb5e is: ShellExecuteA
 ```
 
+Great! That seems the whole imported function set.
+
 **4. What filesystem residue does the shellcode leave?**
 
 **5. What does the shellcode do?**
