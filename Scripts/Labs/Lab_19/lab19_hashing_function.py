@@ -23,6 +23,27 @@ hashes_3 = [
 	0x60AAF9EC
 ]
 
+hashes_4 = [
+	0xEC0E4E8E,
+	0x16B3FE72,
+	0x78B5B983,
+	0x7B8F17E6,
+	0x5B8ACA33,
+	0xBFC7034F,
+	0x7C0017A5,
+	0xDF7D9BAD,
+	0x76DA08AC,
+	0x10FA6516,
+	0xE80A791F,
+	0xFFD97FB,
+	0xC0397EC,
+	0x7CB922F6
+]
+
+hashes_5 = [
+	0x1BE1BB5E
+]
+
 
 MAX_VALUE = 0xFFFFFFFF
 INT_BITS = 32
@@ -45,7 +66,7 @@ def check_hash(function_name, hash_value):
 
 # Reads the file
 def read_file(file):
-	for hash_value in hashes_1:
+	for hash_value in hashes_5:
 		found = False
 		with open(file, "r") as wordlist:
 			function_name = wordlist.readline().rstrip('\n')

@@ -935,7 +935,142 @@ Exploit CVE-2008-2992 Date:11.4.08 v8.1.2 - util.printf - found in stream: 9
 
 **2. How is the shellcode encoded?**
 
+The shellcode is encoded using _UTF-16_, since it is the encoding used by _Javascript_.
+
+If we want to decode so we can load it in _IDA Pro_ we have to decode it as follows:
+
+```
+%ue589%uec81...
+	||
+	\/
+89 e5 81 ec ...
+```
+
+We developed a _Python_ script that takes one shellcode file in _UTF-16_ format and converts it to regular format. This script is located at "Scripts/General/convert_utf16_shellcode.py" and is executed as follows:
+
+```
+$ python3 Scripts/General/convert_utf16_shellcode.py Scripts/Labs/Lab_19/Lab19-03_shellcode.txt 
+
+[+] Shellcode successfully extracted
+[+] Shellcode successfully saved in the file: Scripts/Labs/Lab_19/Lab19-03_shellcode.bin
+```
+
+Now, we have a decoded shellcode fully understandable by _IDA Pro_.
+
+![_IDA Pro_ shellcode](../Pictures/Lab_19/lab_19-03_2_ida_pro_1.png)
+
 **3. Which functions does the shellcode manually import?**
+
+So now, it is time to analyze the shellcode.
+
+The first interesting instruction we see is a call to _0x17B_:
+
+```
+seg000:00000008                 call    loc_17B
+```
+
+This will jump to:
+
+```
+seg000:0000017B loc_17B:                                ; CODE XREF: seg000:00000008↑p
+seg000:0000017B                 pop     esi
+seg000:0000017C
+seg000:0000017C loc_17C:                                ; CODE XREF: seg000:00000286↓p
+seg000:0000017C                 mov     [ebp-14h], esi
+seg000:0000017F                 mov     edi, esi
+seg000:00000181                 mov     ebx, esi
+seg000:00000183                 call    sub_CA
+seg000:00000188                 mov     [ebp-4], eax
+```
+
+So a pointer to the return address of the call instruction (_0xD_) is stored in _ESI_, this will be also loaded in _EBP-0x14_, _EDI_ and _EBX_ prior to call _sub_CA_, which is the following function:
+
+![_IDA Pro_ _kernel32.dll_ _DllBase_](../Pictures/Lab_19/lab_19-03_3_ida_pro_1.png)
+
+As we can see, it is the well known funtion to get the _kernel32.dll_ _DllBase_ address, so we rename it as so _get_kernel32_dllbase_. Also, take in mind that the result is stored at _EBP-0x4_.
+
+Then, we can see how the shellcode executes a loop in which it will use the known functions of function searching by hash:
+
+```
+seg000:0000018B                 mov     ecx, 0Eh
+seg000:00000190 loc_190:                                ; CODE XREF: seg000:0000019B↓j
+seg000:00000190                 lodsd					; EAX = ESI = value at address 0xD 
+seg000:00000191                 push    eax
+seg000:00000192                 push    dword ptr [ebp-4]	; kernel32 DllBase
+seg000:00000195                 call    look_for_functions
+seg000:0000019A                 stosd
+seg000:0000019B                 loop    loc_190
+```
+
+So this functions will search for 14 (_0xE_) hashes stored at _0xD_:
+
+```
+seg000:0000000D                 dd 0EC0E4E8Eh
+seg000:00000011                 dd 16B3FE72h
+seg000:00000015                 dd 78B5B983h
+seg000:00000019                 dd 7B8F17E6h
+seg000:0000001D                 dd 5B8ACA33h
+seg000:00000021                 dd 0BFC7034Fh
+seg000:00000025                 dd 7C0017A5h
+seg000:00000029                 dd 0DF7D9BADh
+seg000:0000002D                 dd 76DA08ACh
+seg000:00000031                 dd 10FA6516h
+seg000:00000035                 dd 0E80A791Fh
+seg000:00000039                 dd 0FFD97FBh
+seg000:0000003D                 dd 0C0397ECh
+seg000:00000041                 dd 7CB922F6h
+```
+
+We include these hashes and execute our _Python_ script as follows, since it uses _kernel32.dll_ (some changes may have to be done, since this script is also used in other exercises):
+
+```
+$ python3 Scripts/Labs/Lab_19/lab19_hashing_function.py Scripts/Labs/Lab_19/kernel32_exports.txt
+
+Occurrence found! The decrypted hash 0xec0e4e8e is: LoadLibraryA
+Occurrence found! The decrypted hash 0x16b3fe72 is: CreateProcessA
+Occurrence found! The decrypted hash 0x78b5b983 is: TerminateProcess
+Occurrence found! The decrypted hash 0x7b8f17e6 is: GetCurrentProcess
+Occurrence found! The decrypted hash 0x5b8aca33 is: GetTempPathA
+Occurrence found! The decrypted hash 0xbfc7034f is: SetCurrentDirectoryA
+Occurrence found! The decrypted hash 0x7c0017a5 is: CreateFileA
+Occurrence found! The decrypted hash 0xdf7d9bad is: GetFileSize
+Occurrence found! The decrypted hash 0x76da08ac is: SetFilePointer
+Occurrence found! The decrypted hash 0x10fa6516 is: ReadFile
+Occurrence found! The decrypted hash 0xe80a791f is: WriteFile
+Occurrence found! The decrypted hash 0xffd97fb is: CloseHandle
+Occurrence found! The decrypted hash 0xc0397ec is: GlobalAlloc
+Occurrence found! The decrypted hash 0x7cb922f6 is: GlobalFree
+```
+
+Great! Let's check id the routine _look_for_functions_ is used in other part of the code:
+
+```
+seg000:0000019D                 push    32336Ch         ; '23l'
+seg000:000001A2                 push    6C656873h       ; 'lehs'
+seg000:000001A7                 mov     eax, esp
+seg000:000001A9                 push    eax             ; shell32
+seg000:000001AA                 call    dword ptr [ebx] ; LoadLibraryA
+seg000:000001AC                 xchg    eax, ecx
+seg000:000001AD                 lodsd
+seg000:000001AE                 push    eax
+seg000:000001AF                 push    ecx
+seg000:000001B0                 call    look_for_functions
+seg000:000001B5                 stosd
+```
+
+It is used after the previous instruction set to get one function, the one with the hash:
+
+```
+seg000:00000045                 dd 1BE1BB5Eh
+```
+
+So we get the exported function of _shell32.dll_, include this hash and execute this function as follows:
+
+```
+$ python3 Scripts/Labs/Lab_19/lab19_hashing_function.py Scripts/Labs/Lab_19/shell32_exports.txt 
+
+Occurrence found! The decrypted hash 0x1be1bb5e is: ShellExecuteA
+```
 
 **4. What filesystem residue does the shellcode leave?**
 
