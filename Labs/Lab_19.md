@@ -1074,6 +1074,100 @@ Occurrence found! The decrypted hash 0x1be1bb5e is: ShellExecuteA
 
 Great! That seems the whole imported function set.
 
+To print them to the _IDA Pro_, we use the script "Scripts/IDA/add_functions.py", we just modify the initial array to add the functions we know.
+
 **4. What filesystem residue does the shellcode leave?**
+
+After importing the functions, the sample will call to _GetFileSize_, prior it sets _ESI_ to 0 and then it adds 4 to it, we have to take in mind that this value is the file handler.
+
+```
+seg000:000001B6                 xor     esi, esi
+...
+seg000:000001BB                 add     esi, 4
+seg000:000001C1                 lea     eax, [ebp+hFile]
+seg000:000001C4                 push    eax
+seg000:000001C5                 push    esi
+seg000:000001C6                 call    dword ptr [ebx+1Ch] ; GetFileSize
+seg000:000001C9                 cmp     eax, [ebx+3Ch]
+```
+
+Then, after executing the call instruction, it will check the result against the value at _EBX+0x3C_, which is the value after the function hashes:
+
+```
+seg000:00000049                 dd 0C602h
+```
+
+If we convert this value to decimal notation, we will have:
+
+```
+C602 -> 50690
+```
+
+So now, if take a look to the _PDF_ file properties, we will see this same value as file size:
+
+![_Desktop_ _PDF_ file size](../Pictures/Lab_19/lab_19-03_4_desktop_1.png)
+
+So we can assume that the sample was looking for the _PDF_ file.
+
+Then, it will store the handle to the _PDF_ at variable _hFile_ and call _GlobalAlloc_ using the value at _EBX+0x44_ as the size to allocate from the heap.
+
+```
+seg000:000001CE                 mov     [ebp+hFile], esi
+seg000:000001D1                 xor     edx, edx
+seg000:000001D3                 push    dword ptr [ebx+44h]
+seg000:000001D6                 push    edx			; GMEM_FIXED
+seg000:000001D7                 call    dword ptr [ebx+30h] ; GlobalAlloc
+...
+seg000:000001E2                 mov     [ebp+hMemory], eax
+```
+
+The value at _EBX+0x44_ is:
+
+```
+seg000:00000051                 dd 0A000h
+```
+
+Which in decimal is:
+
+```
+A000 -> 40960
+```
+
+Once the function is executed, the result is stored at variable _hMemory_.
+
+Now, it will call _SetFilePointer_ using the handler to the _PDF_ file and the value at _EBX+0x40_ as offset value.
+
+```
+seg000:000001E5                 xor     edx, edx
+seg000:000001E7                 push    edx
+seg000:000001E8                 push    edx
+seg000:000001E9                 push    dword ptr [ebx+40h]	; lDistanceToMove
+seg000:000001EC                 push    dword ptr [ebp+hFile]
+seg000:000001EF                 call    dword ptr [ebx+20h] ; SetFilePointer
+```
+
+The value at _EBX+0x40_ is:
+
+```
+seg000:0000004D                 dd 106Fh
+```
+
+Which in decimal is:
+
+```
+106F -> 4207
+```
+
+Then, a call to a new subroutine is executed, the one located at _0x13D_, using 4 arguments, the address of _ReadFile_, the handle to the _PDF_ file, the allocated memory and the size of such allocated memory.
+
+```
+seg000:000001F2                 push    dword ptr [ebx+44h] ; 40960
+seg000:000001F5                 push    [ebp+hMemory]
+seg000:000001F8                 push    [ebp+hFile]
+seg000:000001FB                 push    dword ptr [ebx+24h] ; ReadFile
+seg000:000001FE                 call    sub_13D
+```
+
+
 
 **5. What does the shellcode do?**
