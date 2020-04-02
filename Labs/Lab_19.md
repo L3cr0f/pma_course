@@ -1218,7 +1218,7 @@ The first thing this function does is some kind of _XOR_ decoding procedure in w
 
 ![_IDA Pro_ decoding routine](../Pictures/Lab_19/lab_19-03_4_ida_pro_2.png)
 
-Then, in the same function we can see how the sample stores the new decoded data into the file "foo.exe" in the temporary path.
+Then, in the same function we can see how the sample stores the new decoded data into the file _foo.exe_ in the temporary path.
 
 ![_IDA Pro_ store file](../Pictures/Lab_19/lab_19-03_4_ida_pro_3.png)
 
