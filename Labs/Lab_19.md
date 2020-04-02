@@ -983,7 +983,7 @@ seg000:00000183                 call    sub_CA
 seg000:00000188                 mov     [ebp-4], eax
 ```
 
-So a pointer to the return address of the call instruction (_0xD_) is stored in _ESI_, this will be also loaded in _EBP-0x14_, _EDI_ and _EBX_ prior to call _sub_CA_, which is the following function:
+So a pointer to the return address of the call instruction (_0xD_) is stored in _ESI_, this will be also loaded in _EBP-0x14_ (this will be renamed to _ret_add_D_, to create a variable press 'k' key), _EDI_ and _EBX_ prior to call _sub_CA_, which is the following function:
 
 ![_IDA Pro_ _kernel32.dll_ _DllBase_](../Pictures/Lab_19/lab_19-03_3_ida_pro_1.png)
 
@@ -1168,6 +1168,216 @@ seg000:000001FB                 push    dword ptr [ebx+24h] ; ReadFile
 seg000:000001FE                 call    sub_13D
 ```
 
+The function _sub_13D_ seems to execute the function that its address is passed as argument, in this case _ReadFile_. So this function will execute _ReadFile_ function to read the _PDF_ from offset _0x106F_ to the next 40960 bytes and store these bytes in the heap, taking the previously created handle as reference.
+
+![_IDA Pro_ _sub_13D_ function](../Pictures/Lab_19/lab_19-03_4_ida_pro_1.png)
+
+This function is renamed to, _execute_file_operation_.
+
+Then, the sample will initialize one buffer, _EBP-0x124_, that will be used later to get the temporal path of the system by means of _GetTempPathA_. So we rename this variable to _temp_path_.
+
+```
+seg000:00000203                 xor     eax, eax
+seg000:00000205                 lea     edi, [ebp-124h]
+seg000:0000020B                 mov     ecx, 40h ; '@'
+seg000:00000210                 rep stosd
+seg000:00000212                 lea     edi, [ebp-124h]
+seg000:00000218                 push    edi
+seg000:00000219                 push    100h
+seg000:0000021E                 call    dword ptr [ebx+10h] ; GetTempPathA
+```
+
+After that, the following isntructions are executed:
+
+```
+seg000:00000221                 xor     eax, eax
+seg000:00000223                 lea     edi, [ebp+temp_path]
+seg000:00000229                 repne scasb
+seg000:0000022B                 dec     edi
+seg000:0000022C                 mov     [ebp-1Ch], edi
+seg000:0000022F                 mov     dword ptr [edi], 2E6F6F66h ; '.oof'
+seg000:00000235                 mov     dword ptr [edi+4], 657865h ; 'exe'
+```
+
+As we can see, this piece of code will get the string that contains the temporary path of the system and then it will append the file name "foo.exe" to it.
+
+Now, a new function located at _0xEB_ is called as follows:
+
+```
+seg000:0000023C                 mov     ebx, [ebp+ret_add_D]	; The return address at 0xD is where the function hashes were stored and where the functions addresses are stored at this momment
+seg000:0000023F                 lea     eax, [ebp+temp_path]
+seg000:00000245                 push    eax
+seg000:00000246                 push    4Ah ; 'J'
+seg000:0000024B                 push    dword ptr [ebx+44h] ; 40960
+seg000:0000024E                 push    [ebp+hMemory]
+seg000:00000251                 push    ebx
+seg000:00000252                 call    sub_EB
+```
+
+The first thing this function does is some kind of _XOR_ decoding procedure in which the buffer stored in the heap is the content to decode (remember that this buffer contains the data from the _PDF_) using the initial key with the value _0x41_ and its derivations (the key is incremented by one each iteration).
+
+![_IDA Pro_ decoding routine](../Pictures/Lab_19/lab_19-03_4_ida_pro_2.png)
+
+Then, in the same function we can see how the sample stores the new decoded data into the file "foo.exe" in the temporary path.
+
+![_IDA Pro_ store file](../Pictures/Lab_19/lab_19-03_4_ida_pro_3.png)
+
+Because all of that, this function has been renamed to _decode_and_store_.
+
+Let's decode and extract the embedded file manually using the _Python_ script at "Scripts/Labs/Lab_19/lab19_03_decode_and_extract_file.py":
+
+```
+$ python3 Scripts/Labs/Lab_19/lab19_03_decode_and_extract_file.py
+```
+
+This will give us a file called _Lab19-03_stage_3.exe_.
+
+Then, the sample will execute this new file and free the heap memory.
+
+```
+seg000:0000027F                 lea     eax, [ebp+temp_path]
+seg000:00000285                 push    eax
+seg000:00000286                 call    dword ptr [ebx+4] ; CreateProcessA
+seg000:00000289                 push    [ebp+hMemory]
+seg000:0000028C                 call    dword ptr [ebx+34h] ; GlobalFree
+```
+
+After that, the shellcode will reserve more memory on the heap:
+
+```
+seg000:00000294                 push    dword ptr [ebx+4Ch]
+seg000:00000297                 push    edx
+seg000:00000298                 call    dword ptr [ebx+30h] ; GlobalAlloc
+```
+
+The value stored at _EBX+4C_ is the following:
+
+```
+seg000:00000059                 dd 144Eh
+```
+
+So, in decimal notation is:
+
+```
+0x144E -> 5198
+```
+
+Then, it will call again to _SetFilePointer_ using the value at _EBX+48_ as offset:
+
+```
+seg000:000002A2                 xor     edx, edx
+seg000:000002A4                 push    edx
+seg000:000002A5                 push    edx
+seg000:000002A6                 push    dword ptr [ebx+48h]
+seg000:000002A9                 push    [ebp+hFile]
+seg000:000002AC                 call    dword ptr [ebx+20h] ; SetFilePointer
+```
+
+The value at at _EBX+48_ is:
+
+```
+seg000:00000055                 dd 0B06Fh
+```
+
+Which in decimal is:
+
+```
+0xB06F -> 45167
+```
+
+Then, it will perform the same operations as previously, but creating a new file called _bar.pdf_ in the temporary path:
+
+```
+seg000:000002AF                 push    dword ptr [ebx+4Ch] ; 5198
+seg000:000002B2                 push    [ebp+hMemory_2]
+seg000:000002B5                 push    [ebp+hFile]
+seg000:000002B8                 push    dword ptr [ebx+24h] ; ReadFile
+seg000:000002BB                 call    execute_file_operation
+seg000:000002C0                 mov     eax, [ebp-1Ch]
+seg000:000002C3                 mov     dword ptr [eax], 2E726162h ; '.rab'
+seg000:000002C9                 mov     dword ptr [eax+4], 666470h ; 'fdp'
+seg000:000002D0                 lea     eax, [ebp+temp_path]
+seg000:000002D6                 push    eax
+seg000:000002D7                 push    4Ah ; 'J'
+seg000:000002D9                 mov     ebx, [ebp-14h]
+seg000:000002DC                 push    dword ptr [ebx+4Ch] ; 5198
+seg000:000002DF                 push    dword ptr [ebp-10h]
+seg000:000002E2                 push    ebx
+seg000:000002E3                 call    decode_and_store
+```
+
+This file is also extracted using the previous script, which is as follows (we have included both file extractions in the same script):
+
+```
+MAX_VALUE = 0xFF
+
+def decrypt_file(size, offset):
+	decoded_bytes = bytearray()
+	key = 0x4A
+
+	with open("Scripts/Labs/Lab_19/Lab19-03.pdf", "rb") as encoded_file:
+		encoded_file.seek(offset)
+		encoded_byte = int.from_bytes(encoded_file.read(1), byteorder="big")
+
+		while size > 0:
+			decoded_byte = (encoded_byte ^ key) & MAX_VALUE
+			decoded_bytes.append(decoded_byte)
+
+			key = (key + 1) & MAX_VALUE
+			size = size - 1
+			encoded_byte = int.from_bytes(encoded_file.read(1), byteorder="big")
+
+	return decoded_bytes
+
+def save_decrypted_file(end_of_name, decoded_bytes):
+	decoded_file = open("Scripts/Labs/Lab_19/Lab19-03_stage_" + end_of_name, "wb")
+	decoded_file.write(decoded_bytes)
+
+
+size_1 = 0xA000
+offset_1 = 0x106F
+
+decoded_bytes_1 = decrypt_file(size_1, offset_1)
+save_decrypted_file("3.exe", decoded_bytes_1)
+
+size_2 = 0x144E
+offset_2 = 0xB06F
+
+decoded_bytes_2 = decrypt_file(size_2, offset_2)
+save_decrypted_file("4.pdf", decoded_bytes_2)
+```
+
+The script is executed as previously and we will get the downloaded _PDF_ called _Lab19-03_stage_4.pdf_.
+
+![_Browser_ _Lab19-03_stage_4.pdf_](../Pictures/Lab_19/lab_19-03_4_browser_1.png)
 
 
 **5. What does the shellcode do?**
+
+Then, once the shellcode has decoded and extracted both files it executes or opens, depending the case.
+
+The binary _foo.exe_ is executed:
+
+```
+seg000:0000027F                 lea     eax, [ebp+temp_path]
+seg000:00000285                 push    eax
+seg000:00000286                 call    dword ptr [ebx+4] ; CreateProcessA
+```
+
+The _PDF_ _bar.pdf_ is opened:
+
+```
+seg000:000002F0                 mov     dword ptr [eax], 6E65706Fh ; 'nepo'
+seg000:000002F6                 mov     byte ptr [eax+4], 0
+seg000:000002FA                 push    5
+seg000:000002FF                 push    ecx
+seg000:00000300                 push    ecx
+seg000:00000301                 lea     eax, [ebp+temp_path]
+seg000:00000307                 push    eax
+seg000:00000308                 lea     eax, [ebp-168h]
+seg000:0000030E                 push    eax
+seg000:0000030F                 push    ecx
+seg000:00000310                 call    dword ptr [ebx+38h] ; ShellExecuteA
+```
+
+Finally, the process is terminated.
