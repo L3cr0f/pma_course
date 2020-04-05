@@ -19,7 +19,7 @@ WinVMX32-
 vmx32to64.exe
 SOFTWARE\Microsoft\Windows\CurrentVersion\Run
 SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders
-``` 
+```
 We see some interesting strings like one domain name, some registry values or the name of one binary. Now it is time to check the memory strings.
 
 After check the strings of the sample in the memory, we see that are the same.

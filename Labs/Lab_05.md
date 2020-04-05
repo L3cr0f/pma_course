@@ -66,7 +66,7 @@ The global variable is set at 0x1001673 as a result of the execution of the func
 
 **10. A few hundred lines into the subroutine at 0x1000FF58, a series of comparisons use memcmp to compare strings. What happens if the string comparison to robotwork is successful (when memcmp returns 0)?**
 
-After that, it calls the function _sub_100052A2_, which will open the registry key _SOFTWARE\Microsoft\Windows\CurrentVersion_ and query the value of _WorkTime_ or _WorkTimes_ and sent to the remote shell via the function _sprintf_ and the previously created _pipe_. 
+After that, it calls the function _sub_100052A2_, which will open the registry key _SOFTWARE\Microsoft\Windows\CurrentVersion_ and query the value of _WorkTime_ or _WorkTimes_ and sent to the remote shell via the function _sprintf_ and the previously created _pipe_.
 
 **11. What does the export PSLIST do?**
 

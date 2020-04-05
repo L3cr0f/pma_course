@@ -110,7 +110,7 @@ After that, we select the interface we have previously identified, _IWebBrowser2
 
 ![_IDA Pro_ add _IWebBrowser2_ structure](../Pictures/Lab_07/lab_07-02_2_ida_pro_5.png)
 
-Finally, we right click in the offset _2Ch_ of the program, and select the option "[edx+IWebBrowser2Vtbl.Navigate]" 
+Finally, we right click in the offset _2Ch_ of the program, and select the option "[edx+IWebBrowser2Vtbl.Navigate]"
 
 ![_IDA Pro_ add reference to _IWebBrowser2_ structure](../Pictures/Lab_07/lab_07-02_2_ida_pro_6.png)
 

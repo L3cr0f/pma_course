@@ -36,7 +36,7 @@ We run the sample until there (F9) and then we press either _Step into_ (F7) or 
 
 ![_OllyDBG_ _UPX_ unpacking 2](../Pictures/Lab_18/lab_18-01_1_ollydbg_2.png)
 
-Great! We are now into the unpacked code of the sample! 
+Great! We are now into the unpacked code of the sample!
 
 So now, click on "Plugins -> OllyDump -> Dump debugged process
 

@@ -169,7 +169,7 @@ seg000:00000081                 test    eax, eax
 seg000:00000083                 js      short loc_94
 seg000:00000085                 mov     eax, [eax+0Ch]			-> EAX = PEB_LDR
 seg000:00000088                 mov     esi, [eax+1Ch]			-> ESI = InInitializationOrderModuleList (pointer to LDR_DATA_TABLE_ENTRY[0x10])
-seg000:0000008B                 lodsd					-> EAX = ESI = LDR_DATA_TABLE_ENTRY[0x10] 
+seg000:0000008B                 lodsd					-> EAX = ESI = LDR_DATA_TABLE_ENTRY[0x10]
 seg000:0000008C                 mov     eax, [eax+8]			-> EAX = LDR_DATA_TABLE_ENTRY[0x10 + 0x8] = DllBase
 seg000:0000008F                 jmp     loc_99
 seg000:00000094 ; ---------------------------------------------------------------------------
@@ -705,11 +705,11 @@ It will load the value stored at _0x173_ (the value of _ESI_) and then call the 
 
 ![_IDA Pro_ _kernel32.dll_ _DllBase_](../Pictures/Lab_19/lab_19-02_4_ida_pro_2.png)
 
-As we can see, is the same function that will loop over the _IMAGE_EXPORT_DIRECTORY_ struct of _kernel32.dll_ to get the address of the needed functions. Also, the function _sub_D_ 
+As we can see, is the same function that will loop over the _IMAGE_EXPORT_DIRECTORY_ struct of _kernel32.dll_ to get the address of the needed functions.
+
+Also, the function _sub_D_ is the same hashing function used in the previous exercise.
 
 ![_IDA Pro_ hashing function](../Pictures/Lab_19/lab_19-02_4_ida_pro_3.png)
-
-As we can see, is the same hashing function used in the previous exercise.
 
 So now, we can use the same script of the exercise 1 to get the imported functions, but first, we need to get the hashes at _0x173_:
 
@@ -792,7 +792,7 @@ seg000:0000018B                 dd 60AAF9ECh
 We get the exported functions of such library _ws2_32_, we introduce the hashes into the script and then we execute it (some changes may have to be done, since this script is also used in other exercises):
 
 ```
-$ python3 Scripts/Labs/Lab_19/lab19_hashing_function.py Scripts/Labs/Lab_19/ws2_32_exports.txt 
+$ python3 Scripts/Labs/Lab_19/lab19_hashing_function.py Scripts/Labs/Lab_19/ws2_32_exports.txt
 
 Occurrence found! The decrypted hash 0x3bfcedcb is: WSAStartup
 Occurrence found! The decrypted hash 0xadf509d9 is: WSASocketA
@@ -949,7 +949,7 @@ If we want to decode so we can load it in _IDA Pro_ we have to decode it as foll
 We developed a _Python_ script that takes one shellcode file in _UTF-16_ format and converts it to regular format. This script is located at "Scripts/General/convert_utf16_shellcode.py" and is executed as follows:
 
 ```
-$ python3 Scripts/General/convert_utf16_shellcode.py Scripts/Labs/Lab_19/Lab19-03_shellcode.txt 
+$ python3 Scripts/General/convert_utf16_shellcode.py Scripts/Labs/Lab_19/Lab19-03_shellcode.txt
 
 [+] Shellcode successfully extracted
 [+] Shellcode successfully saved in the file: Scripts/Labs/Lab_19/Lab19-03_shellcode.bin
@@ -994,7 +994,7 @@ Then, we can see how the shellcode executes a loop in which it will use the know
 ```
 seg000:0000018B                 mov     ecx, 0Eh
 seg000:00000190 loc_190:                                ; CODE XREF: seg000:0000019B↓j
-seg000:00000190                 lodsd				; EAX = ESI = value at address 0xD 
+seg000:00000190                 lodsd				; EAX = ESI = value at address 0xD
 seg000:00000191                 push    eax
 seg000:00000192                 push    dword ptr [ebp-4]	; kernel32 DllBase
 seg000:00000195                 call    look_for_functions
@@ -1067,7 +1067,7 @@ seg000:00000045                 dd 1BE1BB5Eh
 So we get the exported function of _shell32.dll_, include this hash and execute this function as follows:
 
 ```
-$ python3 Scripts/Labs/Lab_19/lab19_hashing_function.py Scripts/Labs/Lab_19/shell32_exports.txt 
+$ python3 Scripts/Labs/Lab_19/lab19_hashing_function.py Scripts/Labs/Lab_19/shell32_exports.txt
 
 Occurrence found! The decrypted hash 0x1be1bb5e is: ShellExecuteA
 ```

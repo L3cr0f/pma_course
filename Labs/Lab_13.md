@@ -451,14 +451,14 @@ Finally, the fourth chunk of code is as follows:
 
 ```
 push    10h					-> Puts 10h into the stack (second argument of the next function)
-mov     eax, [ebp+integer(8)_second+1Ch]	-> EAX = second_array [7] = DBC39B5h 
+mov     eax, [ebp+integer(8)_second+1Ch]	-> EAX = second_array [7] = DBC39B5h
 push    eax             ; unsigned int		-> Puts EAX into the stack (first argument of the next function)
 call    __rotl					-> Calls to __rotl = shl eax, 10h = 39B50DBCh
 add     esp, 8
-mov     esi, [ebp+integer(8)_second]		-> ESI = second_array [0] = 6902BDC5h 
+mov     esi, [ebp+integer(8)_second]		-> ESI = second_array [0] = 6902BDC5h
 add     esi, eax				-> ESI = 6902BDC5h + 39B50DBCh = A2B7CB81h
 push    10h             ; int			-> Puts 10h into the stack (second argument of the next function)
-mov     ecx, [ebp+integer(8)_second+18h]	-> ECX = second_array [6] = 6902BDC5h 
+mov     ecx, [ebp+integer(8)_second+18h]	-> ECX = second_array [6] = 6902BDC5h
 push    ecx             ; unsigned int		-> Puts ECX into the stack (first argument of the next function)
 call    __rotl					-> Calls to __rotl = shl ecx, 10h (notice the result is stored in eax) = BDC56902 -> EAX = BDC56902h
 add     esp, 8
@@ -552,7 +552,7 @@ mov     edx, [ebp+integer(17)_0]		-> EDX = ZERO[0]
 mov     [edx+1Ch], ecx				-> ZERO[7] = 8260D673h
 ```
 
-So the first part of the array will: 
+So the first part of the array will:
 
 ```
 ZERO[0] = 607D3483h;
@@ -669,7 +669,7 @@ This file it is stored in the path "Scripts/Labs/Lab_13/lab13_02_decryption_file
 We execute it as follows:
 
 ```
-$ python3 Scripts/Labs/Lab_13/lab13_02_decryption_file.py Scripts/Labs/Lab_13/temp0010e67e 
+$ python3 Scripts/Labs/Lab_13/lab13_02_decryption_file.py Scripts/Labs/Lab_13/temp0010e67e
 ```
 
 And voilà!
@@ -930,7 +930,7 @@ print("The decrypted string is: " + decrypted_string)
 The execution will be as follows:
 
 ```
-$ python Scripts/Labs/Lab_13/lab13_03_aes_decryption.py 
+$ python Scripts/Labs/Lab_13/lab13_03_aes_decryption.py
 The decrypted string is: ?é?_?P?+Ք?;??s XP [Version 5.1.2600]
 (C) Copyright 1985-2001 Microsoft Corp.
 

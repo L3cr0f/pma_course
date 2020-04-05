@@ -238,7 +238,124 @@ This third lab is a longer and more realistic piece of malware. This lab comes w
 
 **1. What can you learn from the interesting strings in this program?**
 
+To check so we execute the following command:
+
+```
+strings Lab20-03.exe
+
+...
+Encoding Args Error
+/srv.html
+/put.html
+/get.html
+/response.html
+/info.html
+/index.html
+.?AUBackdoorClientParentError@@
+.?AUBackdoorClientError@@
+Beacon response Error
+Caught exception during pollstatus: %s
+Polling error
+%s?id=%s
+.?AUCmdParseError@@
+Arg parsing error
+%s %s "%s"
+Error uploading file
+Error downloading file
+user=%s, host=%s, Major Version=%d, Minor Version=%d, Locale=%d
+Error conducting machine survey
+Create Process Failed
+;computer=
+volsn=
+victim;
+Failed to gather victim information
+...
+Error sending Http get
+GET %s HTTP/1.1
+HOST: %s
+User-Agent: %s
+Accept: text/html
+Accept-Language: en-uk,en
+Accept-Charset: utf-8
+Connection: close
+data=
+.?AUPostError@@
+POST %s HTTP/1.1
+HOST: %s
+User-Agent: %s
+Content-Length: %d
+Content-Type: application/x-www-form-urlencoded
+Error sending Http post
+.?AUWsaStartupError@@
+Failed to initialize WSA
+...
+```
+
+It seems that this sample is an info-stealer that tries to gather as much information about the system where is being executed. It seems to have _HTTP_ communication capabilities and the possibility of uploading and downloading files.
+
 **2. What do the imports tell you about this program?**
+
+To get the imports of the binary we use the _Python_ script "Scripts/General/get_file_imports.py" as follows:
+
+```
+C:\> python get_file_imports.py Lab20-03.exe
+
+######################
+IMPORTS
+######################
+======================
+KERNEL32.dll
+======================
+CloseHandle
+GetFileSize
+CreateFileA
+WriteFile
+ReadFile
+GetVersionExA
+GetComputerNameA
+CreateProcessA
+GetLastError
+GetSystemDefaultLCID
+Sleep
+SetStdHandle
+LoadLibraryA
+GetProcAddress
+GetOEMCP
+GetACP
+GetCPInfo
+...
+GetEnvironmentStringsW
+SetHandleCount
+GetStdHandle
+GetFileType
+GetStartupInfoA
+SetFilePointer
+FlushFileBuffers
+======================
+ADVAPI32.dll
+======================
+GetUserNameA
+======================
+WS2_32.dll
+======================
+WSAStartup
+WSACleanup
+send
+recv
+inet_addr
+gethostbyname
+WSAGetLastError
+closesocket
+htons
+socket
+connect
+```
+
+We can learn the following about this piece of malware based on its imports:
+
+- It can communicate through Internet.
+- It can perform file operations.
+- It gets information about the system.
 
 **3. At 0x4036F0, there is a function call that takes the string Config error, followed a few instructions later by a call to CxxThrowException. Does the function take any parameters other than the string? Does the function return anything? What can you tell about this function from the context in which it’s used?**
 

@@ -94,7 +94,7 @@ To execute the malware we have to perform the following actions:
 The file will have the following output:
 
 ```
-01/29/20 17:34:32 - UN PSEL DM PSEL-FC84728D64 PW password OLD (null) 
+01/29/20 17:34:32 - UN PSEL DM PSEL-FC84728D64 PW password OLD (null)
 ```
 
 ## Lab 11-2
@@ -235,7 +235,7 @@ Analyze the malware found in Lab11-03.exe and Lab11-03.dll. Make sure that both 
 
 **1. What interesting analysis leads can you discover using basic static analysis?**
 
-Using _PEView_ we can see some interesting things about the binary _Lab11-03.dll_, like the functions it uses. Also, regarding _Lab11-03.exe_, we only see that it uses 
+Using _PEView_ we can see some interesting things about the binary _Lab11-03.dll_, like the functions it uses. Also, regarding _Lab11-03.exe_, we only see that it uses
 
 ```
 C:\> python get_file_imports.py Lab11-03.dll

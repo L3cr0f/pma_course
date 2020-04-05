@@ -93,7 +93,7 @@ If we introduce some "password" as parameter, the binary will do the following:
 C:\> Lab16-02.exe abcd
 
 Incorrect password, Try again.
-``` 
+```
 
 **3. What is the command-line password?**
 
@@ -157,7 +157,7 @@ Let's see if it is correct!
 C:\> Lab16-02.exe bzrr
 
 Incorrect password, Try again.
-``` 
+```
 
 Mmmm... It failed again, may be we missed something.
 

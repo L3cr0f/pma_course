@@ -266,7 +266,7 @@ print("The decrypted URL is: " + decrypted_url)
 This give us the following output:
 
 ```
-$ python3 Scripts/Labs/Lab_15/lab15_03_decrypt_strings.py 
+$ python3 Scripts/Labs/Lab_15/lab15_03_decrypt_strings.py
 The decrypted URL is: http://www.practicalmalwareanalysis.com/tt.html
 ```
 
@@ -294,6 +294,6 @@ print("The decrypted filename is: " + decrypted_filename)
 This give us the following output:
 
 ```
-$ python3 Scripts/Labs/Lab_15/lab15_03_decrypt_strings.py 
+$ python3 Scripts/Labs/Lab_15/lab15_03_decrypt_strings.py
 The decrypted filename is: spoolsrv.exe
 ```

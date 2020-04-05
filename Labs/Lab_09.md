@@ -257,11 +257,11 @@ As we can see, the decryption routine consist of a _XOR_ operation between _ECX_
 
 ```
 mov     edx, [ebp+encrypted_string]		-> EDX = array of values that make up the encrypted_string = encrypted_string [0]
-add     edx, [ebp+counter]			-> EDX = walks over the array = encrypted_string [0 + counter] 
+add     edx, [ebp+counter]			-> EDX = walks over the array = encrypted_string [0 + counter]
 movsx   ecx, byte ptr [edx]			-> ECX = specific value of the array at the value of the counter = encrypted_string [counter]
 mov     eax, [ebp+counter]			-> EAX = counter
 cdq						-> EDX = 0x00000000 (extends the sign bit of EAX into the EDX register), counter max value = 0x20 = 32
-idiv    [ebp+strlen_of_encrypted_string]	-> [EDX|EAX] / strlen_of_decryption_key -> EAX = result, EDX = reminder 
+idiv    [ebp+strlen_of_encrypted_string]	-> [EDX|EAX] / strlen_of_decryption_key -> EAX = result, EDX = reminder
 mov     eax, [ebp+decryption_key]		-> EAX = decryption_key[0]
 movsx   edx, byte ptr [eax+edx]			-> EDX = decryption_key[0 + reminder]
 xor     ecx, edx				-> ECX ^ EDX = encrypted_string [counter] ^ decryption_key[0 + reminder]
@@ -296,7 +296,7 @@ print("The decrypted string is: " + decrypted_string)
 Let's execute it and see what we get:
 
 ```
-$ python3 Scripts/Labs/Lab_09/lab09_02_decryption_hostname.py 
+$ python3 Scripts/Labs/Lab_09/lab09_02_decryption_hostname.py
 
 The decrypted string is: www.practicalmalwareanalysis.com
 ```
@@ -362,7 +362,7 @@ All _DLLs_ requests the same base address (located at _IMAGE_OPTIONAL_HEADER_), 
 
 ![_PEview DLL_ base address](../Pictures/Lab_09/lab_09-03_2_peview_1.png)
 
-**3. When you use OllyDbg to debug Lab09-03.exe, what is the assigned based address for: DLL1.dll, 
+**3. When you use OllyDbg to debug Lab09-03.exe, what is the assigned based address for: DLL1.dll,
 DLL2.dll, and DLL3.dll?**
 
 When we load the binary in _Immunity Debugger_ we can see in the memory view where the _DLLs_ has been loaded. As we can see in the next image, the _DLL1_ has been loaded at its preferred base address. Nevertheless, the _DLL2_ was loaded at _0x00380000_, since at its preferred base address was loaded the _DLL1_.

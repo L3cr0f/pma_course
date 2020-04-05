@@ -348,7 +348,7 @@ AdjustTokenPrivileges
 Some of these functions tells us the following information:
 
 - WriteFile, CreateFile, MoveFileA, GetTempPathA, GetWindowsDirectoryA: file system operations, to write a file, create a new one, move one file to a new location, get the temporal directory of the system or get the Windows directory, respectively.
-- GetProcAddress, LoadLibraryA: functions used frequently to load libraries dynamically. 
+- GetProcAddress, LoadLibraryA: functions used frequently to load libraries dynamically.
 - GetCurrentProcess, OpenProcess, OpenProcessToken, LookupPrivilegeValueA, AdjustTokenPrivileges: system functions, the first one returns a handle to the current process and the second one allows to get access to an existing process. The rest of the functions allow to modify the permissions of a process. All together tell us that the sample possibly uses these functions to manipulate its own permissions.
 - CreateRemoteThread: function that allows to create a thread that runs in the virtual space of another process. This function is usually employed to perform some process injection techniques.
 - SizeofResource, FindResourceA: these functions returns information about a resource, like a DLL.

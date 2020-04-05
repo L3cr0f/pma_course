@@ -429,7 +429,7 @@ else:
 Now, if we execute the script as follows, it should gave us what we are waiting for:
 
 ```
-$ python3 Scripts/Labs/Lab_17/lab17_03_hash_cracking.py Scripts/Labs/Lab_17/processes.txt 
+$ python3 Scripts/Labs/Lab_17/lab17_03_hash_cracking.py Scripts/Labs/Lab_17/processes.txt
 No occurrence found!
 ```
 
@@ -448,7 +448,7 @@ vmacthlp.exe
 Let's try now!
 
 ```
-$ python3 Scripts/Labs/Lab_17/lab17_03_hash_cracking.py Scripts/Labs/Lab_17/vm_processes.txt 
+$ python3 Scripts/Labs/Lab_17/lab17_03_hash_cracking.py Scripts/Labs/Lab_17/vm_processes.txt
 Occurrence found! The decrypted hash value is: vmwaretray.exe
 ```
 
