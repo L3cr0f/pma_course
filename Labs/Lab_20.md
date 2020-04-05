@@ -357,8 +357,81 @@ We can learn the following about this piece of malware based on its imports:
 - It can perform file operations.
 - It gets information about the system.
 
-**3. At 0x4036F0, there is a function call that takes the string Config error, followed a few instructions later by a call to CxxThrowException. Does the function take any parameters other than the string? Does the function return anything? What can you tell about this function from the context in which it’s used?**
+**3. At 0x4031C1, there is a function call that takes the string Config error, followed a few instructions later by a call to CxxThrowException. Does the function take any parameters other than the string? Does the function return anything? What can you tell about this function from the context in which it’s used?**
+
+This call executes the function at _0x004036F0_, which receives one argument and the _pExceptionObject_ pointer at _ECX_ register, which in the called function will be represented by the _this_ pointer.
+
+![_IDA Pro_ call to exception function](../Pictures/Lab_20/lab_20-03_3_ida_pro_1.png)
+
+The function at _0x004036F0_ seems to be quite large and with different calls to unknowns functions within it. However, based on the context we can see that this function prepares the error message before calling _\_CxxThrowException_, so we can call it _parse_error_1_ (since it can be more functions like this one).
 
 **4. What do the six entries in the switch table at 0x4025C8 do?**
+
+To know what these switch table entries does, we need to know the context first.
+
+This switch statement is executed in a function at _0x00402410_, which is called by the function at _0x00403BE0_, called _main_code_ since it is the only function called by _\_main_ function.
+
+![_IDA Pro_ _\_main_ function](../Pictures/Lab_20/lab_20-03_4_ida_pro_1.png)
+
+The function _0x00402410_ called by _main_code_ is executed within a _sleep_ loop, which may indicate that _C&C_ communication is being performed.
+
+![_IDA Pro_ sleep loop](../Pictures/Lab_20/lab_20-03_4_ida_pro_2.png)
+
+Once in that function, we can see that a call instruction is executed, it executes the function at _0x00403D50_, which seems to perform some socket and connection innitialization, so we rename it to _connection_setup_.
+
+This function first calls a function that calls _WSAStartup_ (renamed to _\_WSAStartup_) using the hostname `Internet Explorer 10.0`, which is quite unusual.
+
+![_IDA Pro_ _WSAStartup_](../Pictures/Lab_20/lab_20-03_4_ida_pro_3.png)
+
+Then, a function at _0x004042C0_ is called, this function has been renamed to _host_lookup_. It is there where we can see where the _IP_ address or domain name of the _C&C_ is checked by means of _cp_ pointer using _inet_addr_ and _gethostbyname_.
+
+![_IDA Pro_ _host_lookup_](../Pictures/Lab_20/lab_20-03_4_ida_pro_4.png)
+
+If we go backwards, we will see how this info is obtained at function _0x00401EE0_, which is the one that loads the file _config.dat_ based on its argument, so it has been renamed to _load_config_ (this function will be later analyzed).
+
+![_IDA Pro_ _load_config_ calling](../Pictures/Lab_20/lab_20-03_4_ida_pro_5.png)
+
+Back to the _connection_setup_ function, it terminates to configure the Internet communication and exits.
+
+![_IDA Pro_ _connection_setup_](../Pictures/Lab_20/lab_20-03_4_ida_pro_6.png)
+
+Then, it configures the _URL_ path and its options of the _HTTP_ get request that will perform later:
+
+![_IDA Pro_ _URL_ path and options](../Pictures/Lab_20/lab_20-03_4_ida_pro_7.png)
+
+As we can see, the format of the _URL_ path and its options would be as follows:
+
+```
+str1: string from "config.dat" at 0x4
+str2: string from "config.dat" at 0x14
+
+<str1>?id=<str2>
+```
+
+Then, a function at _0x0040_ that we have called _perform_http_get_ is called, this one will perform an _HTTP GET_ request using the information extracted from the _config.dat_ file.
+
+![_IDA Pro_ _perform_http_get_](../Pictures/Lab_20/lab_20-03_4_ida_pro_8.png)
+
+The headers will be something like this:
+
+```
+GET <URL path and options> HTTP/1.1
+HOST: <str1>
+User-Agent: Internet Explorer 10.0
+Accept: text/html
+Accept-Language: en-uk,en
+Accept-Charset: utf-8
+Connection: close
+```
+
+The function with the name _http_get_ will perform an _HTTP GET_ connection by means of _send_ function.
+
+After that, the function that we have renamed to _parse_http_response_ (_0x00404B10_) is executed. This will be the responsible for parsing the _HTTP_ response received from the server.
+
+This function also will call _recv_http_response_ (_0x004048E0_), which will use the function _recv_ to receive the response from the server, several times. Also, the function _parse_http_response_ will check some headers of the response, so as to check the validity of it.
+
+![_IDA Pro_ _parse_http_response_ response checks](../Pictures/Lab_20/lab_20-03_4_ida_pro_9.png)
+
+After that, the function _parse_http_response_ will parse the last response in order to get the expected information.
 
 **5. What is the purpose of this program?**
