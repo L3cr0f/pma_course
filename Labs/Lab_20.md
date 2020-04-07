@@ -424,7 +424,7 @@ Accept-Charset: utf-8
 Connection: close
 ```
 
-The function with the name _http_get_ will perform an _HTTP GET_ connection by means of _send_ function.
+The function with the name _http_request_ will perform an _HTTP_ request (_GET_ or _POST_ based on the argument) by means of _send_ function.
 
 After that, the function that we have renamed to _parse_http_response_ (_0x00404B10_) is executed. This will be the responsible for parsing the _HTTP_ response received from the server.
 
@@ -432,6 +432,162 @@ This function also will call _recv_http_response_ (_0x004048E0_), which will use
 
 ![_IDA Pro_ _parse_http_response_ response checks](../Pictures/Lab_20/lab_20-03_4_ida_pro_9.png)
 
-After that, the function _parse_http_response_ will parse the last response in order to get the expected information.
+After that, the function _parse_http_response_ will parse the last response in order to get the expected information, which is composed by the _content-length_ and a buffer.
+
+![_IDA Pro_ _parse_http_response_ result 2](../Pictures/Lab_20/lab_20-03_4_ida_pro_10.png)
+
+![_IDA Pro_ _parse_http_response_ result 2](../Pictures/Lab_20/lab_20-03_4_ida_pro_11.png)
+
+Then, the sample will execute the function at _0x004015C0_, which has been renamed to _decode_response_, since it seems to perform some decoding routine. However, despite it has a _base64_ alphabet, it seems that the routine does a permutation over the response based on two alphabets.
+
+```
+PLMOKNIJBUHVYGTFCRDXESZWAQzaqxswcdevfrbgtnhymjukilop
+	||
+	\/
+ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz
+```
+
+![_IDA Pro_ _decode_response_](../Pictures/Lab_20/lab_20-03_4_ida_pro_12.png)
+
+This set of function calls are as follows:
+
+![_IDA Pro_ function calls](../Pictures/Lab_20/lab_20-03_4_ida_pro_13.png)
+
+Then, the sample will execute the _switch case_ (switch table at _0x004025C8_ address) based on the fourth element of the response.
+
+![_IDA Pro_ _switch case_](../Pictures/Lab_20/lab_20-03_4_ida_pro_14.png)
+
+
+This _switch_ statement is composed of 6 element, all of them executes a function, but the first one:
+
+**a (nothing)**
+
+Exits
+
+**b (sleep)**
+
+It will sleep "x" milliseconds based on the value at 5th possition of the http response (function _sleep_x_ at _0x004025E0_).
+
+![_IDA Pro_ _sleep_x_](../Pictures/Lab_20/lab_20-03_4_ida_pro_15.png)
+
+**c (Create process)**
+
+It will execute some process based on the value at 5th possition of the http response (function _execute_process_ at _0x00402F80_).
+
+**d (Download)**
+
+It will execute the function _download_file_ at _0x00402BA0_, which will execute the one at _0x00402A20_, which will download a file and save it to the disk.
+
+![_IDA Pro_ _download_file_](../Pictures/Lab_20/lab_20-03_4_ida_pro_16.png)
+
+**e (Extract data)**
+
+The function at _0x00402C70_ will upload a file to the server, because of that it has been renamed to _upload_file_.
+
+**f (exFiltrate**
+
+It will call the function _exfiltrate_data_ (_0x00402D30_), which will send the username, the computer's name and other stuff to the _C&C_.
+
+![_IDA Pro_ _exfiltrate_data_](../Pictures/Lab_20/lab_20-03_4_ida_pro_17.png)
+
+We have renamed the function at _0x00402410_ to _execute_commands_.
 
 **5. What is the purpose of this program?**
+
+We know almost everything about the sample but the execution flow prior the execution of the _execute_commands_ function.
+
+The first function the _main_code_ routine executes is the one at _0x00401EE0_, which based on the argument _config.dat_ was renamed to _load_config_ (as previously stated).
+
+This function will call the oen a _0x00403180_, which will read the file and call the function at _0x004034D0_, which will decode de data applying _XOR_ with key _0x4E_, thus this function was renamed to _decode_data_.
+
+![_IDA Pro_ read file and _decode_data_ call](../Pictures/Lab_20/lab_20-03_5_ida_pro_1.png)
+
+We developed the following _Python_ script that will do the job:
+
+```
+def decrypt_file():
+	decrypted_data = ""
+	decryption_key = 0x4E
+
+	with open("Scripts/Labs/Lab_20/config.dat", "rb") as encrypted_file:
+		encrypted_byte = encrypted_file.read(1)
+		while encrypted_byte:
+			decrypted_char = int.from_bytes(encrypted_byte, byteorder="big") ^ decryption_key
+			if decrypted_char == 0x0:
+				decrypted_char = 0x20
+			decrypted_data = decrypted_data + chr(decrypted_char)
+			encrypted_byte = encrypted_file.read(1)
+
+	return decrypted_data
+
+decrypted_data = decrypt_file()
+print("The decrypted config file is: " + decrypted_data)
+```
+
+When we execute the script we see the following:
+
+```
+$ python3 Scripts/Labs/Lab_20/lab20_03_decryption_config_file.py
+
+The decrypted config file is: CBAF127.0.0.1 \ C P P _ L a x5 O t xa5 r . e x e   x5 øùúûüýþ   P   127.0.0.1 5 ?      !   B  Ò  5 Ð      °þ P@ P5 x5
+```
+
+As we can see, some data is still unreadable, but we can read some interesting things like the _IP_ address of the _C&C_.
+
+Also, the first four characters "CBAF" are checked after the encoding routine, so we can conclude that this string is just for checking purposes.
+
+![_IDA Pro_ string check](../Pictures/Lab_20/lab_20-03_5_ida_pro_2.png)
+
+We modify the script to print the information in hexadecimal bytes, since the string is not as precise as it should be:
+
+```
+$ python3 Scripts/Labs/Lab_20/lab20_03_decryption_config_file.py
+
+The decrypted config file is: 0x43 0x42 0x41 0x46 0x31 0x32 0x37 0x2e 0x30 0x2e 0x30 0x2e 0x31 0x0 0x5c 0x0 0x43 0x0 0x50 0x0 0x50 0x0 0x5f 0x0 0x4c 0x0 0x61 0x0 0x78 0x1 0x35 0x0 0x4f 0x0 0x74 0x0 0x78 0x61 0x35 0x0 0x72 0x0 0x2e 0x0 0x65 0x0 0x78 0x0 0x65 0x0 0x0 0x0 0x78 0x1 0x35 0x0 0xf8 0xf9 0xfa 0xfb 0xfc 0xfd 0xfe 0xff 0x8 0x0 0x0 0x0 0x50 0x0 0x0 0x0 0x31 0x32 0x37 0x2e 0x30 0x2e 0x30 0x2e 0x31 0x0 0x35 0x0 0x3f 0x0 0x0 0x0 0x1 0x0 0x0 0x0 0x21 0x0 0x0 0x0 0x28 0x8 0x42 0x0 0x88 0x1e 0x14 0x0 0xd2 0x3 0x0 0x0 0xdc 0x8 0x35 0x0 0xd0 0x7 0x0 0x0 0x0 0x0 0x0 0x0 0xb0 0xfe 0x12 0x0 0x50 0x91 0x40 0x0 0x50 0x6 0x35 0x0 0x78 0x1 0x35 0x0 0x5a 0x0 0x0 0x0 0x1 0x0 0x0 0x0
+```
+
+Now we can see all the decoded information.
+
+The variables of the routine are not correctly identified, since the buffer has a length of 144 elements, not 4 as it says. We can see now how the sample checks some things about the decoded configuration.
+
+![_IDA Pro_ buffer checks](../Pictures/Lab_20/lab_20-03_5_ida_pro_3.png)
+
+```
+buffer[0x04] = 0x31 = "1"
+buffer[0x44] = 0x50 = "P"
+buffer[0x8C] = 0x01
+```
+
+Then, it will copy the buffer to a new one as follows
+
+![_IDA Pro_ buffer copies](../Pictures/Lab_20/lab_20-03_5_ida_pro_4.png)
+
+```
+// Length of 64 bytes
+final_buffer [260] = 0x31 0x32 0x37 0x2e 0x30 0x2e 0x30 0x2e 0x31 0x0 0x5c 0x0 0x43 0x0 0x50 0x0 0x50 0x0 0x5f 0x0 0x4c 0x0 0x61 0x0 0x78 0x1 0x35 0x0 0x4f 0x0 0x74 0x0 0x78 0x61 0x35 0x0 0x72 0x0 0x2e 0x0 0x65 0x0 0x78 0x0 0x65 0x0 0x0 0x0 0x78 0x1 0x35 0x0 0xf8 0xf9 0xfa 0xfb 0xfc 0xfd 0xfe 0xff 0x8 0x0 0x0 0x0
+
+// Length of 4 bytes
+final_buffer [324] = 0x50 0x0 0x0 0x0
+
+// Length of 64 bytes
+final_buffer [328] = 0x31 0x32 0x37 0x2e 0x30 0x2e 0x30 0x2e 0x31 0x0 0x35 0x0 0x3f 0x0 0x0 0x0 0x1 0x0 0x0 0x0 0x21 0x0 0x0 0x0 0x28 0x8 0x42 0x0 0x88 0x1e 0x14 0x0 0xd2 0x3 0x0 0x0 0xdc 0x8 0x35 0x0 0xd0 0x7 0x0 0x0 0x0 0x0 0x0 0x0 0xb0 0xfe 0x12 0x0 0x50 0x91 0x40 0x0 0x50 0x6 0x35 0x0 0x78 0x1 0x35 0x0
+
+// Length of 4 bytes
+final_buffer [396] = 0x5a 0x0 0x0 0x0
+
+// Length of 4 bytes
+final_buffer [400] = 0x1 0x0 0x0 0x0
+```
+
+Now we can understand the different parameters related with the configuration file and checked in the _execute_commands_ routine.
+
+This whole routine was renamed to _read_and_decode_file_.
+
+After the function exits, some modifications regarding the decoded string are performed:
+
+![_IDA Pro_ buffer changes](../Pictures/Lab_20/lab_20-03_5_ida_pro_5.png)
+
+After that, the function will exit and the routine at _0x00401F80_ is called. This function seems to be the responsible for sending the innitial beacon to the server, so we have renamed to _initial_beacon_.
+
+![_IDA Pro_ _initial_beacon_](../Pictures/Lab_20/lab_20-03_5_ida_pro_6.png)
+
