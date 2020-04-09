@@ -119,7 +119,7 @@ If _IDA_ did not recognize the _main_ function, we can identify it as following:
 
 **3. What is being stored on the stack in the instructions from 0x0000000140001150 to 0x0000000140001161?**
 
-At this position, we have seen that the _ocl.exe_ is stored in the stack.
+At this position, we have seen that the "ocl.exe" string is stored in the stack.
 
 **4. How can you get this program to run its payload without changing the filename of the executable?**
 
