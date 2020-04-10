@@ -612,7 +612,7 @@ seg000:0000000E                 loopw   loc_B		-> ECX = ECX + 1 | jump to 0xB
 seg000:00000011                 jmp     short loc_18	-> Jump to decoded code
 ```
 
-As we can see, it's a loop that iterates 399 (_0x18F_) times over the code after the call instruction applying a XOR operation with _0xE7_ as key.
+As we can see, it's a loop that iterates 399 (_0x18F_) times over the code after the call instruction applying an _XOR_ operation with _0xE7_ as key.
 
 We reproduce this behaviour in the following python script:
 

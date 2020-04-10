@@ -166,4 +166,4 @@ for i in range(0x00,0x50):
         PatchByte(sea+i,decoded_byte)
 ```
 
-As we can see, first of all takes the value of the cursor by the function _ScreenEA_. Then, it goes through all the bytes between the cursor and the next 0x50 bytes and applies a XOR decryption with the value 0x55. Finally, it patches the code by means of the function _PatchByte_.
+As we can see, first of all takes the value of the cursor by the function _ScreenEA_. Then, it goes through all the bytes between the cursor and the next 0x50 bytes and applies an _XOR_ decryption with the value _0x55_. Finally, it patches the code by means of the function _PatchByte_.
