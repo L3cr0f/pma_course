@@ -153,22 +153,134 @@ This parameter is used by the function at _0x0000000140001000_ to attach the soc
 
 **7. How many arguments are passed to the call to CreateProcess at 0x0000000140001093? How do you know?**
 
+When the sample calls _CreateProcess_ in _create_reverse_shell_ function, it will pass 10 arguments as always:
+
+```
+BOOL CreateProcessA(
+  LPCSTR                lpApplicationName,
+  LPSTR                 lpCommandLine,
+  LPSECURITY_ATTRIBUTES lpProcessAttributes,
+  LPSECURITY_ATTRIBUTES lpThreadAttributes,
+  BOOL                  bInheritHandles,
+  DWORD                 dwCreationFlags,
+  LPVOID                lpEnvironment,
+  LPCSTR                lpCurrentDirectory,
+  LPSTARTUPINFOA        lpStartupInfo,
+  LPPROCESS_INFORMATION lpProcessInformation
+);
+```
+
+However, this data is not passed via _push_ instructions, but with the registers and the stack:
+
+```
+RCX = lpApplicationName
+RDX = lpCommandLine
+R8 = lpProcessAttributes
+R9 = lpThreadAttributes
+RSP + 0xC8 - = bInheritHandles
+RSP + 0xC0 - = dwCreationFlags
+RSP + 0xB8 - = lpEnvironment
+RSP + 0xB0 - = lpCurrentDirectory
+RSP + 0xA8 - = lpStartupInfo
+RSP + 0xA0 = lpProcessInformation
+```
+
+![_IDA Pro_ _CreateProcess_ parameters](../Pictures/Lab_21/lab_21-01_7_ida_pro_1.png)
+
+In the disassembly view in the picture of the previous exercise we can see easily this process.
+
 ## Lab 21-2
 
 Analyze the malware found in Lab21-02.exe on both x86 and x64 virtual machines. This malware is similar to Lab12-01.exe, with an added x64 component.
 
 **1. What is interesting about the malware’s resource sections?**
 
+To check the resource sections of the sample, we use _Resource Hacker_.
+
+![_IDA Pro_ _CreateProcess_ parameters](../Pictures/Lab_21/lab_21-02_1_resource_hacker_1.png)
+
+This tells us that this sample has a total of two sections, "BIN" with three binary resources (an _x64_ executable, an _x86_ executable and an _x64_ _DLL_) and "Manifest" with the manifest of the application:
+
+```
+<assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">
+  <trustInfo xmlns="urn:schemas-microsoft-com:asm.v3">
+    <security>
+      <requestedPrivileges>
+        <requestedExecutionLevel level="asInvoker" uiAccess="false"></requestedExecutionLevel>
+      </requestedPrivileges>
+    </security>
+  </trustInfo>
+</assembly>
+```
+
 **2. Is this malware compiled for x64 or x86?**
+
+This binary seems to be compiled fo _x86_ systems, since the field _Machine_ of _IMAGE_FILE_HEADER_ in _IMAGE_NT_HEADERS_ has the value _IMAGE_FILE_MACHINE_I386_.
 
 **3. How does the malware determine the type of environment in which it is running?**
 
+To find out how it does, we are going to analyze the sample with _IDA Pro_.
+
+The first thing the sample does is loading some functions that will be used later at execution time.
+
+![_IDA Pro_ _CreateProcess_ parameters](../Pictures/Lab_21/lab_21-02_3_ida_pro_1.png)
+
+Then, the sample will call _GetCurrentProcess_ and _IsWow64Process_ to check if the sample is running in a native _x86_ machine or in an _x64_ machine using _SysWOW64_ binaries. Then, it will call the function at _0x00401000_, which has been renamed to _extract_resource_, since it will extract the resource specified in the first argument in the _System_ path with the name specified in the second argument, specifying the _x64_ binaries if the machine is running under _SysWOW64_ or the _x86_ _DLL_ if the binary is in a native _x86_ system.
+
+![_IDA Pro_ _CreateProcess_ parameters](../Pictures/Lab_21/lab_21-02_3_ida_pro_2.png)
+
 **4. What does this malware do differently in an x64 environment versus an x86 environment?**
+
+Let's analyze both executions paths to check so:
+
+**x86**
+
+First, the malware will call the function at _0x00401130_, which has been renamed to _enable_SeDebugPrivilege_, since it will enable such privilege.
+
+![_IDA Pro_ _enable_SeDebugPrivilege_](../Pictures/Lab_21/lab_21-02_4_ida_pro_1.png)
+
+Then, it will call _EnumProcesses_ and iterate over the received array to get the "explorer.exe" _PID_ (this comparison is made in function at _0x004011A0_, called _check_explorer_process_).
+
+![_IDA Pro_ _check_explorer_process_](../Pictures/Lab_21/lab_21-02_4_ida_pro_2.png)
+
+If the process is found, the sample will open it using _OpenProcess_ and inject into it the previous extracted _DLL_.
+
+![_IDA Pro_ process injection](../Pictures/Lab_21/lab_21-02_4_ida_pro_3.png)
+
+**x64**
+
+After the _x64_ binaries have been extracted (the executable and the _DLL_), the sample will execute the _x64_ binary by means of _ShellExecuteA_ using the following command:
+
+```
+C:\> cmd.exe /c Lab21-02x.exe
+```
+
+This will execute the extracted _x64_ executable.
+
+![_IDA Pro_ _ShellExecuteA_ _x64_ binary](../Pictures/Lab_21/lab_21-02_4_ida_pro_4.png)
 
 **5. Which files does the malware drop when running on an x86 machine? Where would you find the file or files?**
 
+The sample will drop the _DLL_ file called "Lab21-02.dll" in the _System_ path, "C:\Windows\System32".
+
+In the following picture we can see how it creates the file in the _System_ directory after extracting the resource file (routine _extract_resource_).
+
+![_IDA Pro_ _extract_resource_](../Pictures/Lab_21/lab_21-02_5_ida_pro_1.png)
+
 **6. Which files does the malware drop when running on an x64 machine? Where would you find the file or files?**
+
+The sample will drop two binaries, an executable file called "Lab21-02x.exe" and a _DLL_ file called "Lab21-02x.dll" in the _System_ path (this is done in the same way as _x86_ binary explained before), but in this case is "C:\Windows\SysWOW64", since the malware is running in the _x86_ version of a _x64_ system.
 
 **7. What type of process does the malware launch when run on an x64 system?**
 
+When running on an _x64_ system, the process will launch the binary "Lab21-02x.exe", which if we extract and analyze it, will see that it is an _x64_ binary.
+
+![_PEView_ _extract_resource_](../Pictures/Lab_21/lab_21-02_7_peview_1.png)
+
 **8. What does the malware do?**
+
+If we analyze the binary _Lab21-02x.exe_, we will see how it does the same as the _x86_ executable but the _SysWOW64_ check, it will inject the extracted _DLL_ into "explorer.exe".
+
+In the case of the _DLL_ files, they will create a message box every minute that says "Practical Malware Analysis x" ("x" is a numeric value).
+
+![_IDA Pro_ _MessageBoxA_](../Pictures/Lab_21/lab_21-02_8_ida_pro_1.png)
