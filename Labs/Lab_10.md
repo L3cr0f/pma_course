@@ -18,29 +18,23 @@ First, we turn off the debugged _Windows XP_ machine. Then, we startup _WinDBG_ 
 
 Then, we restart the _Windows XP_ machine in the debugging mode and break the execution in _WinDBG_ prior executing the sample.
 
-Firs, we force _WinDBG_ to load all symbols by means of:
-
-```
-ld*
-```
-
 After that, we set a breakpoint to the _ControlService_ function with the following command.
 
 ```
-bp ControlService
+kd> bp ControlService
 ```
 
 Then we continue execution with the following command:
 
 ```
-g
+kd> g
 ```
 
 Now, we execute again the sample to see in it loads some driver object (do not forget to set verbose option).
 
 ![_WinDBG_ driver loaded](../Pictures/Lab_10/lab_10-01_2_windbg_1.png)
 
-Great! The expected driver has been loaded. However, the breakpoint has failed! We will have to get the memory address where the driver is loaded by means of _IDA Pro_. First, we load the "Lab10-01.exe" binary file to see what it does.
+Great! The expected driver has been loaded. However, the breakpoint has failed! We will have to get the memory address where the driver is loaded by means of _IDA Pro_. So first, we load the "Lab10-01.exe" binary file to see what it does.
 
 What the binary does is simply creating a kernel driver service to load the file "Lab10-01.sys" from "C:\Windows\System32". Also, we can see the call to the _ControlService_ function.
 
