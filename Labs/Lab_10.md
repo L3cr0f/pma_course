@@ -109,7 +109,7 @@ Also, we must know what is _arg_0_, so we go back into the code at the _DriverEn
 So now, if we go to _DriverObject + 0x34_ in the struct, we will see the following:
 
 ```
-   +0x034 DriverUnload     : 0xf8cd4486     void  +0
++0x034 DriverUnload     : 0xf8cd4486     void  +0
 ```
 
 It points to _DriverUnload_, so we can put a breakpoint at _0xf8cd4486_ and see if we can see the expected function is executed.
@@ -254,7 +254,6 @@ By executing the following command, we check the bounds of the _NT_ module:
 
 ```
 kd> lm m nt
-
 start    end        module name
 804d7000 806cff00   nt
 ```
