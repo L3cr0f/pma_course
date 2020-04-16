@@ -475,8 +475,8 @@ add     eax, 88h ;		-> EAX = ActiveProcessLinks.Flink
 mov     edx, [eax]		-> EDX = ActiveProcessLinks.Flink
 mov     [ecx], edx		-> [ECX] = ActiveProcessLinks.Blink = ActiveProcessLinks.Flink
 mov     ecx, [eax]		-> ECX = ActiveProcessLinks.Flink
-mov     eax, [eax+4]	-> EAX = ActiveProcessLinks.Blink
-mov     [ecx+4], eax	-> ActiveProcessLinks.Blink = ActiveProcessLinks.Blink
+mov     eax, [eax+4]		-> EAX = ActiveProcessLinks.Blink
+mov     [ecx+4], eax		-> ActiveProcessLinks.Blink = ActiveProcessLinks.Blink
 ```
 
 
