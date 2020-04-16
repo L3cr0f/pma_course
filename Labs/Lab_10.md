@@ -355,6 +355,128 @@ This lab includes a driver and an executable. You can run the executable from an
 
 **1. What does this program do?**
 
+First, we are going to analyze the executable in _IDA Pro_
+
+The first thing the binary does is creating and starting a kernel driver service in which the driver "Lab10-03.sys" is loaded.
+
+![_IDA Pro_ kernel driver service](../Pictures/Lab_10/lab_10-03_1_ida_pro_1.png)
+
+Then, the sample takes a handle to the "\\\\.\\ProcHelper" driver object and sends the data _0xABCDEF01_ as _ControlCode_ to it using _DeviceIoControl_.
+
+![_IDA Pro_ _DeviceIoControl_](../Pictures/Lab_10/lab_10-03_1_ida_pro_2.png)
+
+Now, we see how the binary will get a _COM_ object and its associated interface by means of _CoCreateInstance_.
+
+![_IDA Pro_ _CoCreateInstance_](../Pictures/Lab_10/lab_10-03_1_ida_pro_3.png)
+
+If we check the values of the _CLISD_ and the _IID_ we will see the following.
+
+```
+dd 2DF01h
+dw 0
+dw 0
+db 0C0h, 6 dup(0), 46h
+	||
+	\/
+0002DF01-0000-0000-C000000000000046
+```
+
+This is the _Internet Explorer_ _CLISD_.
+
+Now, if we analyze the _IID_ value we get:
+
+```
+dd 0D30C1661h
+dw 0CDAFh
+dw 11D0h
+db 8Ah, 3Eh, 0, 0C0h, 4Fh, 0C9h, 0E2h, 6Eh
+	||
+	\/
+D30C1661-CDAF-11D0-8A3E00C04FC9E26E
+```
+
+This represents the _IWebBrowser2_ interface of the COM object represented by the previous _CLISD_ value.
+
+Then, if everything goes well, the _Navigate_ method of the _IWebBrowser2_ interface will be executed (do not forget to add the _IWebBrowser2vtbl_ struct) using "http://www.malwareanalysisbook.com/ad.html" as _URL_.
+
+![_IDA Pro_ _CoCreateInstance_](../Pictures/Lab_10/lab_10-03_1_ida_pro_4.png)
+
+This will be executed every 30 seconds indefinitely.
+
 **2. Once this program is running, how do you stop it?**
 
+If we try to stop it using _Process Explorer_, we can see how the program seems to be stopped.
+
+![_Process Explorer_](../Pictures/Lab_10/lab_10-03_2_process_explorer_1.png)
+
+However, it is running as we can see.
+
+![_Browser_](../Pictures/Lab_10/lab_10-03_2_browser_1.png)
+
+The easiest way to stop the execution of the program is rebooting the system.
+
 **3. What does the kernel component do?**
+
+We load the file _Lab10-03.sys_ in _IDA Pro_ to analyze it.
+
+The first thing we see is that it creates a _DeviceObject_ for use by "\\Device\\ProcHelper" driver, which is the same we saw in the executable.
+
+![_IDA Pro_ _ProcHelper_ _DeviceObject_](../Pictures/Lab_10/lab_10-03_3_ida_pro_1.png)
+
+Then it mades some changes to the _DriverObject_ struct. It adds some entrie to the _MajorFunction_ array field and another one to the _DriverUnload_ field.
+
+![_IDA Pro_ _DriverObject_ changes](../Pictures/Lab_10/lab_10-03_3_ida_pro_2.png)
+
+As we can see, the sample will add the pointer to the function _remove_symlink_device_ (_0x0000062A_), which will remove the symbolic link and the driver device.
+
+![_IDA Pro_ _remove_symlink_device_](../Pictures/Lab_10/lab_10-03_3_ida_pro_3.png)
+
+Regarding the _unknown_ function (_0x00000666_), we can what it does.
+
+![_IDA Pro_ _unknown_](../Pictures/Lab_10/lab_10-03_3_ida_pro_4.png)
+
+As we can see, it calls to _IoGetCurrentProcess_, which will return the _\_EPROCESS_ struct of the current process. However, we cannot see to what field corresponds the offset _0x8C_ and _0x88_, since _IDA_ does not have such struct definition. We will have to use _WinDBG_ in order to get these values and understand what this function does.
+
+We run both machines and break the _Windows XP_ as soon it has loaded. Then, we execute the following command:
+
+```
+kd> dt nt!_EPROCESS
+   +0x000 Pcb              : _KPROCESS
+   +0x06c ProcessLock      : _EX_PUSH_LOCK
+   +0x070 CreateTime       : _LARGE_INTEGER
+   +0x078 ExitTime         : _LARGE_INTEGER
+   +0x080 RundownProtect   : _EX_RUNDOWN_REF
+   +0x084 UniqueProcessId  : Ptr32 Void
+   +0x088 ActiveProcessLinks : _LIST_ENTRY
+   +0x090 QuotaUsage       : [3] Uint4B
+   +0x09c QuotaPeak        : [3] Uint4B
+   +0x0a8 CommitCharge     : Uint4B
+   +0x0ac PeakVirtualSize  : Uint4B
+   +0x0b0 VirtualSize      : Uint4B
+   +0x0b4 SessionProcessLinks : _LIST_ENTRY
+...
+```
+
+As we can see, the values points to _ActiveProcessLinks_ \__LIST_ENTRY_ struct. So now, if we print such struct we will get:
+
+```
+kd> dt nt!_LIST_ENTRY
+   +0x000 Flink            : Ptr32 _LIST_ENTRY
+   +0x004 Blink            : Ptr32 _LIST_ENTRY
+```
+
+These entries will point to the forward _\_EPROCESS_ struct (flink) and to the backward _\_EPROCESS_ struct.
+
+So now, we can analyze the code:
+
+```
+mov     ecx, [eax+8Ch]		-> ECX = ActiveProcessLinks.Blink
+add     eax, 88h ;		-> EAX = ActiveProcessLinks.Flink
+mov     edx, [eax]		-> EDX = ActiveProcessLinks.Flink
+mov     [ecx], edx		-> [ECX] = ActiveProcessLinks.Blink = ActiveProcessLinks.Flink
+mov     ecx, [eax]		-> ECX = ActiveProcessLinks.Flink
+mov     eax, [eax+4]	-> EAX = ActiveProcessLinks.Blink
+mov     [ecx+4], eax	-> ActiveProcessLinks.Blink = ActiveProcessLinks.Blink
+```
+
+
