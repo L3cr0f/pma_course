@@ -465,18 +465,187 @@ kd> dt nt!_LIST_ENTRY
    +0x004 Blink            : Ptr32 _LIST_ENTRY
 ```
 
-These entries will point to the forward _\_EPROCESS_ struct (flink) and to the backward _\_EPROCESS_ struct.
+These entries will point to the forward (_Flink_) _\_EPROCESS.ActiveProcessLinks_  and to the backward (_Blink_) _\_EPROCESS.ActiveProcessLinks_, which in both cases is equal to the _\_EPROCESS.ActiveProcessLinks.Flink_ entry of the respective process.
 
-So now, we can analyze the code:
+At this moment, we decide to debug the driver. To do so, we load the executable in _Immunity Debugger_ and execute it until it has loaded de driver and prior the execution of _DeviceIoControl_ (since this function executes the driver component we want to analyze).
+
+To do so, we set a breakpoint at _0x004010A1_ in _Immunity_ and run the sample.
+
+When the breakpoint is hit, we break the system by means of _WinDBG_.
+
+Let's try to get the driver object after it has been loaded by the system.
+
+To do so, first we set up the verbose mode in _WinDBG_. Then, we wait until de driver is loaded.
 
 ```
-mov     ecx, [eax+8Ch]		-> ECX = ActiveProcessLinks.Blink
-add     eax, 88h ;		-> EAX = ActiveProcessLinks.Flink
-mov     edx, [eax]		-> EDX = ActiveProcessLinks.Flink
-mov     [ecx], edx		-> [ECX] = ActiveProcessLinks.Blink = ActiveProcessLinks.Flink
-mov     ecx, [eax]		-> ECX = ActiveProcessLinks.Flink
-mov     eax, [eax+4]		-> EAX = ActiveProcessLinks.Blink
-mov     [ecx+4], eax		-> ActiveProcessLinks.Blink = ActiveProcessLinks.Blink
+ModLoad: f8cc3000 f8cc3e00   Lab10-03.sys
 ```
 
+Now, we can look for where has been loaded (remember the driver object _ProcHelper_).
 
+```
+kd> !devobj ProcHelper
+Device object (8219bf18) is for:
+ ProcHelperLoading symbols for f8cfe000     Lab10-03.sys ->   Lab10-03.sys
+*** ERROR: Module load completed but symbols could not be loaded for Lab10-03.sys
+ \Driver\Process Helper DriverObject 81e532c0
+Current Irp 00000000 RefCount 1 Type 00000022 Flags 00000040
+Dacl e1368d64 DevExt 00000000 DevObjExt 8219bfd0 
+ExtensionFlags (0000000000)  
+Characteristics (0x00000100)  FILE_DEVICE_SECURE_OPEN
+Device queue is not busy.
+```
+
+The _Process Helper_ drive object is at _0x81E532C0_, this is the address we are going to use to see the the driver object table:
+
+```
+kd> dt nt!_DRIVER_OBJECT 0x81E532C0
+   +0x000 Type             : 0n4
+   +0x002 Size             : 0n168
+   +0x004 DeviceObject     : 0x8219bf18 _DEVICE_OBJECT
+   +0x008 Flags            : 0x12
+   +0x00c DriverStart      : 0xf8cfe000 Void
+   +0x010 DriverSize       : 0xe00
+   +0x014 DriverSection    : 0x820d44b8 Void
+   +0x018 DriverExtension  : 0x81e53368 _DRIVER_EXTENSION
+   +0x01c DriverName       : _UNICODE_STRING "\Driver\Process Helper"
+   +0x024 HardwareDatabase : 0x80670ae0 _UNICODE_STRING "\REGISTRY\MACHINE\HARDWARE\DESCRIPTION\SYSTEM"
+   +0x028 FastIoDispatch   : (null) 
+   +0x02c DriverInit       : 0xf8cfe7cd     long  +0
+   +0x030 DriverStartIo    : (null) 
+   +0x034 DriverUnload     : 0xf8cfe62a     void  +0
+   +0x038 MajorFunction    : [28] 0xf8cfe606     long  +0
+```
+
+Now, we need to remember that the _unknown_ function was placed in the _MajorFunction_ + _0x38_ in the _\_DRIVER_OBJECT_ struct. Let's verify it:
+
+```
+kd> dd 0x81E532C0 + 0x38  + 0x38 L1
+81e53330  f8cfe666
+```
+
+The pointer at _0x81e53330_ points to the address _0xf8cfe666_, where the _unknown_ function is.
+
+Also, we can get this address if we add the offset _0x666_ (seen in _IDA Pro_) to the _DriverStart_ address:
+
+```
+kd> u 0xf8cfe000 + 0x666
+Lab10_03+0x666:
+f8cfe666 8bff            mov     edi,edi
+f8cfe668 55              push    ebp
+f8cfe669 8bec            mov     ebp,esp
+f8cfe66b ff1590e4cff8    call    dword ptr [Lab10_03+0x490 (f8cfe490)]
+f8cfe671 8b888c000000    mov     ecx,dword ptr [eax+8Ch]
+f8cfe677 0588000000      add     eax,88h
+f8cfe67c 8b10            mov     edx,dword ptr [eax]
+f8cfe67e 8911            mov     dword ptr [ecx],edx
+```
+
+So now, let's add a breakpoint to the start of the function and continue the system execution:
+
+```
+kd> bp 0xf8cfe666
+kd> g
+```
+
+Also, we continue the binary execution in _Immunity_.
+
+```
+Breakpoint 0 hit
+Lab10_03+0x666:
+f8cfe666 8bff            mov     edi,edi
+```
+
+Great! The breakpoint has been hit.
+
+When the sample executes the following instruction we get the value of the address of _\_EPROCESS.ActiveProcessLinks.Flink_ of the current process.
+
+```
+f8cfe677 0588000000      add     eax,88h
+```
+
+```
+EAX = 0x82039250
+```
+
+At this moment, _EAX_ points to the _Flink_ address of the current process. This let us know the current order of the processes, but first we need to know the offset of _\_EPROCESS.ImageFileName_, this field will tell us the filename of one the process:
+
+```
+kd> dt nt!_EPROCESS
+...
+  +0x174 ImageFileName    : [16] UChar
+...
+```
+
+So now we have the offset, we need to make the following operation to get its value:
+
+```
+ImageFileName = Flink_address - ActiveProcessLinks_offset + ImageFileName_offset
+	||
+	\/
+ImageFileName = 0x00000000 - 0x88 + 0x174
+```
+
+So now we can get the current order of the processes by getting the values in the _\_EPROCESS.ActiveProcessLinks_ struct:
+
+```
+kd> da 0x82039250 - 0x88 + 0x174
+8203933C  "Lab10-03.exe"	<--- Current process
+kd> dd 0x82039250 L1
+82039250  81E43448			<--- Flink pointer
+kd> da 81E43448 - 0x88 + 0x174
+81E43534  "mscorsvw.exe"	<--- Forward process
+kd> dd 0x82039250 + 0x4 L1
+82039254  822DF448			<--- Blink pointer
+kd> da 822DF448 - 0x88 + 0x174
+822DF534  "ImmunityDebugge"		<--- Backward process
+
+			||
+			\/
+
+ImmunityDebugger.exe -> Lab10_03.exe -> mscorsvw.exe
+```
+
+After these instructions are executed, the order of the process list is the following:
+
+```
+kd> da 0x82039250 - 0x88 + 0x174
+8203933C  "Lab10-03.exe"	<--- Current process
+
+kd> dd 0x82039250 L1
+82039250  81E43448			<--- 0x81E43448 + 0x4 = Blink address of forward process
+kd> dd 0x81E43448 + 0x4 L1
+81E4344C  822DF448			<--- Blink pointer of forward process
+kd> da 0x822DF448 - 0x88 + 0x174
+822df534  "ImmunityDebugge"		<--- Backward process of the forward process
+
+kd> dd 0x82039250 + 0x4 L1
+82039254  822DF448			<--- Flink address of forward process
+kd> dd 0x822DF448 L1
+822DF448  81E43448		<--- Flink pointer of backward process
+kd> da 0x81E43448 - 0x88 + 0x174
+81E43534  "mscorsvw.exe"	<--- Forward process of the backward process
+
+			||
+			\/
+
+ImmunityDebugger.exe -> mscorsvw.exe
+```
+
+So now, we statically analyze the code with this information:
+
+```
+mov     ecx, [eax+8Ch]		-> ECX = ImmunityDebugger.Flink
+add     eax, 88h ;		-> EAX = Lab10-03.Flink
+mov     edx, [eax]		-> EDX = mscorsvw.Flink
+mov     [ecx], edx		-> ImmunityDebugger.Flink = mscorsvw.Flink
+mov     ecx, [eax]		-> ECX = mscorsvw.Flink
+mov     eax, [eax+4]		-> EAX = ImmunityDebugger.Flink
+mov     [ecx+4], eax		-> mscorsvw.Blink = ImmunityDebugger.Flink
+```
+
+We can see that this driver will hide the current process (_Lab10-03_). A more descriptive picture is shown as follows:
+
+![_Book_](../Pictures/Lab_10/lab_10-03_3_book_1.png)
+
+So finally, we modify the function name _unkwown_ to _hide_process_ in _IDA Pro_.
