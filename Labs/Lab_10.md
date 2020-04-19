@@ -590,11 +590,11 @@ So now we can get the current order of the processes by getting the values in th
 
 ```
 kd> da 0x82039250 - 0x88 + 0x174
-8203933C  "Lab10-03.exe"	<--- Current process
+8203933C  "Lab10-03.exe"		<--- Current process
 kd> dd 0x82039250 L1
 82039250  81E43448			<--- Flink pointer
 kd> da 81E43448 - 0x88 + 0x174
-81E43534  "mscorsvw.exe"	<--- Forward process
+81E43534  "mscorsvw.exe"		<--- Forward process
 kd> dd 0x82039250 + 0x4 L1
 82039254  822DF448			<--- Blink pointer
 kd> da 822DF448 - 0x88 + 0x174
@@ -610,7 +610,7 @@ After these instructions are executed, the order of the process list is the foll
 
 ```
 kd> da 0x82039250 - 0x88 + 0x174
-8203933C  "Lab10-03.exe"	<--- Current process
+8203933C  "Lab10-03.exe"		<--- Current process
 
 kd> dd 0x82039250 L1
 82039250  81E43448			<--- 0x81E43448 + 0x4 = Blink address of forward process
@@ -622,9 +622,9 @@ kd> da 0x822DF448 - 0x88 + 0x174
 kd> dd 0x82039250 + 0x4 L1
 82039254  822DF448			<--- Flink address of forward process
 kd> dd 0x822DF448 L1
-822DF448  81E43448		<--- Flink pointer of backward process
+822DF448  81E43448			<--- Flink pointer of backward process
 kd> da 0x81E43448 - 0x88 + 0x174
-81E43534  "mscorsvw.exe"	<--- Forward process of the backward process
+81E43534  "mscorsvw.exe"		<--- Forward process of the backward process
 
 			||
 			\/
