@@ -136,7 +136,7 @@ Yes, but only if the local hostname have less than 12 characters.
 
 **9. What does this malware do?**
 
-The malware first reads and decrypts the included resource file, it contains the URL of the CnC. After that, it gets the first 12 bytes of the computer's hostname, _base64_ encodes it and uses this value as webpage to make the request, I mean: http://www.practicalmalwareanalysis.com/[base64 encoded hostname]/. After that, the malware sleeps 5 minutes and then exits.
+The malware first reads and decrypts the included resource file, it contains the URL of the CnC. After that, it gets the first 12 bytes of the computer's hostname, _base64_ encodes it and uses this value as webpage to make the request, I mean: `http://www.practicalmalwareanalysis.com/[base64 encoded hostname]/`. After that, the malware sleeps 5 minutes and then exits.
 
 ## Lab 13-2
 
