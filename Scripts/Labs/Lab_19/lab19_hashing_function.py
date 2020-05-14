@@ -48,7 +48,7 @@ hashes_5 = [
 MAX_VALUE = 0xFFFFFFFF
 INT_BITS = 32
 
-# Left rotate of bits
+# Right rotate of bits
 def rotr(num, bits):
 	return ((num >> bits)|(num << (INT_BITS - bits))) & MAX_VALUE
 
