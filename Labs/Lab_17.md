@@ -1,4 +1,4 @@
-	# Lab 17 - Anti-Virtual Machine Techniques
+# Lab 17 - Anti-Virtual Machine Techniques
 
 ## Lab 17-1
 Analyze the malware found in Lab17-01.exe inside VMware. This is the same malware as Lab07-01.exe, with added anti-VMware techniques.
